@@ -1,0 +1,297 @@
+{% load static %}
+
+<div class="verification-code-container">
+    <!-- Campo oculto para o valor real -->
+    <input type="{{ widget.type }}" 
+           name="{{ widget.name }}" 
+           value="{{ widget.value|default:'' }}"
+           {% for name, value in widget.attrs.items %}{% if value is not False %} {{ name }}{% if value is not True %}="{{ value|stringformat:'s' }}"{% endif %}{% endif %}{% endfor %}
+           class="verification-code-hidden-input"
+           style="position: absolute; left: -9999px; opacity: 0;">
+    
+    <!-- Quadradinhos visuais -->
+    <div class="verification-code-boxes">
+        <div class="code-box" data-index="0">
+            <span class="code-digit"></span>
+        </div>
+        <div class="code-box" data-index="1">
+            <span class="code-digit"></span>
+        </div>
+        <div class="code-box" data-index="2">
+            <span class="code-digit"></span>
+        </div>
+        <div class="code-box" data-index="3">
+            <span class="code-digit"></span>
+        </div>
+        <div class="code-box" data-index="4">
+            <span class="code-digit"></span>
+        </div>
+        <div class="code-box" data-index="5">
+            <span class="code-digit"></span>
+        </div>
+    </div>
+    
+    <!-- Campo de entrada invisível para capturar input -->
+    <input type="text" 
+           class="verification-code-input-field"
+           maxlength="6"
+           inputmode="numeric"
+           pattern="[0-9]{6}"
+           autocomplete="one-time-code"
+           placeholder="123456"
+           style="position: absolute; left: -9999px; opacity: 0;">
+</div>
+
+<style>
+.verification-code-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 1rem 0;
+    position: relative;
+}
+
+.verification-code-boxes {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+    align-items: center;
+}
+
+.code-box {
+    width: 4rem;
+    height: 4rem;
+    border: 3px solid #dee2e6;
+    border-radius: 1rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #fff;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: #212529;
+    font-family: 'Courier New', monospace;
+    text-align: center;
+    user-select: none;
+}
+
+.code-box:hover {
+    border-color: #0d6efd;
+    box-shadow: 0 4px 8px rgba(13, 110, 253, 0.2);
+}
+
+.code-box.active {
+    border-color: #0d6efd;
+    background: #f8f9ff;
+    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1);
+}
+
+.code-box.filled {
+    border-color: #198754;
+    background: #f8fff9;
+}
+
+.code-box.success {
+    border-color: #198754;
+    background: #d1e7dd;
+    box-shadow: 0 0 0 3px rgba(25, 135, 84, 0.2);
+    animation: successPulse 0.6s ease-out;
+}
+
+.code-box.error {
+    border-color: #dc3545;
+    background: #fff8f8;
+    animation: shake 0.5s ease-in-out;
+}
+
+.code-digit {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: #212529;
+    font-family: 'Courier New', monospace;
+    line-height: 1;
+    text-align: center;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+@keyframes popIn {
+    0% { 
+        transform: scale(0.8);
+        opacity: 0;
+    }
+    50% { 
+        transform: scale(1.1);
+    }
+    100% { 
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.code-box.filled .code-digit {
+    animation: popIn 0.3s ease-out;
+}
+
+@keyframes successPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+/* Responsividade */
+@media (max-width: 576px) {
+    .code-box {
+        width: 3.5rem;
+        height: 3.5rem;
+        border-width: 2px;
+    }
+    
+    .code-digit {
+        font-size: 1.5rem;
+    }
+    
+    .verification-code-boxes {
+        gap: 0.5rem;
+    }
+}
+
+@media (max-width: 400px) {
+    .code-box {
+        width: 3rem;
+        height: 3rem;
+    }
+    
+    .code-digit {
+        font-size: 1.25rem;
+    }
+    
+    .verification-code-boxes {
+        gap: 0.25rem;
+    }
+}
+
+/* Tema escuro */
+@media (prefers-color-scheme: dark) {
+    .code-box {
+        background: #2d3748;
+        border-color: #4a5568;
+        color: #e2e8f0;
+    }
+    
+    .code-box:hover {
+        border-color: #63b3ed;
+        box-shadow: 0 4px 8px rgba(99, 179, 237, 0.2);
+    }
+    
+    .code-box.active {
+        border-color: #63b3ed;
+        background: #2a4365;
+    }
+    
+    .code-box.filled {
+        border-color: #68d391;
+        background: #2f5a3d;
+    }
+    
+    .code-digit {
+        color: #e2e8f0;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const container = document.querySelector('.verification-code-container');
+    if (!container) return;
+    
+    const hiddenInput = container.querySelector('.verification-code-hidden-input');
+    const inputField = container.querySelector('.verification-code-input-field');
+    const boxes = container.querySelectorAll('.code-box');
+    
+    // Focar no campo de entrada quando clicar em qualquer quadradinho
+    boxes.forEach(box => {
+        box.addEventListener('click', () => {
+            inputField.focus();
+        });
+    });
+    
+    // Atualizar quadradinhos quando digitar
+    inputField.addEventListener('input', function() {
+        const value = this.value.replace(/\D/g, '').slice(0, 6);
+        hiddenInput.value = value;
+        
+        // Atualizar quadradinhos
+        boxes.forEach((box, index) => {
+            const digit = value[index] || '';
+            const digitSpan = box.querySelector('.code-digit');
+            
+            if (digit) {
+                digitSpan.textContent = digit;
+                box.classList.add('filled');
+                box.classList.remove('active');
+                
+                // Feedback tátil (vibração) se disponível
+                if (navigator.vibrate) {
+                    navigator.vibrate(50);
+                }
+            } else {
+                digitSpan.textContent = '';
+                box.classList.remove('filled', 'active');
+            }
+        });
+        
+        // Destacar quadradinho ativo
+        if (value.length < 6) {
+            boxes.forEach((box, index) => {
+                if (index === value.length) {
+                    box.classList.add('active');
+                } else {
+                    box.classList.remove('active');
+                }
+            });
+        }
+        
+        // Auto-submit quando 6 dígitos são inseridos
+        if (value.length === 6) {
+            // Adicionar classe de sucesso
+            boxes.forEach(box => {
+                box.classList.add('success');
+            });
+            
+            setTimeout(() => {
+                hiddenInput.form.submit();
+            }, 800);
+        }
+    });
+    
+    // Permitir apenas números
+    inputField.addEventListener('keypress', function(e) {
+        if (!/\d/.test(e.key) && !['Backspace', 'Delete', 'Tab', 'Enter'].includes(e.key)) {
+            e.preventDefault();
+        }
+    });
+    
+    // Focar automaticamente no campo
+    inputField.focus();
+    
+    // Preencher com valor existente (se houver)
+    if (hiddenInput.value) {
+        inputField.value = hiddenInput.value;
+        inputField.dispatchEvent(new Event('input'));
+    }
+});
+</script> 

@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Demo do Design Django - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <!-- Header da Página -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h2 mb-1 text-sans text-body">
+                        <i class="fas fa-palette me-2" style="color: var(--nix-accent);"></i>Nix Design System
+                    </h1>
+                    <p class="text-theme-secondary mb-0 text-body">Demonstração do sistema de design moderno com paleta roxo elegante</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Theme Toggle Demo -->
+    <div class="card-django border-0 shadow-sm mb-4">
+        <div class="card-body profile-card-body card-django">
+            <div class="alert alert-success" role="alert">
+                <i class="fas fa-palette me-2 text-django-green"></i>
+                <strong>Novo Sistema de Tema!</strong> Use o toggle no canto superior direito para alternar entre tema claro e escuro.
+            </div>
+        </div>
+    </div>
+
+    <!-- Typography Section -->
+    <div class="card-django border-0 shadow-sm mb-4">
+        <div class="card-header profile-card-header">
+            <h6 class="mb-0 text-sans text-body">
+                <i class="fas fa-font me-2"></i>Tipografia Django
+            </h6>
+        </div>
+        <div class="card-body profile-card-body card-django">
+            <div class="row">
+                <div class="col-md-6">
+                    <h4 class="text-sans text-body">Headers (Sans-serif)</h4>
+                    <h1 class="text-sans text-body">H1 Header</h1>
+                    <h2 class="text-sans text-body">H2 Header</h2>
+                    <h3 class="text-sans text-body">H3 Header</h3>
+                    <h4 class="text-sans text-body">H4 Header</h4>
+                    <h5 class="text-sans text-body">H5 Header</h5>
+                </div>
+                <div class="col-md-6">
+                    <h4 class="text-sans text-body">Texto do Corpo</h4>
+                    <p class="text-body">Este é um parágrafo seguindo o style guide oficial do Django.</p>
+                    <p class="text-sans text-body">Este é um parágrafo usando sans-serif para casos especiais.</p>
+                    <code class="monospace">Código usando fonte monospace</code>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Colors Section -->
+    <div class="card-django border-0 shadow-sm mb-4">
+        <div class="card-header profile-card-header">
+            <h6 class="mb-0 text-sans text-body">
+                <i class="fas fa-palette me-2"></i>Paleta de Cores Nix
+            </h6>
+        </div>
+        <div class="card-body profile-card-body card-django">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5 class="text-sans text-body">Cores Primárias</h5>
+                    <div class="d-flex align-items-center mb-2">
+                        <div style="width: 40px; height: 40px; border-radius: 8px; background-color: var(--nix-accent);"></div>
+                        <div class="ms-3">
+                            <strong class="text-sans">Roxo Elegante</strong><br>
+                            <small class="text-theme-secondary">#7c3aed</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <h5 class="text-sans text-body">Demonstração de Links</h5>
+                    <p class="text-body">Este é um <a href="#">link normal</a> usando as cores do Django.</p>
+                    <p class="text-sans text-body">Links em texto sans-serif: <a href="#">Django Documentation</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Buttons Section -->
+    <div class="card-django border-0 shadow-sm mb-4">
+        <div class="card-header profile-card-header">
+            <h6 class="mb-0 text-sans text-body">
+                <i class="fas fa-mouse-pointer me-2"></i>Botões Django
+            </h6>
+        </div>
+        <div class="card-body profile-card-body card-django">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5 class="text-sans text-body">Botões Primários</h5>
+                    <button class="btn btn-primary me-2 mb-2">Botão Primário</button>
+                    <button class="btn btn-outline-primary me-2 mb-2">Botão Outline</button>
+                </div>
+                <div class="col-md-6">
+                    <h5 class="text-sans text-body">Outros Botões</h5>
+                    <button class="btn btn-secondary me-2 mb-2">Secundário</button>
+                    <button class="btn btn-success me-2 mb-2">Sucesso</button>
+                    <button class="btn btn-danger mb-2">Perigo</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer Info -->
+    <div class="text-center mt-5">
+        <p class="text-theme-secondary text-body">
+            <i class="fas fa-palette me-2" style="color: var(--nix-accent);"></i>
+            Design system moderno com paleta roxo elegante
+        </p>
+    </div>
+</div>
+{% endblock %}

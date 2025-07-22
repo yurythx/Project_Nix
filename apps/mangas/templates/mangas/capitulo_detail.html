@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ capitulo.manga.title }} - Capítulo {{ capitulo.number }}{% if capitulo.title %}: {{ capitulo.title }}{% endif %} - Mangás - Project Nix{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="mb-4">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{% url 'mangas:manga_list' %}">Mangás</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'mangas:manga_detail' capitulo.manga.slug %}">{{ capitulo.manga.title }}</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Capítulo {{ capitulo.number }}</li>
+                    </ol>
+                </nav>
+                <h1 class="h4 mb-3">{{ capitulo.manga.title }} - Capítulo {{ capitulo.number }}{% if capitulo.title %}: {{ capitulo.title }}{% endif %}</h1>
+            </div>
+            {% if capitulo.paginas.all %}
+            <div id="manga-reader" class="mb-4">
+                {% for pagina in capitulo.paginas.all %}
+                <div class="manga-page mb-4 text-center" data-page="{{ forloop.counter0 }}" style="display: {% if forloop.first %}block{% else %}none{% endif %};">
+                    <img src="{{ pagina.image.url }}" class="img-fluid rounded shadow" alt="Página {{ pagina.number }}" style="max-height: 80vh;">
+                    <div class="small text-muted mt-2">Página {{ pagina.number }}</div>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <button id="prev-page" class="btn btn-outline-primary" disabled><i class="fas fa-arrow-left"></i> Anterior</button>
+                <span id="page-indicator">1 / {{ capitulo.paginas.count }}</span>
+                <button id="next-page" class="btn btn-outline-primary">Próxima <i class="fas fa-arrow-right"></i></button>
+            </div>
+            {% else %}
+            <div class="alert alert-info">Nenhuma página cadastrada para este capítulo.</div>
+            {% endif %}
+            <div class="d-flex gap-2">
+                <a href="{% url 'mangas:manga_detail' capitulo.manga.slug %}" class="btn btn-outline-secondary btn-sm">
+                    <i class="fas fa-arrow-left"></i> Voltar ao mangá
+                </a>
+                {% if user.is_authenticated and user.is_staff %}
+                <a href="{% url 'mangas:pagina_create' capitulo.manga.slug capitulo.slug %}" class="btn btn-primary btn-sm">
+                    <i class="fas fa-plus"></i> Nova Página
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% if capitulo.paginas.count > 0 %}
+<script src="{% static 'js/manga-viewer.js' %}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    window.initMangaViewer && window.initMangaViewer({
+        total: {{ capitulo.paginas.count }},
+    });
+});
+</script>
+{% endif %}
+{% endblock %} 

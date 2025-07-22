@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+
+{% block title %}Artigo não encontrado - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 text-center">
+            <!-- Ícone de erro -->
+            <div class="mb-4">
+                <i class="fas fa-newspaper fa-5x text-secondary"></i>
+            </div>
+            
+            <!-- Título do erro -->
+            <h1 class="display-4 text-sans text-body mb-3">Artigo não encontrado</h1>
+            
+            <!-- Mensagem de erro -->
+            <p class="lead text-secondary mb-4">
+                O artigo que você está procurando não foi encontrado ou pode ter sido removido.
+            </p>
+            
+            {% if slug %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Slug procurado:</strong> {{ slug }}
+                </div>
+            {% endif %}
+            
+            <!-- Ações -->
+            <div class="d-flex justify-content-center gap-3 mb-5">
+                <a href="{% url 'articles:article_list' %}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-list me-2"></i>Ver todos os artigos
+                </a>
+                <a href="{% url 'articles:search' %}" class="btn btn-outline-primary btn-lg">
+                    <i class="fas fa-search me-2"></i>Buscar artigos
+                </a>
+                <a href="{% url 'pages:home' %}" class="btn btn-outline-secondary btn-lg">
+                    <i class="fas fa-home me-2"></i>Página inicial
+                </a>
+            </div>
+            
+            <!-- Sugestões -->
+            <div class="row">
+                <div class="col-12">
+                    <h4 class="text-sans text-body mb-3">Que tal dar uma olhada nestes artigos?</h4>
+                </div>
+            </div>
+            
+            <!-- Artigos sugeridos (últimos publicados) -->
+            {% load articles_tags %}
+            {% get_latest_articles 3 as latest_articles %}
+            
+            {% if latest_articles %}
+                <div class="row g-4">
+                    {% for article in latest_articles %}
+                    <div class="col-md-4">
+                        <div class="card h-100 border-0 shadow-sm hover-lift">
+                            {% if article.featured_image %}
+                                <div class="img-container img-container-16-9">
+                                    <img src="{{ article.featured_image.url }}"
+                                         class="img-optimized"
+                                         alt="{{ article.featured_image_alt|default:article.title }}"
+                                         loading="lazy"
+                                         onerror="this.style.display='none'">
+                                    <div class="img-overlay"></div>
+                                </div>
+                            {% endif %}
+                            <div class="card-body d-flex flex-column">
+                                <div class="mb-2">
+                                    {% if article.category %}
+                                        <span class="badge bg-primary">
+                                            {% if article.category.icon %}<i class="{{ article.category.icon }} me-1"></i>{% endif %}
+                                            {{ article.category.name }}
+                                        </span>
+                                    {% endif %}
+                                </div>
+
+                                <h6 class="card-title">
+                                    <a href="{{ article.get_absolute_url }}" class="text-decoration-none text-dark">
+                                        {{ article.title|truncatechars:50 }}
+                                    </a>
+                                </h6>
+
+                                <p class="card-text text-muted small">{{ article.excerpt|truncatechars:80 }}</p>
+                                
+                                <div class="mt-auto">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <small class="text-secondary">
+                                            <i class="fas fa-calendar me-1"></i>{{ article.published_at|date:"d/m/Y" }}
+                                        </small>
+                                        <small class="text-secondary">
+                                            <i class="fas fa-eye me-1"></i>{{ article.view_count }}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Ainda não há artigos publicados no blog.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.hover-lift {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hover-lift:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+}
+
+.img-container {
+    position: relative;
+    overflow: hidden;
+}
+
+.img-container-16-9 {
+    aspect-ratio: 16/9;
+}
+
+.img-optimized {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.img-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, rgba(0,0,0,0.1), transparent);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.card:hover .img-optimized {
+    transform: scale(1.05);
+}
+
+.card:hover .img-overlay {
+    opacity: 1;
+}
+</style>
+{% endblock %}

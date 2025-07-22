@@ -1,0 +1,204 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% comment %} Estilos migrados para main.css. Removido article-list.css {% endcomment %}
+
+{% block content %}
+<div class="container my-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h2 mb-0">Artigos</h1>
+                {% if user.is_authenticated and user.is_staff or user.is_authenticated and user.is_superuser %}
+                    <a href="{% url 'articles:article_create' %}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-plus me-1"></i>Novo Artigo
+                    </a>
+                {% endif %}
+            </div>
+            
+            {% if articles %}
+                <div class="articles-list-simple">
+                    {% for article in articles %}
+                    <article class="article-item-simple mb-4 p-3 border rounded">
+                        <div class="row">
+                            <div class="col-md-3 mb-3 mb-md-0">
+                                {% if article.featured_image %}
+                                    <a href="{{ article.get_absolute_url }}" class="d-block featured-image-simple">
+                                        <img src="{{ article.featured_image.url }}"
+                                             class="img-fluid rounded"
+                                             alt="{{ article.featured_image_alt|default:article.title }}"
+                                             loading="lazy">
+                                    </a>
+                                {% else %}
+                                    <div class="featured-image-simple no-image-placeholder-simple d-flex align-items-center justify-content-center">
+                                        <i class="fas fa-image fa-2x text-muted"></i>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col">
+                                <div class="d-flex flex-wrap gap-2 mb-2">
+                                    {% if article.category %}
+                                        <span class="badge bg-primary">{{ article.category.name }}</span>
+                                    {% endif %}
+                                    <span class="badge bg-secondary">{{ article.published_at|date:"d/m/Y" }}</span>
+                                </div>
+                                
+                                <h3 class="h5 mb-2">
+                                    <a href="{{ article.get_absolute_url }}" class="text-decoration-none">
+                                        {{ article.title }}
+                                    </a>
+                                </h3>
+                                
+                                <p class="text-muted small mb-2">
+                                    <i class="fas fa-user me-1"></i>{{ article.author.get_full_name|default:article.author.username }}
+                                    <i class="fas fa-eye ms-3 me-1"></i>{{ article.view_count }}
+                                    <i class="fas fa-comments ms-3 me-1"></i>{{ article.comment_count }}
+                                </p>
+                                
+                                <p class="mb-2">{{ article.excerpt|truncatechars:200 }}</p>
+                                
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">
+                                        <i class="fas fa-clock me-1"></i>{{ article.reading_time }} min
+                                    </small>
+                                    <a href="{{ article.get_absolute_url }}" class="btn btn-outline-primary btn-sm">
+                                        Ler mais
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+                    {% endfor %}
+                </div>
+                
+                <!-- Paginação simples -->
+                {% if page_obj.has_other_pages %}
+                <nav aria-label="Paginação" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Anterior</a>
+                            </li>
+                        {% endif %}
+                        
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if page_obj.number == num %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ num }}</span>
+                                </li>
+                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}">Próximo</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-newspaper fa-3x text-secondary mb-3"></i>
+                    <h3 class="text-secondary">Nenhum artigo encontrado</h3>
+                    <p class="text-muted">Ainda não há artigos publicados.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.articles-list-simple {
+    max-width: 100%;
+}
+
+.article-item-simple {
+    transition: all 0.3s ease;
+    background: white;
+}
+
+.article-item-simple:hover {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    transform: translateY(-1px);
+}
+
+.article-item-simple h3 a {
+    color: #2c3e50;
+    transition: color 0.3s ease;
+}
+
+.article-item-simple h3 a:hover {
+    color: var(--bs-primary);
+}
+
+.featured-image-simple {
+    display: block;
+    width: 100% !important;
+    height: 150px !important; /* Altura fixa para o template simples */
+    overflow: hidden;
+    border-radius: 0.375rem;
+    background-color: #f8f9fa;
+    flex-shrink: 0;
+}
+
+.article-item-simple img {
+    transition: transform 0.3s ease;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    flex-shrink: 0;
+    min-width: 100%;
+    min-height: 100%;
+}
+
+.article-item-simple:hover img {
+    transform: scale(1.05);
+}
+
+.no-image-placeholder-simple {
+    background-color: #f8f9fa;
+    border: 2px dashed #dee2e6;
+    border-radius: 0.375rem;
+    color: #6c757d;
+    transition: all 0.3s ease;
+}
+
+.no-image-placeholder-simple:hover {
+    background-color: #e9ecef;
+    border-color: #adb5bd;
+    color: #495057;
+}
+
+@media (max-width: 768px) {
+    .article-item-simple .row {
+        flex-direction: column;
+    }
+    
+    .article-item-simple .col-md-3 {
+        width: 100%;
+        max-width: 200px;
+        margin: 0 auto;
+    }
+    
+    .featured-image-simple {
+        height: 120px !important; /* Altura menor em tablets */
+        min-height: 120px !important;
+        max-height: 120px !important;
+    }
+}
+
+@media (max-width: 576px) {
+    .featured-image-simple {
+        height: 100px !important; /* Altura ainda menor em mobile */
+        min-height: 100px !important;
+        max-height: 100px !important;
+    }
+}
+</style>
+{% endblock %} 

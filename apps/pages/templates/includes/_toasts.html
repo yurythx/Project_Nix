@@ -1,0 +1,235 @@
+<!-- Toast Container -->
+<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;" role="alert" aria-live="assertive" aria-atomic="true">
+    {% if messages %}
+        {% for message in messages %}
+            <div class="toast align-items-center show toast-dark-mode bg-{% if message.tags == 'error' %}danger{% else %}{{ message.tags|default:'secondary' }}{% endif %}"
+                 role="alert"
+                 aria-live="assertive"
+                 aria-atomic="true"
+                 data-bs-autohide="true"
+                 data-bs-delay="5000"
+                 style="border: 2px solid rgba(255,255,255,0.2); box-shadow: 0 10px 25px rgba(0,0,0,0.5);"
+
+                <div class="d-flex">
+                    <div class="toast-body d-flex align-items-center">
+                        <!-- Ícone baseado no tipo de mensagem -->
+                        {% if message.tags == 'success' %}
+                            <i class="fas fa-check-circle me-2"></i>
+                        {% elif message.tags == 'error' %}
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                        {% elif message.tags == 'warning' %}
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                        {% elif message.tags == 'info' %}
+                            <i class="fas fa-info-circle me-2"></i>
+                        {% else %}
+                            <i class="fas fa-bell me-2"></i>
+                        {% endif %}
+
+                        <span>{{ message }}</span>
+                    </div>
+
+                    <button type="button"
+                            class="btn-close me-2 m-auto"
+                            data-bs-dismiss="toast"
+                            aria-label="Close"></button>
+                </div>
+            </div>
+        {% endfor %}
+    {% endif %}
+</div>
+
+<!-- Toast Styles -->
+<style>
+.toast-container {
+    max-width: 400px;
+}
+
+.toast {
+    min-width: 300px;
+    margin-bottom: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    animation: slideInRight 0.3s ease-out;
+}
+
+.toast-body {
+    padding: 12px 16px;
+    font-weight: 500;
+}
+
+.toast .btn-close {
+    padding: 8px;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOutRight {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+}
+
+.toast.hide {
+    animation: slideOutRight 0.3s ease-in;
+}
+
+/* Melhorias específicas para toasts no modo escuro */
+.toast-dark-mode {
+    opacity: 1 !important;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+[data-theme="dark"] .toast-dark-mode {
+    background-color: rgba(45, 55, 72, 0.95) !important;
+    border: 2px solid rgba(255, 255, 255, 0.2) !important;
+    color: #ffffff !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5) !important;
+}
+
+[data-theme="dark"] .toast-dark-mode.bg-theme-success {
+    background-color: rgba(30, 77, 58, 0.95) !important;
+    border-color: #198754 !important;
+}
+
+[data-theme="dark"] .toast-dark-mode.bg-theme-danger {
+    background-color: rgba(90, 30, 30, 0.95) !important;
+    border-color: #dc3545 !important;
+}
+
+[data-theme="dark"] .toast-dark-mode.bg-theme-warning {
+    background-color: rgba(90, 74, 30, 0.95) !important;
+    border-color: #ffc107 !important;
+}
+
+[data-theme="dark"] .toast-dark-mode.bg-theme-info {
+    background-color: rgba(30, 58, 90, 0.95) !important;
+    border-color: #0dcaf0 !important;
+}
+
+/* Responsividade */
+@media (max-width: 576px) {
+    .toast-container {
+        position: fixed !important;
+        top: 10px !important;
+        left: 10px !important;
+        right: 10px !important;
+        max-width: none;
+    }
+
+    .toast {
+        min-width: auto;
+        width: 100%;
+    }
+}
+</style>
+
+<!-- Toast JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Inicializar todos os toasts
+    var toastElList = [].slice.call(document.querySelectorAll('.toast'));
+    var toastList = toastElList.map(function (toastEl) {
+        return new bootstrap.Toast(toastEl, {
+            autohide: true,
+            delay: 5000
+        });
+    });
+    
+    // Mostrar toasts automaticamente
+    toastList.forEach(function(toast) {
+        toast.show();
+    });
+    
+    // Adicionar evento de clique para fechar
+    toastElList.forEach(function(toastEl) {
+        toastEl.addEventListener('hidden.bs.toast', function() {
+            this.remove();
+        });
+    });
+});
+
+// Função para criar toasts dinamicamente via JavaScript
+function showToast(message, type = 'info', duration = 5000) {
+    const toastContainer = document.querySelector('.toast-container');
+    if (!toastContainer) return;
+
+    const icons = {
+        success: 'fas fa-check-circle',
+        error: 'fas fa-exclamation-circle',
+        warning: 'fas fa-exclamation-triangle',
+        info: 'fas fa-info-circle',
+        default: 'fas fa-bell'
+    };
+
+    // Mapear 'error' para 'danger' para compatibilidade com Bootstrap
+    const bootstrapType = type === 'error' ? 'danger' : type;
+
+    const toastHtml = `
+        <div class="toast align-items-center toast-dark-mode bg-${bootstrapType}"
+             role="alert"
+             aria-live="assertive"
+             aria-atomic="true"
+             style="border: 2px solid rgba(255,255,255,0.2); box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+            <div class="d-flex">
+                <div class="toast-body d-flex align-items-center">
+                    <i class="${icons[type] || icons.default} me-2"></i>
+                    <span>${message}</span>
+                </div>
+                <button type="button"
+                        class="btn-close me-2 m-auto"
+                        data-bs-dismiss="toast"
+                        aria-label="Close"></button>
+            </div>
+        </div>
+    `;
+
+    toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+
+    const newToast = toastContainer.lastElementChild;
+    const toast = new bootstrap.Toast(newToast, {
+        autohide: true,
+        delay: duration
+    });
+
+    toast.show();
+
+    newToast.addEventListener('hidden.bs.toast', function() {
+        this.remove();
+    });
+}
+
+// Função para mostrar toast de sucesso
+function showSuccessToast(message, duration = 5000) {
+    showToast(message, 'success', duration);
+}
+
+// Função para mostrar toast de erro
+function showErrorToast(message, duration = 7000) {
+    showToast(message, 'error', duration);
+}
+
+// Função para mostrar toast de aviso
+function showWarningToast(message, duration = 6000) {
+    showToast(message, 'warning', duration);
+}
+
+// Função para mostrar toast de informação
+function showInfoToast(message, duration = 5000) {
+    showToast(message, 'info', duration);
+}
+</script>

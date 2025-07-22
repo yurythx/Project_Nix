@@ -1,0 +1,21 @@
+{% load static %}
+
+<div class="img-container{% if aspect_ratio %} img-container-{{ aspect_ratio }}{% endif %}">
+    {% if lazy %}
+        <img data-src="{{ src }}"
+             {% if webp_src %}data-webp="{{ webp_src }}"{% endif %}
+             class="img-optimized img-lazy{% if css_class %} {{ css_class }}{% endif %}"
+             alt="{{ alt }}"
+             loading="lazy"
+             src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PC9zdmc+">
+    {% else %}
+        <img src="{{ src }}"
+             class="img-optimized{% if css_class %} {{ css_class }}{% endif %}"
+             alt="{{ alt }}"
+             loading="eager">
+    {% endif %}
+    
+    {% if overlay %}
+        <div class="img-overlay"></div>
+    {% endif %}
+</div>

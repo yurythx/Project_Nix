@@ -1,0 +1,282 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if query %}Busca por "{{ query }}"{% else %}Busca de Artigos{% endif %} - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <!-- Header -->
+            <div class="text-center mb-5">
+                <h1 class="display-6 text-sans text-body">
+                    <i class="fas fa-search me-2"></i>
+                    {% if query %}
+                        Busca por "{{ query }}"
+                    {% else %}
+                        Busca de Artigos
+                    {% endif %}
+                </h1>
+                
+                {% if query and total_results %}
+                    <p class="lead text-secondary text-body">
+                        {{ total_results }} artigo{{ total_results|pluralize }} encontrado{{ total_results|pluralize }}
+                    </p>
+                {% endif %}
+            </div>
+
+            <!-- Search Form -->
+            <div class="card-django mb-5 mb-3">
+                <div class="card-body card-django">
+                    <form method="get" class="row g-3 form-django" aria-label="Formulário de busca" role="form">
+                        <div class="col-md-9">
+                            <input type="search" class="form-control form-control-lg" name="q"
+                                   value="{{ query }}" placeholder="Buscar artigos..." autofocus
+                                   aria-label="Campo de busca de artigos" aria-describedby="search-help">
+                        </div>
+                        <div class="col-md-3">
+                            <button type="submit" class="btn btn-primary btn-lg w-100 text-sans">
+                                <i class="fas fa-search me-1"></i>Buscar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Results -->
+            {% if query %}
+                {% if articles %}
+                    <div class="search-results">
+                        {% for article in articles %}
+                            <div class="card-django mb-4">
+                                <div class="card-body card-django">
+                                    <div class="row">
+                                        {% if article.featured_image %}
+                                            <div class="col-md-3">
+                                                <img src="{{ article.featured_image.url }}" class="img-fluid rounded" 
+                                                     alt="{{ article.title }}" style="height: 120px; object-fit: cover; width: 100%;">
+                                            </div>
+                                            <div class="col-md-9">
+                                        {% else %}
+                                            <div class="col-12">
+                                        {% endif %}
+                                            <!-- Category -->
+                                            {% if article.category %}
+                                                <div class="mb-2">
+                                                    <span class="badge bg-django-green">{{ article.category.name }}</span>
+                                                </div>
+                                            {% endif %}
+
+                                            <h5 class="card-title text-sans text-body">
+                                                <a href="{% url 'articles:article_detail' article.slug %}" class="text-decoration-none">
+                                                    {{ article.title }}
+                                                </a>
+                                            </h5>
+                                            
+                                            {% if article.excerpt %}
+                                                <p class="card-django-text text-secondary text-body">
+                                                    {{ article.excerpt|truncatewords:25 }}
+                                                </p>
+                                            {% endif %}
+                                            
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    {% if article.author %}
+                                                        <small class="text-secondary">
+                                                            <i class="fas fa-user me-1"></i>
+                                                            {{ article.author.get_full_name|default:article.author.username }}
+                                                        </small>
+                                                    {% endif %}
+                                                    
+                                                    <small class="text-secondary ms-3">
+                                                        <i class="fas fa-calendar me-1"></i>
+                                                        {{ article.published_at|date:"d/m/Y" }}
+                                                    </small>
+                                                    
+                                                    {% if article.views_count %}
+                                                        <small class="text-secondary ms-3">
+                                                            <i class="fas fa-eye me-1"></i>
+                                                            {{ article.views_count }}
+                                                        </small>
+                                                    {% endif %}
+                                                    
+                                                    {% if article.reading_time %}
+                                                        <small class="text-secondary ms-3">
+                                                            <i class="fas fa-clock me-1"></i>
+                                                            {{ article.reading_time }} min
+                                                        </small>
+                                                    {% endif %}
+                                                </div>
+                                                
+                                                <a href="{% url 'articles:article_detail' article.slug %}" class="btn btn-outline-primary btn-sm">
+                                                    <i class="fas fa-arrow-right me-1"></i>Ler mais
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Pagination -->
+                    {% if page_obj.has_other_pages %}
+                        <nav aria-label="Navegação de resultados">
+                            <ul class="pagination justify-content-center">
+                                {% if page_obj.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page=1&q={{ query }}">
+                                            <i class="fas fa-angle-double-left"></i>
+                                        </a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}&q={{ query }}">
+                                            <i class="fas fa-angle-left"></i>
+                                        </a>
+                                    </li>
+                                {% endif %}
+
+                                {% for num in page_obj.paginator.page_range %}
+                                    {% if page_obj.number == num %}
+                                        <li class="page-item active">
+                                            <span class="page-link">{{ num }}</span>
+                                        </li>
+                                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ num }}&q={{ query }}">{{ num }}</a>
+                                        </li>
+                                    {% endif %}
+                                {% endfor %}
+
+                                {% if page_obj.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.next_page_number }}&q={{ query }}">
+                                            <i class="fas fa-angle-right"></i>
+                                        </a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}&q={{ query }}">
+                                            <i class="fas fa-angle-double-right"></i>
+                                        </a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                    {% endif %}
+                {% else %}
+                    <!-- No Results -->
+                    <div class="text-center py-5">
+                        <i class="fas fa-search fa-4x text-secondary mb-4"></i>
+                        <h3 class="text-sans text-body">Nenhum artigo encontrado</h3>
+                        <p class="text-secondary mb-4 text-body">
+                            Não encontramos nenhum artigo para "{{ query }}".
+                        </p>
+                        
+                        <div class="row justify-content-center">
+                            <div class="col-md-8">
+                                <div class="card-django">
+                                    <div class="card-body card-django">
+                                        <h5 class="card-title text-sans text-body">Dicas para melhorar sua busca:</h5>
+                                        <ul class="list-unstyled text-start">
+                                            <li class="mb-2">
+                                                <i class="fas fa-check text-success me-2"></i>
+                                                Verifique a ortografia das palavras
+                                            </li>
+                                            <li class="mb-2">
+                                                <i class="fas fa-check text-success me-2"></i>
+                                                Tente usar palavras-chave diferentes
+                                            </li>
+                                            <li class="mb-2">
+                                                <i class="fas fa-check text-success me-2"></i>
+                                                Use termos mais gerais
+                                            </li>
+                                            <li class="mb-2">
+                                                <i class="fas fa-check text-success me-2"></i>
+                                                Reduza o número de palavras
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <a href="{% url 'articles:article_list' %}" class="btn btn-primary me-2">
+                                <i class="fas fa-newspaper me-1"></i>Ver todos os artigos
+                            </a>
+                            <a href="{% url 'pages:home' %}" class="btn btn-outline-primary">
+                                <i class="fas fa-home me-1"></i>Voltar ao início
+                            </a>
+                        </div>
+                    </div>
+                {% endif %}
+            {% else %}
+                <!-- Search Instructions -->
+                <div class="text-center py-5">
+                    <i class="fas fa-newspaper fa-4x text-django-green mb-4"></i>
+                    <h3 class="text-sans text-body">Busque por artigos</h3>
+                    <p class="text-secondary mb-4 text-body">
+                        Digite palavras-chave no campo acima para encontrar artigos do blog.
+                    </p>
+                    
+                    <div class="row justify-content-center">
+                        <div class="col-md-6">
+                            <div class="card-django">
+                                <div class="card-body card-django">
+                                    <h5 class="card-title text-sans text-body">Sugestões populares:</h5>
+                                    <div class="d-flex flex-wrap justify-content-center gap-2">
+                                        <a href="?q=tecnologia" class="badge bg-secondary text-white text-decoration-none">tecnologia</a>
+                                        <a href="?q=tutorial" class="badge bg-secondary text-white text-decoration-none">tutorial</a>
+                                        <a href="?q=dicas" class="badge bg-secondary text-white text-decoration-none">dicas</a>
+                                        <a href="?q=novidades" class="badge bg-secondary text-white text-decoration-none">novidades</a>
+                                        <a href="?q=guia" class="badge bg-secondary text-white text-decoration-none">guia</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <a href="{% url 'articles:article_list' %}" class="btn btn-primary">
+                            <i class="fas fa-newspaper me-1"></i>Ver todos os artigos
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Highlight search terms in results
+    const query = '{{ query|escapejs }}';
+    if (query) {
+        const searchResults = document.querySelector('.search-results');
+        if (searchResults) {
+            const regex = new RegExp(`(${query})`, 'gi');
+            const walker = document.createTreeWalker(
+                searchResults,
+                NodeFilter.SHOW_TEXT,
+                null,
+                false
+            );
+            
+            const textNodes = [];
+            let node;
+            while (node = walker.nextNode()) {
+                textNodes.push(node);
+            }
+            
+            textNodes.forEach(function(textNode) {
+                if (regex.test(textNode.textContent)) {
+                    const highlightedText = textNode.textContent.replace(regex, '<mark>$1</mark>');
+                    const wrapper = document.createElement('span');
+                    wrapper.innerHTML = highlightedText;
+                    textNode.parentNode.replaceChild(wrapper, textNode);
+                }
+            });
+        }
+    }
+});
+</script>
+{% endblock %}

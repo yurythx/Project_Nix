@@ -1,0 +1,1 @@
+# default_app_config é deprecated no Django 3.2+

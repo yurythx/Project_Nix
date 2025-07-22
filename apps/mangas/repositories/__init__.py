@@ -1,0 +1,1 @@
+# Pacote de repositórios do app mangas 

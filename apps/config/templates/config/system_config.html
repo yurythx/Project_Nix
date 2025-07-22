@@ -1,0 +1,238 @@
+{% extends 'config/base_config_page.html' %}
+{% load config_extras %}
+
+{% block config_title %}Configuração do Sistema{% endblock %}
+{% block page_icon %}<i class="fas fa-cogs me-2"></i>{% endblock %}
+{% block page_title %}Configuração do Sistema{% endblock %}
+
+{% block page_content %}
+<div class="row">
+    <!-- Configurações Principais -->
+    <div class="col-12 col-lg-8">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-cog me-2"></i>Configurações Gerais
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post" class="config-form">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.site_name.id_for_label }}" class="form-label">
+                                <i class="fas fa-globe me-1"></i>Nome do Site
+                            </label>
+                            {{ form.site_name }}
+                            {% if form.site_name.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.site_name.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.site_description.id_for_label }}" class="form-label">
+                                <i class="fas fa-align-left me-1"></i>Descrição do Site
+                            </label>
+                            {{ form.site_description }}
+                            {% if form.site_description.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.site_description.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.debug_mode.id_for_label }}" class="form-label">
+                                <i class="fas fa-bug me-1"></i>Modo Debug
+                            </label>
+                            <div class="form-check form-switch">
+                                {{ form.debug_mode }}
+                                <label class="form-check-label" for="{{ form.debug_mode.id_for_label }}">
+                                    Ativar modo de desenvolvimento
+                                </label>
+                            </div>
+                            <small class="form-text text-muted">Mostra informações detalhadas de erro (desabilitar em produção)</small>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.maintenance_mode.id_for_label }}" class="form-label">
+                                <i class="fas fa-tools me-1"></i>Modo Manutenção
+                            </label>
+                            <div class="form-check form-switch">
+                                {{ form.maintenance_mode }}
+                                <label class="form-check-label" for="{{ form.maintenance_mode.id_for_label }}">
+                                    Ativar modo de manutenção
+                                </label>
+                            </div>
+                            <small class="form-text text-muted">Bloqueia acesso de usuários não-admin</small>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.timezone.id_for_label }}" class="form-label">
+                                <i class="fas fa-clock me-1"></i>Fuso Horário
+                            </label>
+                            {{ form.timezone }}
+                            {% if form.timezone.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.timezone.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.language.id_for_label }}" class="form-label">
+                                <i class="fas fa-language me-1"></i>Idioma
+                            </label>
+                            {{ form.language }}
+                            {% if form.language.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.language.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Salvar Configurações
+                        </button>
+                        <a href="{% url 'config:dashboard' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Voltar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar com informações e ações rápidas -->
+    <div class="col-12 col-lg-4">
+        <!-- Status do Sistema -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-light">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-info-circle me-2"></i>Status do Sistema
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="avatar-sm me-3">
+                            <div class="bg-success rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                <i class="fas fa-check text-white"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="fw-bold">Sistema Operacional</div>
+                            <small class="text-muted">{{ system_info.os|default:"Desconhecido" }}</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="avatar-sm me-3">
+                            <div class="bg-info rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                <i class="fas fa-code text-white"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="fw-bold">Versão Python</div>
+                            <small class="text-muted">{{ system_info.python_version|default:"Desconhecida" }}</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="avatar-sm me-3">
+                            <div class="bg-warning rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                <i class="fas fa-database text-white"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="fw-bold">Banco de Dados</div>
+                            <small class="text-muted">{{ system_info.database|default:"Desconhecido" }}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ações Rápidas -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-light">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-bolt me-2"></i>Ações Rápidas
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'config:environment_variables' %}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-key me-2"></i>Variáveis de Ambiente
+                    </a>
+                    <a href="{% url 'config:database_info' %}" class="btn btn-outline-info btn-sm">
+                        <i class="fas fa-database me-2"></i>Informações do Banco
+                    </a>
+                    <a href="{% url 'config:system_logs' %}" class="btn btn-outline-warning btn-sm">
+                        <i class="fas fa-file-alt me-2"></i>Logs do Sistema
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dicas -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-light">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-lightbulb me-2"></i>Dicas
+                </h6>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0">
+                    <li class="mb-2">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        Desabilite o debug em produção
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        Configure o fuso horário correto
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        Use modo manutenção para atualizações
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Mensagens de feedback -->
+{% if messages %}
+    <div class="mt-4">
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-triangle{% else %}info-circle{% endif %} me-2"></i>
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+{% endblock %}

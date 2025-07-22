@@ -1,0 +1,329 @@
+{% extends 'config/base_config.html' %}
+
+{% block config_title %}Templates de Email{% endblock %}
+
+{% block config_content %}
+<!-- Header -->
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2 text-sans text-body">
+        <i class="fas fa-file-alt me-2 text-django-green"></i>Templates de Email
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <button type="button" class="btn btn-sm btn-primary">
+                <i class="fas fa-plus me-1"></i>Novo Template
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Lista de Templates -->
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-list me-2"></i>Templates Disponíveis
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered" width="100%" cellspacing="0">
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>Arquivo</th>
+                                <th>Descrição</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for template in email_templates %}
+                            <tr>
+                                <td>
+                                    <strong>{{ template.name }}</strong>
+                                </td>
+                                <td>
+                                    <code class="small">{{ template.file }}</code>
+                                </td>
+                                <td>
+                                    <span class="text-muted">{{ template.description }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge {% if template.status == 'Ativo' %}bg-success{% else %}bg-secondary{% endif %}">
+                                        {{ template.status }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <button type="button" class="btn btn-outline-primary" 
+                                                onclick="previewTemplate('{{ template.file }}')">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-outline-secondary" 
+                                                onclick="editTemplate('{{ template.file }}')">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-outline-info" 
+                                                onclick="testTemplate('{{ template.file }}')">
+                                            <i class="fas fa-paper-plane"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-4">
+                                    <i class="fas fa-inbox fa-2x mb-2"></i>
+                                    <p class="mb-0">Nenhum template de email encontrado.</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Variáveis Disponíveis -->
+<div class="row mt-4">
+    <div class="col-lg-6">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-info">
+                    <i class="fas fa-code me-2"></i>Variáveis Disponíveis
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-12">
+                        <h6 class="text-muted">Usuário:</h6>
+                        <ul class="small">
+                            <li><code>{{ "{{ user.username }}" }}</code> - Nome de usuário</li>
+                            <li><code>{{ "{{ user.email }}" }}</code> - Email do usuário</li>
+                            <li><code>{{ "{{ user.first_name }}" }}</code> - Primeiro nome</li>
+                            <li><code>{{ "{{ user.last_name }}" }}</code> - Último nome</li>
+                            <li><code>{{ "{{ user.get_full_name }}" }}</code> - Nome completo</li>
+                        </ul>
+                        
+                        <h6 class="text-muted mt-3">Sistema:</h6>
+                        <ul class="small">
+                            <li><code>{{ "{{ site_name }}" }}</code> - Nome do site</li>
+                            <li><code>{{ "{{ site_url }}" }}</code> - URL do site</li>
+                            <li><code>{{ "{{ current_year }}" }}</code> - Ano atual</li>
+                            <li><code>{{ "{{ support_email }}" }}</code> - Email de suporte</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-success">
+                    <i class="fas fa-palette me-2"></i>Guia de Estilo
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="small">
+                    <h6 class="text-muted">Cores do Sistema:</h6>
+                    <div class="mb-3">
+                        <div class="d-flex align-items-center mb-1">
+                            <div class="bg-primary" style="width: 20px; height: 20px; border-radius: 3px;"></div>
+                            <span class="ms-2">Primária: #0d6efd</span>
+                        </div>
+                        <div class="d-flex align-items-center mb-1">
+                            <div class="bg-success" style="width: 20px; height: 20px; border-radius: 3px;"></div>
+                            <span class="ms-2">Sucesso: #198754</span>
+                        </div>
+                        <div class="d-flex align-items-center mb-1">
+                            <div class="bg-warning" style="width: 20px; height: 20px; border-radius: 3px;"></div>
+                            <span class="ms-2">Aviso: #ffc107</span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <div class="bg-danger" style="width: 20px; height: 20px; border-radius: 3px;"></div>
+                            <span class="ms-2">Erro: #dc3545</span>
+                        </div>
+                    </div>
+                    
+                    <h6 class="text-muted">Fontes:</h6>
+                    <ul>
+                        <li>Títulos: Arial, sans-serif</li>
+                        <li>Texto: Georgia, serif</li>
+                        <li>Código: Courier, monospace</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Preview -->
+<div class="modal fade" id="previewModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-eye me-2"></i>Preview do Template
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="templatePreview">
+                    <div class="text-center py-4">
+                        <i class="fas fa-spinner fa-spin fa-2x"></i>
+                        <p class="mt-2">Carregando preview...</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                <button type="button" class="btn btn-primary" onclick="editCurrentTemplate()">
+                    <i class="fas fa-edit me-1"></i>Editar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Teste -->
+<div class="modal fade" id="testModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-paper-plane me-2"></i>Testar Template
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="testTemplateForm">
+                    <div class="mb-3">
+                        <label for="testEmail" class="form-label">Email de Teste</label>
+                        <input type="email" class="form-control" id="testEmail" 
+                               value="{{ user.email }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="testSubject" class="form-label">Assunto</label>
+                        <input type="text" class="form-control" id="testSubject" 
+                               value="Teste de Template - Havoc">
+                    </div>
+                    <input type="hidden" id="testTemplateFile">
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="sendTestTemplate()">
+                    <i class="fas fa-paper-plane me-1"></i>Enviar Teste
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentTemplate = '';
+
+// Preview do template
+function previewTemplate(templateFile) {
+    currentTemplate = templateFile;
+    const modal = new bootstrap.Modal(document.getElementById('previewModal'));
+    
+    // Simular carregamento do template
+    document.getElementById('templatePreview').innerHTML = `
+        <div class="border rounded p-3" style="background: #f8f9fa;">
+            <h4>Template: ${templateFile}</h4>
+            <hr>
+            <div class="email-preview" style="background: white; padding: 20px; border-radius: 5px;">
+                <h2 style="color: #0d6efd;">Havoc - Sistema de Gerenciamento</h2>
+                <p>Olá <strong>{{ user.get_full_name }}</strong>,</p>
+                <p>Este é um exemplo de como o template <code>${templateFile}</code> será renderizado.</p>
+                <div class="alert alert-info">
+                    <strong>Nota:</strong> Este é apenas um preview. O conteúdo real depende do contexto de uso.
+                </div>
+                <hr>
+                <small class="text-muted">
+                    © ${new Date().getFullYear()} Havoc - Todos os direitos reservados<br>
+                    Este email foi enviado automaticamente pelo sistema.
+                </small>
+            </div>
+        </div>
+    `;
+    
+    modal.show();
+}
+
+// Editar template
+function editTemplate(templateFile) {
+    // Implementar editor de template
+    alert('Funcionalidade de edição será implementada em breve.\nTemplate: ' + templateFile);
+}
+
+function editCurrentTemplate() {
+    if (currentTemplate) {
+        editTemplate(currentTemplate);
+    }
+}
+
+// Testar template
+function testTemplate(templateFile) {
+    document.getElementById('testTemplateFile').value = templateFile;
+    const modal = new bootstrap.Modal(document.getElementById('testModal'));
+    modal.show();
+}
+
+// Enviar teste do template
+function sendTestTemplate() {
+    const email = document.getElementById('testEmail').value;
+    const subject = document.getElementById('testSubject').value;
+    const templateFile = document.getElementById('testTemplateFile').value;
+    
+    if (!email) {
+        alert('Por favor, informe um email para teste.');
+        return;
+    }
+    
+    // Simular envio
+    const button = event.target;
+    const originalText = button.innerHTML;
+    
+    button.disabled = true;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Enviando...';
+    
+    setTimeout(() => {
+        button.disabled = false;
+        button.innerHTML = originalText;
+        
+        // Fechar modal
+        bootstrap.Modal.getInstance(document.getElementById('testModal')).hide();
+        
+        // Mostrar sucesso
+        showAlert('success', `Template ${templateFile} enviado com sucesso para ${email}!`);
+    }, 2000);
+}
+
+// Mostrar alerta
+function showAlert(type, message) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(alertDiv);
+    
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.remove();
+        }
+    }, 5000);
+}
+</script>
+{% endblock %}

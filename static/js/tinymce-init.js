@@ -1,0 +1,1 @@
+// TinyMCE custom init removido 

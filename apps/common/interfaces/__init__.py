@@ -1,0 +1,1 @@
+# Interfaces e contratos compartilhados entre apps 

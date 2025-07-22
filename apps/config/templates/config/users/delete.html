@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+
+{% block title %}Deletar Usuário - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <!-- Header da Página -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h2 mb-1 text-sans text-body text-danger">
+                        <i class="fas fa-trash me-2 text-django-green"></i>Deletar Usuário
+                    </h1>
+                    <p class="text-secondary mb-0 text-body">Confirmação de exclusão permanente</p>
+                </div>
+                <div>
+                    <a href="{% url 'config:user_list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>Voltar
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Aviso de Confirmação -->
+            <div class="card-django border-danger border-0 shadow-sm">
+                <div class="card-header bg-danger text-light">
+                    <h5 class="mb-0 text-sans text-body">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Confirmação de Exclusão
+                    </h5>
+                </div>
+                <div class="card-body profile-card-body card-django">
+                    <div class="alert alert-danger">
+                        <h5 class="alert-heading text-sans text-body">
+                            <i class="fas fa-warning me-2"></i>Atenção!
+                        </h5>
+                        <p class="mb-0 text-body">
+                            Você está prestes a <strong>deletar permanentemente</strong> o usuário abaixo.
+                            Esta ação <strong>não pode ser desfeita</strong>.
+                        </p>
+                        <hr>
+                        <p class="mb-0 text-body">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Recomendação:</strong> Considere <strong>desativar</strong> o usuário em vez de deletá-lo. 
+                            Usuários desativados não podem acessar o sistema, mas seus dados são preservados.
+                        </p>
+                    </div>
+
+                    <!-- Informações do Usuário -->
+                    <div class="card-django mb-4 border-0 shadow-sm">
+                        <div class="card-header profile-card-header">
+                            <h6 class="mb-0 text-sans text-body">Usuário a ser deletado:</h6>
+                        </div>
+                        <div class="card-body profile-card-body card-django">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold text-sans">E-mail:</label>
+                                        <p class="form-control-plaintext text-body">{{ user_detail.email }}</p>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold text-sans">Nome:</label>
+                                        <p class="form-control-plaintext text-body">{{ user_detail.get_full_name|default:"Não informado" }}</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold text-sans">Status:</label>
+                                        <div>
+                                            {% if user_detail.is_active %}
+                                                <span class="badge bg-success">
+                                                    <i class="fas fa-check me-1"></i>Ativo
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-danger">
+                                                    <i class="fas fa-times me-1"></i>Inativo
+                                                </span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold text-sans">Criado em:</label>
+                                        <p class="form-control-plaintext text-body">{{ user_detail.date_joined|date:"d/m/Y H:i" }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Formulário de Confirmação -->
+                    <form method="post" id="deleteForm">
+                        {% csrf_token %}
+                        <div class="mb-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="confirmDelete" required>
+                                <label class="form-check-label fw-bold text-danger text-sans" for="confirmDelete">
+                                    Eu entendo que esta ação é irreversível e confirmo a exclusão
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <a href="{% url 'config:user_list' %}" class="btn btn-secondary">
+                                    <i class="fas fa-times me-1"></i>Cancelar
+                                </a>
+                                {% if user_detail.is_active %}
+                                <form method="post" action="{% url 'config:user_deactivate' user_detail.slug %}" class="d-inline ms-2" onsubmit="return confirm('Tem certeza que deseja desativar este usuário?')">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-warning">
+                                        <i class="fas fa-pause me-1"></i>Desativar
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <button type="submit" class="btn btn-danger" id="deleteButton" disabled>
+                                    <i class="fas fa-trash me-1"></i>Deletar Usuário
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const confirmCheckbox = document.getElementById('confirmDelete');
+    const deleteButton = document.getElementById('deleteButton');
+    const deleteForm = document.getElementById('deleteForm');
+
+    confirmCheckbox.addEventListener('change', function() {
+        deleteButton.disabled = !this.checked;
+    });
+
+    deleteForm.addEventListener('submit', function(e) {
+        if (!confirmCheckbox.checked) {
+            e.preventDefault();
+            alert('Você deve confirmar a exclusão marcando a caixa de seleção.');
+            return;
+        }
+
+        const userEmail = '{{ user_detail.email|escapejs }}';
+        const confirmMessage = `Tem certeza absoluta que deseja deletar o usuário "${userEmail}"?\n\nEsta ação NÃO PODE ser desfeita!`;
+
+        if (!confirm(confirmMessage)) {
+            e.preventDefault();
+        }
+    });
+});
+</script>
+{% endblock %}

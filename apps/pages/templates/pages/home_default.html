@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<!-- Mensagem de configuração concluída -->
+{% if setup_completed %}
+<div class="alert alert-success alert-dismissible fade show m-3" role="alert">
+    <div class="d-flex align-items-center">
+        <i class="fas fa-check-circle fa-2x me-3 text-theme-success"></i>
+        <div>
+            <h5 class="alert-heading mb-1">🎉 Configuração Concluída!</h5>
+            <p class="mb-0">Bem-vindo ao Project Nix! O sistema foi configurado com sucesso e está pronto para uso.</p>
+        </div>
+    </div>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+{% endif %}
+
+<div class="hero-section text-theme-light py-5" style="background: linear-gradient(135deg, var(--nix-primary) 0%, var(--nix-primary-dark) 100%)">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="display-4 fw-bold text-sans text-body">Bem-vindo ao Project Nix</h1>
+                <p class="lead text-body">Sistema moderno de gerenciamento de conteúdo com arquitetura limpa e princípios SOLID.</p>
+                <div class="mt-4">
+                    <a href="{% url 'pages:about' %}" class="btn btn-light btn-lg me-3 btn-enhanced">
+                        <i class="fas fa-info-circle me-2"></i>Saiba Mais
+                    </a>
+                    <a href="{% url 'pages:contact' %}" class="btn btn-outline-light btn-lg btn-enhanced">
+                        <i class="fas fa-envelope me-2"></i>Contato
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="text-center">
+                    <i class="fas fa-lightbulb fa-10x" style="color: var(--nix-accent);"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Features Section -->
+<div class="container my-5">
+    <div class="row">
+        <div class="col-12 text-center mb-5">
+            <h2 class="text-sans text-body">Sistema em Funcionamento</h2>
+            <p class="text-theme-secondary text-body">O app Pages está funcionando corretamente!</p>
+        </div>
+    </div>
+    
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card-django h-100 border-0 shadow-sm">
+                <div class="card-body card-django-body-spacious text-center card-django">
+                    <div class="feature-icon mb-3">
+                        <i class="fas fa-check-circle fa-3x text-theme-success"></i>
+                    </div>
+                    <h5 class="card-title text-sans text-body">App Pages</h5>
+                    <p class="card-django-text text-body">Sistema de páginas implementado com arquitetura limpa e princípios SOLID.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card-django h-100 border-0 shadow-sm">
+                <div class="card-body card-django-body-spacious text-center card-django">
+                    <div class="feature-icon mb-3">
+                        <i class="fas fa-users fa-3x text-django-green"></i>
+                    </div>
+                    <h5 class="card-title text-sans text-body">App Accounts</h5>
+                    <p class="card-django-text text-body">Sistema completo de autenticação e gerenciamento de usuários.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card-django h-100 border-0 shadow-sm">
+                <div class="card-body card-django-body-spacious text-center card-django">
+                    <div class="feature-icon mb-3">
+                        <i class="fas fa-cog fa-3x text-theme-warning"></i>
+                    </div>
+                    <h5 class="card-title text-sans text-body">App Config</h5>
+                    <p class="card-django-text text-body">Painel administrativo para configuração e gerenciamento do sistema.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="bg-theme-secondary py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-12 text-center mb-4">
+                <h3 class="text-sans text-body">Ações Rápidas</h3>
+            </div>
+        </div>
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="d-flex flex-wrap justify-content-center gap-3">
+                    {% if user.is_authenticated %}
+                        {% if user.is_staff %}
+                            <a href="{% url 'config:dashboard' %}" class="btn btn-primary btn-enhanced">
+                                <i class="fas fa-tachometer-alt me-2"></i>Dashboard Admin
+                            </a>
+                            <a href="/admin/" class="btn btn-secondary btn-enhanced">
+                                <i class="fas fa-cog me-2"></i>Django Admin
+                            </a>
+                        {% endif %}
+                        <a href="{% url 'accounts:logout' %}" class="btn btn-outline-danger btn-enhanced">
+                            <i class="fas fa-sign-out-alt me-2"></i>Sair
+                        </a>
+                    {% else %}
+                        <a href="{% url 'accounts:login' %}" class="btn btn-primary btn-enhanced">
+                            <i class="fas fa-sign-in-alt me-2"></i>Fazer Login
+                        </a>
+                        <a href="{% url 'accounts:register' %}" class="btn btn-outline-primary btn-enhanced">
+                            <i class="fas fa-user-plus me-2"></i>Registrar-se
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

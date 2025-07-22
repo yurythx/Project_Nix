@@ -1,0 +1,92 @@
+{% extends 'config/base_config.html' %}
+
+{% block config_title %}Logs de Atividade do Sistema{% endblock %}
+
+{% block config_content %}
+<div class="container my-4">
+    <h1 class="h3 mb-4 text-sans text-body">
+        <i class="fas fa-clipboard-list me-2 text-django-green"></i>Logs de Atividade do Sistema
+    </h1>
+    <form method="get" class="row g-2 align-items-end mb-4" role="search" aria-label="Filtro de logs">
+        <div class="col-md-4">
+            <label for="filter_user" class="form-label">Usuário</label>
+            <input type="text" name="user" id="filter_user" class="form-control" value="{{ filter_user }}" list="user-list" placeholder="E-mail do usuário">
+            <datalist id="user-list">
+                {% for email in users %}
+                    <option value="{{ email }}">{{ email }}</option>
+                {% endfor %}
+            </datalist>
+        </div>
+        <div class="col-md-3">
+            <label for="filter_action" class="form-label">Ação</label>
+            <select name="action" id="filter_action" class="form-select">
+                <option value="">Todas</option>
+                {% for code, label in actions %}
+                    <option value="{{ code }}" {% if filter_action == code %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label for="filter_date" class="form-label">Data</label>
+            <input type="date" name="date" id="filter_date" class="form-control" value="{{ filter_date }}">
+        </div>
+        <div class="col-md-2 d-grid">
+            <button type="submit" class="btn btn-primary mt-2">
+                <i class="fas fa-filter me-1"></i>Filtrar
+            </button>
+        </div>
+        <div class="col-md-2 d-grid">
+            <a href="?{% if filter_user %}user={{ filter_user|urlencode }}&{% endif %}{% if filter_action %}action={{ filter_action|urlencode }}&{% endif %}{% if filter_date %}date={{ filter_date|urlencode }}&{% endif %}export=csv" class="btn btn-outline-secondary mt-2" role="button">
+                <i class="fas fa-file-csv me-1"></i>Exportar CSV
+            </a>
+        </div>
+    </form>
+    <div class="card-django border-0 shadow-sm">
+        <div class="card-body p-0">
+            {% with headers=[
+                {'label': 'Data/Hora'},
+                {'label': 'Usuário'},
+                {'label': 'Ação'},
+                {'label': 'Alvo'},
+                {'label': 'Descrição'},
+                {'label': 'IP'}
+            ] %}
+            {% with rows=logs|map:'log_row' %}
+                {% include 'config/includes/_table.html' with headers=headers rows=rows caption='Tabela de logs de atividade' %}
+            {% endwith %}
+            {% endwith %}
+        </div>
+    </div>
+    {% if page_obj.has_other_pages %}
+    <nav aria-label="Paginação de logs">
+        <ul class="pagination justify-content-center mt-4">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1">Primeira</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Anterior</a>
+            </li>
+            {% endif %}
+            <li class="page-item active">
+                <span class="page-link">
+                    Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+                </span>
+            </li>
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}">Próxima</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Última</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% comment %}
+Helper filter log_row precisa ser implementado para transformar cada log em uma lista de células HTML seguras.
+{% endcomment %} 

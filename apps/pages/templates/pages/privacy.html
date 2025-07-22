@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Política de Privacidade - Project Nix{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h2 mb-1 text-sans text-body">
+                        <i class="fas fa-shield-alt me-2" style="color: var(--nix-accent);"></i>Política de Privacidade
+                    </h1>
+                    <p class="text-theme-secondary mb-0 text-body">Como protegemos suas informações</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body profile-card-body">
+                    <h2 class="text-sans text-body">Política de Privacidade do Project Nix</h2>
+                    <p class="text-muted">Última atualização: {{ "now"|date:"d/m/Y" }}</p>
+                    
+                    <h3 class="text-sans text-body">1. Informações que Coletamos</h3>
+                    <p class="text-body">Coletamos informações que você nos fornece diretamente, como quando você:</p>
+                    <ul class="text-body">
+                        <li>Cria uma conta</li>
+                        <li>Faz login em nossa plataforma</li>
+                        <li>Envia mensagens através do formulário de contato</li>
+                        <li>Interage com nosso conteúdo</li>
+                    </ul>
+
+                    <h3 class="text-sans text-body">2. Como Usamos Suas Informações</h3>
+                    <p class="text-body">Utilizamos suas informações para:</p>
+                    <ul class="text-body">
+                        <li>Fornecer e manter nossos serviços</li>
+                        <li>Processar transações</li>
+                        <li>Enviar comunicações importantes</li>
+                        <li>Melhorar nossos serviços</li>
+                        <li>Cumprir obrigações legais</li>
+                    </ul>
+
+                    <h3 class="text-sans text-body">3. Compartilhamento de Informações</h3>
+                    <p class="text-body">Não vendemos, alugamos ou compartilhamos suas informações pessoais com terceiros, exceto:</p>
+                    <ul class="text-body">
+                        <li>Com seu consentimento explícito</li>
+                        <li>Para cumprir obrigações legais</li>
+                        <li>Para proteger nossos direitos e segurança</li>
+                        <li>Com prestadores de serviços confiáveis (sempre com proteções adequadas)</li>
+                    </ul>
+
+                    <h3 class="text-sans text-body">4. Segurança dos Dados</h3>
+                    <p class="text-body">Implementamos medidas de segurança técnicas e organizacionais para proteger suas informações pessoais contra:</p>
+                    <ul class="text-body">
+                        <li>Acesso não autorizado</li>
+                        <li>Alteração, divulgação ou destruição não autorizada</li>
+                        <li>Perda acidental</li>
+                    </ul>
+
+                    <h3 class="text-sans text-body">5. Seus Direitos</h3>
+                    <p class="text-body">Você tem o direito de:</p>
+                    <ul class="text-body">
+                        <li>Acessar suas informações pessoais</li>
+                        <li>Corrigir informações imprecisas</li>
+                        <li>Solicitar a exclusão de seus dados</li>
+                        <li>Retirar seu consentimento a qualquer momento</li>
+                        <li>Portabilidade dos dados</li>
+                    </ul>
+
+                    <h3 class="text-sans text-body">6. Cookies e Tecnologias Similares</h3>
+                    <p class="text-body">Utilizamos cookies e tecnologias similares para:</p>
+                    <ul class="text-body">
+                        <li>Melhorar a experiência do usuário</li>
+                        <li>Analisar o uso do site</li>
+                        <li>Personalizar conteúdo e anúncios</li>
+                        <li>Fornecer funcionalidades de mídia social</li>
+                    </ul>
+
+                    <h3 class="text-sans text-body">7. Retenção de Dados</h3>
+                    <p class="text-body">Mantemos suas informações pessoais apenas pelo tempo necessário para:</p>
+                    <ul class="text-body">
+                        <li>Fornecer nossos serviços</li>
+                        <li>Cumprir obrigações legais</li>
+                        <li>Resolver disputas</li>
+                        <li>Fazer cumprir nossos acordos</li>
+                    </ul>
+
+                    <h3 class="text-sans text-body">8. Transferências Internacionais</h3>
+                    <p class="text-body">Suas informações podem ser transferidas e processadas em países diferentes do seu país de residência. Sempre garantimos proteções adequadas para essas transferências.</p>
+
+                    <h3 class="text-sans text-body">9. Menores de Idade</h3>
+                    <p class="text-body">Nossos serviços não são destinados a menores de 13 anos. Não coletamos intencionalmente informações pessoais de menores de 13 anos.</p>
+
+                    <h3 class="text-sans text-body">10. Alterações nesta Política</h3>
+                    <p class="text-body">Podemos atualizar esta política periodicamente. Notificaremos você sobre mudanças significativas através de:</p>
+                    <ul class="text-body">
+                        <li>Email</li>
+                        <li>Aviso em nosso site</li>
+                        <li>Outros meios apropriados</li>
+                    </ul>
+
+                    <h3 class="text-sans text-body">11. Contato</h3>
+                    <p class="text-body">Se você tiver dúvidas sobre esta política de privacidade, entre em contato conosco:</p>
+                    
+                    <div class="bg-surface p-3 rounded">
+                        <p class="mb-2 text-body"><strong>Email:</strong> privacidade@projectnix.com</p>
+                        <p class="mb-2 text-body"><strong>Telefone:</strong> (11) 99999-9999</p>
+                        <div class="info-value"><strong>Endereço:</strong> São Paulo, SP - Brasil</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body profile-card-body">
+                    <h4 class="text-sans text-body mb-3">
+                        <i class="fas fa-question-circle me-2" style="color: var(--nix-accent);"></i>Dúvidas Frequentes
+                    </h4>
+                    
+                    <div class="accordion" id="privacyFAQ">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                                    Como posso solicitar meus dados?
+                                </button>
+                            </h2>
+                            <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#privacyFAQ">
+                                <div class="accordion-body">
+                                    Entre em contato conosco através do email privacidade@projectnix.com
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                                    Posso deletar minha conta?
+                                </button>
+                            </h2>
+                            <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#privacyFAQ">
+                                <div class="accordion-body">
+                                    Sim, você pode solicitar a exclusão de sua conta através das configurações do perfil.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card border-0 shadow-sm">
+                <div class="card-body profile-card-body">
+                    <h4 class="text-sans text-body mb-3">
+                        <i class="fas fa-file-alt me-2" style="color: var(--nix-accent);"></i>Documentos Relacionados
+                    </h4>
+                    
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <a href="{% url 'pages:terms' %}" class="text-decoration-none" style="color: var(--nix-accent);">
+                                <i class="fas fa-file-contract me-2"></i>Termos de Uso
+                            </a>
+                        </li>
+                        <li class="mb-2">
+                            <a href="{% url 'pages:about' %}" class="text-decoration-none" style="color: var(--nix-accent);">
+                                <i class="fas fa-info-circle me-2"></i>Sobre Nós
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

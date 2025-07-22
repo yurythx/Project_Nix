@@ -1,0 +1,264 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ title }} - Artigos{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0" style="min-height: 100vh;">
+    <div class="row g-0">
+        <div class="col-12">
+            <div class="d-flex flex-column justify-content-center align-items-center w-100" style="min-height: 100vh;">
+                <div class="w-100 px-2 px-md-4" style="max-width: 1200px; margin-top: 48px;">
+                    <h1 class="mb-4 text-center">{% if form.instance.pk %}Editar Artigo{% else %}Novo Artigo{% endif %}</h1>
+                    {% if form.instance.pk and form.instance.featured_image %}
+                        <div class="mb-3 text-center">
+                            <label class="form-label fw-bold">Imagem Destacada Atual:</label><br>
+                            <img src="{{ form.instance.featured_image.url }}" alt="Imagem Destacada" class="img-fluid rounded shadow" style="max-width: 320px;">
+                        </div>
+                    {% endif %}
+                    <form method="post" enctype="multipart/form-data" class="bg-surface p-3 p-md-4 rounded shadow-sm w-100">
+                        {% csrf_token %}
+                        {{ form|crispy }}
+                        <style>
+                            /* Aumenta a altura do TinyMCE e melhora responsividade */
+                            .tox-tinymce, .mce-tinymce {
+                                min-height: 400px !important;
+                                height: 60vh !important;
+                                max-height: 700px !important;
+                            }
+                            textarea#id_content {
+                                min-height: 400px !important;
+                                height: 60vh !important;
+                                max-height: 700px !important;
+                            }
+                            @media (max-width: 767px) {
+                                .tox-tinymce, .mce-tinymce, textarea#id_content {
+                                    min-height: 250px !important;
+                                    height: 35vh !important;
+                                    max-height: 350px !important;
+                                }
+                            }
+                        </style>
+                        <button type="submit" class="btn btn-primary btn-lg mt-3 w-100 w-md-auto">Salvar</button>
+                    </form>
+                    <a href="{% url 'articles:article_list' %}" class="btn btn-link mt-3">Voltar</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Estilos específicos para o formulário de artigos */
+.tinymce-container {
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    overflow: hidden;
+}
+
+.tinymce-container .tox-tinymce {
+    border: none;
+}
+
+/* Modo escuro para TinyMCE */
+[data-theme="dark"] .tox-tinymce {
+    background-color: #2d3748 !important;
+    border-color: #4a5568 !important;
+}
+
+[data-theme="dark"] .tox .tox-toolbar,
+[data-theme="dark"] .tox .tox-toolbar__group,
+[data-theme="dark"] .tox .tox-toolbar__primary {
+    background-color: #1a202c !important;
+    border-color: #4a5568 !important;
+}
+
+[data-theme="dark"] .tox .tox-tbtn {
+    background-color: #2d3748 !important;
+    border-color: #4a5568 !important;
+    color: #e2e8f0 !important;
+}
+
+[data-theme="dark"] .tox .tox-tbtn:hover {
+    background-color: #4a5568 !important;
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] .tox .tox-tbtn--enabled {
+    background-color: #3182ce !important;
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] .tox .tox-menu {
+    background-color: #2d3748 !important;
+    border-color: #4a5568 !important;
+}
+
+[data-theme="dark"] .tox .tox-collection__item {
+    color: #e2e8f0 !important;
+}
+
+[data-theme="dark"] .tox .tox-collection__item:hover {
+    background-color: #4a5568 !important;
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] .tox .tox-edit-area {
+    background-color: #1a202c !important;
+}
+
+[data-theme="dark"] .tox .tox-edit-area__iframe {
+    background-color: #1a202c !important;
+}
+
+[data-theme="dark"] .tinymce-container {
+    border-color: #4a5568 !important;
+}
+
+.form-label.fw-bold {
+    color: #495057;
+    margin-bottom: 0.5rem;
+}
+
+.card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.character-counter {
+    font-size: 0.875rem;
+    color: #6c757d;
+}
+
+.character-counter.text-danger {
+    color: #dc3545 !important;
+}
+
+/* CSS customizado removido - deixando TinyMCE gerenciar fullscreen nativamente */
+</style>
+{% endblock %}
+
+{% block extra_js %}
+{{ form.media }}
+<!-- TinyMCE Unified Config já carregado no base.html -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Character counter for meta fields
+    const metaTitle = document.querySelector('#id_meta_title');
+    const metaDescription = document.querySelector('#id_meta_description');
+
+    if (metaTitle) {
+        addCharacterCounter(metaTitle, 60);
+    }
+
+    if (metaDescription) {
+        addCharacterCounter(metaDescription, 160);
+    }
+
+    function addCharacterCounter(element, maxLength) {
+        const counter = document.createElement('div');
+        counter.className = 'form-text text-end character-counter';
+        element.parentNode.appendChild(counter);
+
+        function updateCounter() {
+            const length = element.value.length;
+            counter.textContent = `${length}/${maxLength}`;
+            counter.className = length > maxLength ?
+                'form-text text-end character-counter text-danger' :
+                'form-text text-end character-counter text-muted';
+        }
+
+        updateCounter();
+        element.addEventListener('input', updateCounter);
+    }
+
+    // Preview da imagem destacada
+    const featuredImageInput = document.getElementById('id_featured_image');
+    const featuredImagePreview = document.getElementById('featured-image-preview');
+    const featuredImagePreviewImg = document.getElementById('featured-image-preview-img');
+    const currentFeaturedImage = document.getElementById('current-featured-image');
+    const removeCurrentImageBtn = document.getElementById('remove-current-image');
+
+    if (featuredImageInput) {
+        featuredImageInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+
+            if (file) {
+                // Verificar se é uma imagem
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+
+                    reader.onload = function(e) {
+                        featuredImagePreviewImg.src = e.target.result;
+                        featuredImagePreview.style.display = 'block';
+
+                        // Ocultar imagem atual se existir
+                        if (currentFeaturedImage) {
+                            currentFeaturedImage.style.display = 'none';
+                        }
+                    };
+
+                    reader.readAsDataURL(file);
+                } else {
+                    alert('Por favor, selecione apenas arquivos de imagem.');
+                    featuredImageInput.value = '';
+                }
+            } else {
+                // Se nenhum arquivo foi selecionado, ocultar preview
+                featuredImagePreview.style.display = 'none';
+
+                // Mostrar imagem atual novamente se existir
+                if (currentFeaturedImage) {
+                    currentFeaturedImage.style.display = 'block';
+                }
+            }
+        });
+    }
+
+    // Botão para remover imagem atual
+    if (removeCurrentImageBtn) {
+        removeCurrentImageBtn.addEventListener('click', function() {
+            if (confirm('Tem certeza que deseja remover a imagem destacada atual?')) {
+                // Limpar input de arquivo
+                featuredImageInput.value = '';
+
+                // Ocultar imagem atual
+                currentFeaturedImage.style.display = 'none';
+
+                // Adicionar campo hidden para indicar remoção
+                let removeInput = document.getElementById('remove_featured_image');
+                if (!removeInput) {
+                    removeInput = document.createElement('input');
+                    removeInput.type = 'hidden';
+                    removeInput.name = 'remove_featured_image';
+                    removeInput.id = 'remove_featured_image';
+                    removeInput.value = 'true';
+                    featuredImageInput.parentNode.appendChild(removeInput);
+                }
+            }
+        });
+    }
+
+    // Inicialização simplificada do TinyMCE
+    setTimeout(() => {
+        if (window.tinyMCEManager) {
+            window.tinyMCEManager.autoSaveEnabled = true;
+            console.log('Template: Auto-save enabled');
+        }
+    }, 2000);
+
+    // Limpar auto-save ao enviar formulário
+    const form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function() {
+            if (window.tinyMCEManager) {
+                window.tinyMCEManager.clearAutoSave('id_content');
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

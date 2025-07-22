@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ book.title }} - Livros - Project Nix{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="row g-0">
+                    {% if book.cover_image %}
+                    <div class="col-md-4">
+                        <img src="{{ book.cover_image.url }}" class="img-fluid rounded-start w-100 h-100 object-fit-cover" alt="{{ book.title }}">
+                    </div>
+                    {% endif %}
+                    <div class="col-md-8">
+                        <div class="card-body">
+                            <h1 class="card-title h3 mb-2">{{ book.title }}</h1>
+                            {% if book.author %}
+                            <p class="mb-2"><i class="fas fa-user me-1"></i> {{ book.author }}</p>
+                            {% endif %}
+                            {% if book.published_date %}
+                            <p class="mb-2"><i class="fas fa-calendar me-1"></i> {{ book.published_date|date:'d M, Y' }}</p>
+                            {% endif %}
+                            <p class="card-text">{{ book.description }}</p>
+                            <div class="mt-4 d-flex gap-2 align-items-center">
+                                <a href="{% url 'books:book_edit' book.slug %}" class="btn btn-outline-secondary btn-sm">
+                                    <i class="fas fa-edit"></i> Editar
+                                </a>
+                                <a href="{% url 'books:book_delete' book.slug %}" class="btn btn-outline-danger btn-sm">
+                                    <i class="fas fa-trash"></i> Deletar
+                                </a>
+                                <a href="{% url 'books:book_list' %}" class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-arrow-left"></i> Voltar
+                                </a>
+                                {% if user.is_authenticated %}
+                                <button id="favorite-btn" class="btn btn-outline-warning btn-sm" type="button">
+                                    <i id="favorite-icon" class="far fa-star"></i> <span id="favorite-label">Favoritar</span>
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% if book.file %}
+                <div class="mb-4">
+                    {% if book.file.name|lower|endswith:'.epub' %}
+                        <div id="epub-reader" style="min-height: 600px; border: 1px solid #eee;"></div>
+                        <script src="https://cdn.jsdelivr.net/npm/epubjs/dist/epub.min.js"></script>
+                        <script src="{% static 'js/epub-viewer.js' %}"></script>
+                        <script>
+                            document.addEventListener('DOMContentLoaded', function() {
+                                window.initEpubViewer && window.initEpubViewer(
+                                    "{{ book.file.url }}",
+                                    "{{ book.slug }}",
+                                    {{ user.is_authenticated|yesno:'true,false' }}
+                                );
+                            });
+                        </script>
+                    {% elif book.file.name|lower|endswith:'.pdf' %}
+                        <embed src="{{ book.file.url }}" type="application/pdf" width="100%" height="600px" style="border:1px solid #eee;">
+                    {% else %}
+                        <div class="alert alert-warning">Formato de arquivo não suportado para visualização online.</div>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% if user.is_authenticated %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const btn = document.getElementById('favorite-btn');
+    const icon = document.getElementById('favorite-icon');
+    const label = document.getElementById('favorite-label');
+    const slug = "{{ book.slug }}";
+    function updateFavoriteUI(isFav) {
+        if (isFav) {
+            icon.classList.remove('far');
+            icon.classList.add('fas');
+            label.textContent = 'Favorito';
+            btn.classList.add('active');
+        } else {
+            icon.classList.remove('fas');
+            icon.classList.add('far');
+            label.textContent = 'Favoritar';
+            btn.classList.remove('active');
+        }
+    }
+    fetch(`/livros/${slug}/favorite/status/`, { credentials: 'same-origin' })
+        .then(r => r.json())
+        .then(data => updateFavoriteUI(data.favorite));
+    btn.addEventListener('click', function() {
+        const isActive = btn.classList.contains('active');
+        fetch(`/livros/${slug}/${isActive ? 'unfavorite' : 'favorite'}/`, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'X-CSRFToken': (document.cookie.match(/csrftoken=([^;]+)/)||[])[1] }
+        })
+        .then(r => r.json())
+        .then(data => updateFavoriteUI(!isActive));
+    });
+});
+</script>
+{% endif %}
+{% endblock %} 

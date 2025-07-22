@@ -1,0 +1,57 @@
+{% extends "admin/base.html" %}
+{% load static %}
+
+{% block title %}{{ title }} | Project Nix Admin{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link href="{% static 'css/main.css' %}" rel="stylesheet">
+<style>
+    #header {
+        background: var(--primary-color);
+        color: #fff;
+    }
+    #branding h1 {
+        color: #fff;
+    }
+    .module h2, .module caption, .inline-group h2 {
+        background: var(--primary-color);
+    }
+    div.breadcrumbs {
+        background: var(--primary-light);
+    }
+    div.breadcrumbs a {
+        color: #fff;
+    }
+    div.breadcrumbs a:hover {
+        color: #e0e0e0;
+    }
+    .button, input[type=submit], input[type=button], .submit-row input, a.button {
+        background: var(--primary-color);
+    }
+    .button:hover, input[type=submit]:hover, input[type=button]:hover {
+        background: var(--primary-light);
+    }
+    .button.default, input[type=submit].default, .submit-row input.default {
+        background: var(--primary-color);
+    }
+    .button.default:hover, input[type=submit].default:hover {
+        background: var(--primary-light);
+    }
+    a:link, a:visited {
+        color: var(--primary-color);
+    }
+    a:hover {
+        color: var(--primary-light);
+    }
+</style>
+{% endblock %}
+
+{% block branding %}
+<h1 id="site-name">
+    <img src="/static/favicon-32x32.png" alt="Project Nix Logo" width="24" height="24" style="margin-right: 8px; vertical-align: middle;">
+    Project Nix Administration
+</h1>
+{% endblock %}
+
+{% block nav-global %}{% endblock %} 

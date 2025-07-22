@@ -1,0 +1,73 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br" class="h-100">
+<head>
+    {# Include global head (meta, favicon, etc) #}
+    {% include 'includes/_head.html' %}
+    {# Bloco para CSS extra de páginas/apps #}
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="d-flex flex-column h-100">
+    {# Skip to main content for accessibility #}
+    <a class="visually-hidden-focusable" href="#main-content">Pular para o conteúdo principal</a>
+
+    {# Header/Navegação global #}
+    <header>
+        {% include 'includes/_nav.html' %}
+    </header>
+
+    {# Toasts globais #}
+    {% include 'includes/_toasts.html' %}
+
+    {# Conteúdo principal #}
+    <main id="main-content" class="flex-shrink-0">
+        {% block content %}
+        <!-- Conteúdo padrão se nenhum bloco for sobrescrito -->
+        <div class="container my-5">
+            <div class="row">
+                <div class="col-12 text-center">
+                    <h1>Bem-vindo ao Project Nix</h1>
+                    <p class="lead">Leitura de artigos, livros, mangás e audiolivros</p>
+                </div>
+            </div>
+        </div>
+        {% endblock %}
+    </main>
+
+    {# Rodapé global #}
+    {% include 'includes/_footer.html' %}
+
+    {# JS global #}
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+    <script src="{% static 'js/theme-toggle.js' %}"></script>
+    <script src="{% static 'js/image-optimizer.js' %}"></script>
+    <script src="{% static 'js/animations.js' %}"></script>
+    <script src="{% static 'js/performance.js' %}"></script>
+    <script src="{% static 'js/main.js' %}"></script>
+    {# Bloco para JS extra de páginas/apps #}
+    {% block extra_js %}{% endblock %}
+
+    {# Structured Data para SEO #}
+    {% block structured_data %}
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "Project Nix",
+        "description": "Sistema de gerenciamento de conteúdo moderno",
+        "url": "{{ request.build_absolute_uri }}",
+        "potentialAction": {
+            "@type": "SearchAction",
+            "target": "{{ request.build_absolute_uri }}{% url 'articles:search' %}?q={search_term_string}",
+            "query-input": "required name=search_term_string"
+        }
+    }
+    </script>
+    {% endblock %}
+
+    {# Breadcrumbs globais #}
+    {% block breadcrumbs %}
+        {% include 'includes/_breadcrumbs.html' with breadcrumbs=breadcrumbs %}
+    {% endblock %}
+</body>
+</html>

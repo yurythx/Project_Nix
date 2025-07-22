@@ -1,0 +1,271 @@
+{% extends 'config/base_config.html' %}
+
+{% block config_title %}Estatísticas de Email{% endblock %}
+
+{% block config_content %}
+<div class="config-content">
+    <!-- Header -->
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2 text-sans text-body">
+            <i class="fas fa-chart-bar me-2 text-django-green"></i>Estatísticas de Email
+        </h1>
+        <div class="btn-toolbar mb-2 mb-md-0">
+            <div class="btn-group me-2">
+                <a href="{% url 'config:email_config' %}" class="btn btn-sm btn-outline-primary config-btn">
+                    <i class="fas fa-cog me-1"></i>Configurações
+                </a>
+                <a href="{% url 'config:email_test' %}" class="btn btn-sm btn-outline-success config-btn">
+                    <i class="fas fa-paper-plane me-1"></i>Testar Email
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estatísticas Principais -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2 config-card">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Emails Enviados Hoje
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ emails_sent_today|default:0 }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-paper-plane fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2 config-card">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Esta Semana
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ emails_sent_week|default:0 }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-calendar-week fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2 config-card">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Este Mês
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ emails_sent_month|default:0 }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-calendar-alt fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2 config-card">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Falhas
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ emails_failed|default:0 }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Informações Detalhadas -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow config-card">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="fas fa-chart-line me-2"></i>Estatísticas Detalhadas
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Período</th>
+                                    <th>Enviados</th>
+                                    <th>Falhas</th>
+                                    <th>Taxa de Sucesso</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Hoje</td>
+                                    <td>{{ emails_sent_today|default:0 }}</td>
+                                    <td>{{ emails_failed_today|default:0 }}</td>
+                                    <td>
+                                        {% if emails_sent_today %}
+                                            {% widthratio emails_sent_today emails_sent_today 100 %}%
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Esta Semana</td>
+                                    <td>{{ emails_sent_week|default:0 }}</td>
+                                    <td>{{ emails_failed_week|default:0 }}</td>
+                                    <td>
+                                        {% if emails_sent_week %}
+                                            {% widthratio emails_sent_week emails_sent_week 100 %}%
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Este Mês</td>
+                                    <td>{{ emails_sent_month|default:0 }}</td>
+                                    <td>{{ emails_failed_month|default:0 }}</td>
+                                    <td>
+                                        {% if emails_sent_month %}
+                                            {% widthratio emails_sent_month emails_sent_month 100 %}%
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow config-card">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-success">
+                        <i class="fas fa-cog me-2"></i>Status do Sistema
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="small text-muted">Fila de Email</div>
+                        <div class="h6">{{ email_queue_size|default:0 }} emails pendentes</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="small text-muted">Último Envio</div>
+                        <div class="h6">
+                            {% if last_email_sent %}
+                                {{ last_email_sent|timesince }} atrás
+                            {% else %}
+                                Nenhum email enviado
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="small text-muted">Status do Servidor</div>
+                        <div class="h6">
+                            <span class="badge bg-success">
+                                <i class="fas fa-check me-1"></i>Online
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="text-center">
+                        <a href="{% url 'config:email_test' %}" class="btn btn-primary btn-sm config-btn">
+                            <i class="fas fa-paper-plane me-1"></i>Enviar Teste
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Informações sobre Implementação -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="alert alert-info border-0 config-card">
+                <div class="d-flex align-items-start">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-info-circle fa-2x text-info"></i>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="alert-heading mb-2">📊 Sobre as Estatísticas</h6>
+                        <p class="mb-2">
+                            As estatísticas de email mostram dados simulados para demonstração. 
+                            Em um ambiente de produção, estes dados seriam coletados de:
+                        </p>
+                        <ul class="mb-0">
+                            <li><strong>Logs de Email:</strong> Registros de envios bem-sucedidos e falhas</li>
+                            <li><strong>Fila de Email:</strong> Emails aguardando processamento</li>
+                            <li><strong>Métricas do Servidor:</strong> Status e performance do servidor SMTP</li>
+                            <li><strong>Histórico:</strong> Dados históricos para análise de tendências</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Cores específicas para os cards de estatísticas */
+.border-left-primary {
+    border-left: 0.25rem solid #4e73df !important;
+}
+
+.border-left-success {
+    border-left: 0.25rem solid #1cc88a !important;
+}
+
+.border-left-info {
+    border-left: 0.25rem solid #36b9cc !important;
+}
+
+.border-left-warning {
+    border-left: 0.25rem solid #f6c23e !important;
+}
+
+.text-gray-800 {
+    color: #5a5c69 !important;
+}
+
+.text-gray-300 {
+    color: #dddfeb !important;
+}
+
+/* Dark mode support */
+[data-theme="dark"] .text-gray-800 {
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] .text-gray-300 {
+    color: #858796 !important;
+}
+</style>
+</div>
+{% endblock %}

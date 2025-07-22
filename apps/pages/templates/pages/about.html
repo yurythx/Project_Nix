@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+
+{% block title %}Sobre o Project Nix - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h2 mb-1 text-sans text-body">
+                        <i class="fas fa-info-circle me-2" style="color: var(--nix-accent);"></i>Sobre o Project Nix
+                    </h1>
+                    <p class="text-theme-secondary mb-0 text-body">Conheça mais sobre nossa plataforma</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body profile-card-body">
+                    <h2 class="text-sans text-body mb-4">Nossa Missão</h2>
+                    
+                    <p class="text-body mb-4">
+                        O Project Nix é um sistema de gerenciamento de conteúdo desenvolvido com as melhores práticas
+                        de desenvolvimento moderno. Nossa missão é fornecer uma plataforma robusta, segura e
+                        fácil de usar para gerenciar conteúdo digital de forma eficiente.
+                    </p>
+
+                    <h3 class="text-sans text-body mb-3">Características Principais</h3>
+                    
+                    <div class="row g-4 mb-4">
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-start">
+                                <img src="/static/favicon-32x32.png" alt="Project Nix Logo" width="24" height="24" class="me-3 mt-1">
+                                <div>
+                                    <h5 class="text-sans text-body">Arquitetura Limpa</h5>
+                                    <p class="text-muted small">Desenvolvido seguindo os princípios SOLID e Clean Architecture</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-start">
+                                <i class="fas fa-shield-alt me-3 mt-1" style="color: var(--nix-accent);"></i>
+                                <div>
+                                    <h5 class="text-sans text-body">Segurança</h5>
+                                    <p class="text-muted small">Múltiplas camadas de proteção e autenticação robusta</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-start">
+                                <i class="fas fa-rocket me-3 mt-1" style="color: var(--nix-accent);"></i>
+                                <div>
+                                    <h5 class="text-sans text-body">Performance</h5>
+                                    <p class="text-muted small">Otimizado para velocidade e eficiência</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-start">
+                                <i class="fas fa-mobile-alt me-3 mt-1" style="color: var(--nix-accent);"></i>
+                                <div>
+                                    <h5 class="text-sans text-body">Responsivo</h5>
+                                    <p class="text-muted small">Interface adaptável para todos os dispositivos</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h3 class="text-sans text-body mb-3">Tecnologias Utilizadas</h3>
+                    
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <div class="badge bg-theme-primary me-2 mb-2">Django</div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="badge bg-theme-success me-2 mb-2">Python</div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="badge bg-theme-info me-2 mb-2">Bootstrap</div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="badge bg-theme-warning me-2 mb-2">PostgreSQL</div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="badge bg-theme-danger me-2 mb-2">Redis</div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="badge bg-theme-secondary me-2 mb-2">Docker</div>
+                        </div>
+                    </div>
+
+                    <h3 class="text-sans text-body mb-3">Nossa História</h3>
+                    
+                    <p class="text-body">
+                        O Project Nix nasceu da necessidade de criar uma plataforma de gerenciamento de conteúdo
+                        que fosse não apenas funcional, mas também educacional. Inspirado na filosofia de
+                        desenvolvimento limpo e na busca pela excelência técnica, nosso sistema demonstra
+                        como aplicar os melhores padrões de arquitetura de software em um projeto real.
+                    </p>
+
+                    <p class="text-body">
+                        O nome "Project Nix" foi escolhido para representar elegância e modernidade no
+                        desenvolvimento de software, com um design sofisticado em paleta roxa que transmite
+                        profissionalismo e inovação.
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <!-- Sidebar -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body profile-card-body">
+                    <h4 class="text-sans text-body mb-3">
+                        <i class="fas fa-chart-line me-2" style="color: var(--nix-accent);"></i>Estatísticas
+                    </h4>
+                    
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="mb-3">
+                                <h3 class="mb-1" style="color: var(--nix-accent);">99.9%</h3>
+                                <small class="text-muted">Uptime</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="mb-3">
+                                <h3 class="mb-1" style="color: var(--nix-accent);">&lt;100ms</h3>
+                                <small class="text-muted">Tempo de Resposta</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card border-0 shadow-sm">
+                <div class="card-body profile-card-body">
+                    <h4 class="text-sans text-body mb-3">
+                        <i class="fas fa-users me-2" style="color: var(--nix-accent);"></i>Equipe
+                    </h4>
+                    
+                    <p class="text-muted small mb-3">
+                        Desenvolvido por uma equipe apaixonada por tecnologia e boas práticas de desenvolvimento.
+                    </p>
+                    
+                    <a href="{% url 'articles:article_list' %}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-newspaper me-2"></i>Ver Artigos
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

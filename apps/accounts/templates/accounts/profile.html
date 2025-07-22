@@ -1,0 +1,296 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Meu Perfil - {{ block.super }}{% endblock %}
+
+{% block breadcrumbs %}
+    {{ block.super }}
+{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <!-- Header do Perfil -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h2 mb-1 text-sans text-body">
+                        <i class="fas fa-user me-2 text-django-green"></i>Meu Perfil
+                    </h1>
+                    <p class="text-secondary mb-0 text-body">Visualize e gerencie suas informações pessoais</p>
+                </div>
+                <div>
+                    <a href="{% url 'accounts:settings' %}" class="btn btn-primary">
+                        <i class="fas fa-cog me-1"></i>Configurações
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Card Principal do Perfil -->
+        <div class="col-lg-4">
+            <div class="card-django border-0 shadow-sm mb-4">
+                <div class="card-body text-center profile-card-body">
+                    <!-- Avatar -->
+                    <div class="profile-avatar-container">
+                        <div class="position-relative d-inline-block">
+                            <img src="{{ profile_user.get_avatar_url }}"
+                                 alt="Avatar de {{ profile_user.get_full_name|default:profile_user.username }}"
+                                 class="rounded-circle shadow avatar-xl">
+                            <!-- Badge de Status -->
+                            {% if profile_user.is_verified %}
+                                <span class="position-absolute bottom-0 end-0 bg-success rounded-circle p-2"
+                                      data-bs-toggle="tooltip" title="Conta Verificada">
+                                    <i class="fas fa-check text-light"></i>
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Nome e Email -->
+                    <h4 class="mb-1 text-sans text-body">
+                        {{ profile_user.get_full_name|default:profile_user.username }}
+                    </h4>
+                    <p class="text-secondary mb-3 text-body">
+                        {{ profile_user.email }}
+                    </p>
+
+                    <!-- Bio -->
+                    {% if profile_user.bio %}
+                        <p class="text-secondary small mb-3 text-body">
+                            {{ profile_user.bio }}
+                        </p>
+                    {% endif %}
+
+                    <!-- Localização -->
+                    {% if profile_user.location %}
+                        <p class="text-secondary small mb-3 text-body">
+                            <i class="fas fa-map-marker-alt me-1"></i>
+                            {{ profile_user.location }}
+                        </p>
+                    {% endif %}
+
+                    <!-- Botões de Ação -->
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'accounts:settings' %}" class="btn btn-primary">
+                            <i class="fas fa-edit me-2"></i>Editar Perfil
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card de Estatísticas -->
+            <div class="card-django border-0 shadow-sm">
+                <div class="profile-card-header">
+                    <h6 class="mb-0 text-sans text-body">
+                        <i class="fas fa-chart-bar me-2 text-django-green"></i>Estatísticas
+                    </h6>
+                </div>
+                <div class="card-body profile-card-body p-0">
+                    <div class="row g-0">
+                        <div class="col-6">
+                            <div class="profile-stats-item border-end">
+                                <h5 class="text-django-green mb-1 text-sans text-body">
+                                    {{ profile_user.authored_articles.count }}
+                                </h5>
+                                <small class="text-secondary">Artigos</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="profile-stats-item">
+                                <h5 class="text-success mb-1 text-sans text-body">
+                                    {{ profile_user.comments.count }}
+                                </h5>
+                                <small class="text-secondary">Comentários</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Informações Detalhadas -->
+        <div class="col-lg-8">
+            <!-- Informações Pessoais -->
+            <div class="card-django border-0 shadow-sm mb-4">
+                <div class="profile-card-header">
+                    <h6 class="mb-0 text-sans text-body">
+                        <i class="fas fa-user-circle me-2 text-django-green"></i>Informações Pessoais
+                    </h6>
+                </div>
+                <div class="card-body profile-card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="profile-info-item">
+                                <label class="profile-info-label">Nome</label>
+                                <div class="profile-info-value">
+                                    {{ profile_user.first_name|default:"Não informado" }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="profile-info-item">
+                                <label class="profile-info-label">Sobrenome</label>
+                                <div class="profile-info-value">
+                                    {{ profile_user.last_name|default:"Não informado" }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="profile-info-item">
+                                <label class="profile-info-label">E-mail</label>
+                                <div class="profile-info-value">
+                                    {{ profile_user.email }}
+                                    {% if profile_user.is_verified %}
+                                        <i class="fas fa-check-circle text-success ms-2"
+                                           data-bs-toggle="tooltip" title="E-mail verificado"></i>
+                                    {% else %}
+                                        <i class="fas fa-exclamation-circle text-warning ms-2"
+                                           data-bs-toggle="tooltip" title="E-mail não verificado"></i>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="profile-info-item">
+                                <label class="profile-info-label">Username</label>
+                                <div class="profile-info-value">
+                                    {{ profile_user.username }}
+                                </div>
+                            </div>
+                        </div>
+                        {% if profile_user.phone %}
+                            <div class="col-md-6">
+                                <div class="profile-info-item">
+                                    <label class="profile-info-label">Telefone</label>
+                                    <div class="profile-info-value">
+                                        {{ profile_user.phone }}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                        {% if profile_user.birth_date %}
+                            <div class="col-md-6">
+                                <div class="profile-info-item">
+                                    <label class="profile-info-label">Data de Nascimento</label>
+                                    <div class="profile-info-value">
+                                        {{ profile_user.birth_date|date:"d/m/Y" }}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Informações da Conta -->
+            <div class="card-django border-0 shadow-sm mb-4">
+                <div class="profile-card-header">
+                    <h6 class="mb-0 text-sans text-body">
+                        <i class="fas fa-shield-alt me-2 text-django-green"></i>Informações da Conta
+                    </h6>
+                </div>
+                <div class="card-body profile-card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="profile-info-item">
+                                <label class="profile-info-label">Membro desde</label>
+                                <div class="profile-info-value">
+                                    {{ profile_user.date_joined|date:"d/m/Y" }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="profile-info-item">
+                                <label class="profile-info-label">Último acesso</label>
+                                <div class="profile-info-value">
+                                    {{ profile_user.last_login|date:"d/m/Y H:i"|default:"Nunca" }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="profile-info-item">
+                                <label class="profile-info-label">Status da Conta</label>
+                                <div class="profile-info-value">
+                                    {% if profile_user.is_active %}
+                                        <span class="badge bg-success profile-badge">Ativa</span>
+                                    {% else %}
+                                        <span class="badge bg-danger profile-badge">Inativa</span>
+                                    {% endif %}
+                                    {% if profile_user.is_verified %}
+                                        <span class="badge bg-django-green profile-badge">Verificada</span>
+                                    {% else %}
+                                        <span class="badge bg-warning profile-badge">Não Verificada</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="profile-info-item">
+                                <label class="profile-info-label">Tipo de Usuário</label>
+                                <div class="profile-info-value">
+                                    {% if profile_user.is_superuser %}
+                                        <span class="badge bg-danger profile-badge">Superusuário</span>
+                                    {% elif profile_user.is_staff %}
+                                        <span class="badge bg-warning profile-badge">Staff</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary profile-badge">Usuário</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Atividade Recente -->
+            <div class="card-django border-0 shadow-sm">
+                <div class="profile-card-header">
+                    <h6 class="mb-0 text-sans text-body">
+                        <i class="fas fa-clock me-2 text-django-green"></i>Atividade Recente
+                    </h6>
+                </div>
+                <div class="card-body profile-card-body">
+                    {% if profile_user.authored_articles.exists %}
+                        <h6 class="text-secondary small mb-4 text-sans text-body">Últimos Artigos</h6>
+                        {% for article in profile_user.authored_articles.all|slice:":3" %}
+                            <div class="profile-activity-item d-flex align-items-center">
+                                <div class="activity-icon bg-django-green text-light">
+                                    <i class="fas fa-file-alt"></i>
+                                </div>
+                                <div class="profile-activity-content">
+                                    <div class="profile-activity-title">
+                                        <a href="{{ article.get_absolute_url }}" class="text-decoration-none text-body">
+                                            {{ article.title }}
+                                        </a>
+                                    </div>
+                                    <div class="profile-activity-meta">
+                                        {{ article.created_at|date:"d/m/Y" }}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center text-secondary py-4">
+                            <i class="fas fa-file-alt fa-2x mb-3"></i>
+                            <p class="mb-0 text-body">Nenhum artigo publicado ainda</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Inicializar tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
+{% endblock %}

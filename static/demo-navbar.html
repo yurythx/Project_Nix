@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demonstração - Alinhamento da Navbar</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <link href="css/main.css" rel="stylesheet">
+    <link href="css/accessibility.css" rel="stylesheet">
+    <style>
+        .demo-section {
+            padding: 2rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .demo-navbar {
+            margin-bottom: 2rem;
+            position: relative;
+        }
+        .alignment-guide {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: rgba(255, 0, 0, 0.3);
+            top: 50%;
+            pointer-events: none;
+        }
+        .code-example {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 1rem;
+            margin: 1rem 0;
+            font-family: var(--font-family-mono);
+            font-size: 0.875rem;
+        }
+        .theme-toggle-demo {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <div class="theme-toggle-demo">
+        <button class="btn btn-outline-secondary" onclick="toggleTheme()">
+            <i class="fas fa-moon" id="theme-icon"></i>
+        </button>
+    </div>
+
+    <!-- Navbar Original -->
+    <nav class="navbar navbar-expand-lg navbar-nix demo-navbar">
+        <div class="container">
+            <div class="alignment-guide"></div>
+            
+            <!-- Brand -->
+            <a class="navbar-brand" href="#">
+                <img src="favicon.ico" alt="Project Nix Logo" width="32" height="32">
+                Project Nix
+            </a>
+            
+            <!-- Mobile Toggle -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <!-- Navigation Links -->
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#">
+                            <i class="fas fa-home"></i>Home
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <i class="fas fa-newspaper"></i>Artigos
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <i class="fas fa-book"></i>Livros
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <i class="fas fa-book-open"></i>Mangás
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <i class="fas fa-headphones"></i>Audiolivros
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <i class="fas fa-info-circle"></i>Sobre
+                        </a>
+                    </li>
+                </ul>
+                
+                <!-- User Menu -->
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                            <div class="avatar-sm me-2">
+                                <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 24px; height: 24px;">
+                                    <i class="fas fa-user text-white small"></i>
+                                </div>
+                            </div>
+                            <span class="d-none d-md-inline">Usuário Demo</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <h6 class="dropdown-header">
+                                    <i class="fas fa-user"></i>usuario@demo.com
+                                </h6>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#">
+                                <i class="fas fa-user-circle"></i>Meu Perfil
+                            </a></li>
+                            <li><a class="dropdown-item" href="#">
+                                <i class="fas fa-cog"></i>Configurações
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#">
+                                <i class="fas fa-tachometer-alt"></i>Dashboard
+                            </a></li>
+                            <li><a class="dropdown-item" href="#">
+                                <i class="fas fa-tools"></i>Admin
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="#">
+                                <i class="fas fa-sign-out-alt"></i>Sair
+                            </a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-5">
+        <div class="text-center mb-5">
+            <h1 class="display-4 fw-bold" style="color: var(--nix-accent);">Demonstração - Alinhamento da Navbar</h1>
+            <p class="lead">Ícones e textos perfeitamente alinhados</p>
+        </div>
+
+        <!-- Melhorias Implementadas -->
+        <section class="demo-section">
+            <h2 class="h3 mb-4">✅ Melhorias Implementadas</h2>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="fas fa-align-center text-primary me-2"></i>
+                                Alinhamento Perfeito
+                            </h5>
+                            <p class="card-text">Ícones e textos alinhados verticalmente usando flexbox.</p>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-check text-success me-2"></i>Display flex nos nav-links</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Align-items center</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Ícones com largura fixa</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="fas fa-mobile-alt text-primary me-2"></i>
+                                Responsividade
+                            </h5>
+                            <p class="card-text">Alinhamento mantido em todos os dispositivos.</p>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-check text-success me-2"></i>Desktop otimizado</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Mobile friendly</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Tablet compatível</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Código CSS -->
+        <section class="demo-section">
+            <h2 class="h3 mb-4">💻 Código CSS Implementado</h2>
+            
+            <h4>Alinhamento Principal</h4>
+            <div class="code-example">
+.navbar-nav .nav-link {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+}
+
+.navbar-nav .nav-link i {
+    width: 16px;
+    height: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 0.5rem;
+    font-size: 14px;
+    line-height: 1;
+    flex-shrink: 0;
+}
+            </div>
+
+            <h4>Dropdown Items</h4>
+            <div class="code-example">
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+}
+
+.dropdown-item i {
+    width: 16px;
+    height: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 0.5rem;
+    font-size: 14px;
+    line-height: 1;
+    flex-shrink: 0;
+}
+            </div>
+
+            <h4>Responsividade Mobile</h4>
+            <div class="code-example">
+@media (max-width: 768px) {
+    .navbar-nav .nav-link {
+        padding: 0.75rem 1rem;
+        justify-content: flex-start;
+    }
+
+    .navbar-nav .nav-link i {
+        margin-right: 0.75rem;
+        font-size: 16px;
+    }
+}
+            </div>
+        </section>
+
+        <!-- Benefícios -->
+        <section class="demo-section">
+            <h2 class="h3 mb-4">🎯 Benefícios</h2>
+            
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="text-center">
+                        <div class="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                            <i class="fas fa-eye text-white"></i>
+                        </div>
+                        <h5>Visual Limpo</h5>
+                        <p class="text-muted">Ícones e textos perfeitamente alinhados criam uma aparência profissional.</p>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="text-center">
+                        <div class="bg-success rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                            <i class="fas fa-universal-access text-white"></i>
+                        </div>
+                        <h5>Acessibilidade</h5>
+                        <p class="text-muted">Melhor experiência para usuários com deficiências visuais.</p>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="text-center">
+                        <div class="bg-info rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                            <i class="fas fa-mobile-alt text-white"></i>
+                        </div>
+                        <h5>Responsivo</h5>
+                        <p class="text-muted">Funciona perfeitamente em todos os tamanhos de tela.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function toggleTheme() {
+            const html = document.documentElement;
+            const icon = document.getElementById('theme-icon');
+            const currentTheme = html.getAttribute('data-theme');
+            
+            if (currentTheme === 'dark') {
+                html.setAttribute('data-theme', 'light');
+                icon.className = 'fas fa-moon';
+            } else {
+                html.setAttribute('data-theme', 'dark');
+                icon.className = 'fas fa-sun';
+            }
+        }
+
+        // Aplicar tema inicial
+        document.documentElement.setAttribute('data-theme', 'light');
+    </script>
+</body>
+</html>

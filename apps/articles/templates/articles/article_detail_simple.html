@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ article.title }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .meta {
+            color: #666;
+            margin-bottom: 20px;
+            padding: 10px;
+            background: #f5f5f5;
+            border-radius: 5px;
+        }
+        .content {
+            margin: 20px 0;
+        }
+        .comments-section {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid #eee;
+        }
+        .comment-form {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            box-sizing: border-box;
+        }
+        button {
+            background: #007cba;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #005a87;
+        }
+    </style>
+</head>
+<body>
+    <article>
+        <header>
+            <h1>{{ article.title }}</h1>
+            <div class="meta">
+                <p><strong>Autor:</strong> {{ article.author.username }}</p>
+                {% if article.category %}
+                <p><strong>Categoria:</strong> {{ article.category.name }}</p>
+                {% endif %}
+                <p><strong>Publicado em:</strong> {{ article.published_at|date:"d/m/Y H:i" }}</p>
+                <p><strong>Visualizações:</strong> {{ article.view_count }}</p>
+            </div>
+        </header>
+
+        <div class="content">
+            <h2>Resumo</h2>
+            <p>{{ article.excerpt }}</p>
+            
+            <h2>Conteúdo</h2>
+            <div>{{ article.content|linebreaks }}</div>
+        </div>
+    </article>
+
+    <!-- Sistema de Comentários -->
+    <section class="comments-section">
+        <h2>💬 Sistema de Comentários</h2>
+        
+        {% if article.allow_comments %}
+            <div class="comment-form">
+                <h3>Deixe seu comentário</h3>
+                <form method="post" action="{% url 'articles:add_comment' slug=article.slug %}">
+                    {% csrf_token %}
+                    
+                    <div class="form-group">
+                        <label for="id_name">Nome *</label>
+                        <input type="text" name="name" id="id_name" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="id_email">Email *</label>
+                        <input type="email" name="email" id="id_email" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="id_website">Website (opcional)</label>
+                        <input type="url" name="website" id="id_website">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="id_content">Comentário *</label>
+                        <textarea name="content" id="id_content" rows="4" required></textarea>
+                    </div>
+                    
+                    <!-- Honeypot -->
+                    <input type="text" name="website_url" style="display: none;">
+                    
+                    <button type="submit">Enviar Comentário</button>
+                </form>
+            </div>
+            
+            <!-- Lista de comentários -->
+            <div class="comments-list">
+                <h3>Comentários</h3>
+                {% for comment in article.comments.all %}
+                    <div class="comment" style="border: 1px solid #ddd; padding: 15px; margin: 10px 0; border-radius: 5px;">
+                        <div style="font-weight: bold; margin-bottom: 5px;">
+                            {{ comment.author_name }}
+                            <small style="color: #666;">- {{ comment.created_at|date:"d/m/Y H:i" }}</small>
+                        </div>
+                        <div>{{ comment.content|linebreaks }}</div>
+                        
+                        <!-- Respostas -->
+                        {% for reply in comment.get_replies %}
+                            <div style="margin-left: 20px; margin-top: 10px; padding: 10px; background: #f5f5f5; border-radius: 3px;">
+                                <div style="font-weight: bold; margin-bottom: 5px;">
+                                    ↳ {{ reply.author_name }}
+                                    <small style="color: #666;">- {{ reply.created_at|date:"d/m/Y H:i" }}</small>
+                                </div>
+                                <div>{{ reply.content|linebreaks }}</div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% empty %}
+                    <p style="color: #666; font-style: italic;">Nenhum comentário ainda. Seja o primeiro a comentar!</p>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p style="color: #666;">Comentários estão desabilitados para este artigo.</p>
+        {% endif %}
+    </section>
+
+    <!-- Artigos relacionados -->
+    {% if related_articles %}
+    <section style="margin-top: 40px; padding-top: 20px; border-top: 2px solid #eee;">
+        <h2>📚 Artigos Relacionados</h2>
+        <ul>
+            {% for related in related_articles %}
+                <li style="margin-bottom: 10px;">
+                    <a href="{% url 'articles:article_detail' slug=related.slug %}">{{ related.title }}</a>
+                    <small style="color: #666;">- {{ related.published_at|date:"d/m/Y" }}</small>
+                </li>
+            {% endfor %}
+        </ul>
+    </section>
+    {% endif %}
+
+    <!-- Links de navegação -->
+    <nav style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee;">
+        <a href="{% url 'articles:article_list' %}" style="color: #007cba; text-decoration: none;">← Voltar para lista de artigos</a>
+    </nav>
+
+    <script>
+        // Funcionalidade básica para o formulário
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.querySelector('form');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    const name = document.getElementById('id_name').value.trim();
+                    const email = document.getElementById('id_email').value.trim();
+                    const content = document.getElementById('id_content').value.trim();
+                    
+                    if (!name || !email || !content) {
+                        e.preventDefault();
+                        alert('Por favor, preencha todos os campos obrigatórios.');
+                        return false;
+                    }
+                    
+                    if (content.length < 10) {
+                        e.preventDefault();
+                        alert('O comentário deve ter pelo menos 10 caracteres.');
+                        return false;
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

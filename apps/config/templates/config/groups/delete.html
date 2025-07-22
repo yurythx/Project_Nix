@@ -1,0 +1,7 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Deletar Grupo</h1>
+<p>Tem certeza que deseja deletar o grupo "{{ object.name }}"?</p>
+<form method="post">{% csrf_token %}<button type="submit">Confirmar</button></form>
+<a href="{% url 'config:group_list' %}">Cancelar</a>
+{% endblock %} 

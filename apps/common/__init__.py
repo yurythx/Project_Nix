@@ -1,0 +1,1 @@
+# Utilitários, helpers e middlewares compartilhados entre apps 

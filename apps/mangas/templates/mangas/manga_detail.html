@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ manga.title }} - Mangás - Project Nix{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="row g-0">
+                    {% if manga.cover_image %}
+                    <div class="col-md-4">
+                        <img src="{{ manga.cover_image.url }}" class="img-fluid rounded-start w-100 h-100 object-fit-cover" alt="{{ manga.title }}">
+                    </div>
+                    {% endif %}
+                    <div class="col-md-8">
+                        <div class="card-body">
+                            <h1 class="card-title h3 mb-2">{{ manga.title }}</h1>
+                            {% if manga.author %}
+                            <p class="mb-2"><i class="fas fa-user me-1"></i> {{ manga.author }}</p>
+                            {% endif %}
+                            <p class="card-text">{{ manga.description }}</p>
+                            <div class="mt-4 d-flex gap-2">
+                                {% if user.is_authenticated and user.is_staff %}
+                                <a href="{% url 'mangas:manga_edit' manga.slug %}" class="btn btn-outline-secondary btn-sm">
+                                    <i class="fas fa-edit"></i> Editar
+                                </a>
+                                <a href="{% url 'mangas:manga_delete' manga.slug %}" class="btn btn-outline-danger btn-sm">
+                                    <i class="fas fa-trash"></i> Deletar
+                                </a>
+                                {% endif %}
+                                <a href="{% url 'mangas:manga_list' %}" class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-arrow-left"></i> Voltar
+                                </a>
+                                <a href="{% url 'mangas:capitulo_create' manga.slug %}" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-plus"></i> Novo Capítulo
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-theme-secondary text-theme-light">
+                    <h5 class="mb-0 text-sans text-body">
+                        <i class="fas fa-list me-2"></i>Capítulos
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if manga.capitulos.all %}
+                        <ul class="list-group">
+                            {% for cap in manga.capitulos.all %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <a href="{% url 'mangas:capitulo_detail' manga.slug cap.slug %}">
+                                    Capítulo {{ cap.number }}{% if cap.title %}: {{ cap.title }}{% endif %}
+                                </a>
+                                <span class="badge bg-theme-primary rounded-pill">{{ cap.paginas.count }} pág.</span>
+                            </li>
+                            {% empty %}
+                            <li class="list-group-item text-center text-muted">Nenhum capítulo cadastrado.</li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <div class="alert alert-info">Nenhum capítulo cadastrado.</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

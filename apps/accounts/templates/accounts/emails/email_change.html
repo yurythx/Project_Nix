@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirmação de Alteração de E-mail</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e9ecef;
+        }
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            color: #ffc107;
+            margin-bottom: 10px;
+        }
+        .title {
+            color: #ffc107;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        .code-container {
+            background: linear-gradient(135deg, #ffc107, #e0a800);
+            color: #212529;
+            padding: 25px;
+            border-radius: 10px;
+            text-align: center;
+            margin: 25px 0;
+        }
+        .code {
+            font-size: 36px;
+            font-weight: bold;
+            letter-spacing: 8px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+        }
+        .code-label {
+            font-size: 14px;
+            opacity: 0.8;
+            margin-bottom: 10px;
+        }
+        .instructions {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #ffc107;
+            margin: 20px 0;
+        }
+        .warning {
+            background-color: #fff3cd;
+            color: #856404;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #ffc107;
+            margin: 20px 0;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e9ecef;
+            color: #6c757d;
+            font-size: 14px;
+        }
+        .highlight {
+            background-color: #fff3cd;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">📧 FireFlies</div>
+            <h1 class="title text-sans text-body">Mudança de Email</h1>
+            <p>Confirmação de alteração de endereço de email</p>
+        </div>
+
+        <div class="content">
+            <p>Olá!</p>
+            
+            <p>Recebemos uma solicitação para alterar o e-mail da sua conta. Para confirmar este novo endereço, use o código abaixo:</p>
+
+            <div class="code-container">
+                <div class="code-label">CÓDIGO DE CONFIRMAÇÃO</div>
+                <div class="code">{{ code }}</div>
+                <div style="font-size: 12px; opacity: 0.8;">Digite este código na página de confirmação</div>
+            </div>
+
+            <div class="instructions">
+                <h3 style="margin-top: 0; color: #ffc107;" class="text-sans text-body">✉️ Como confirmar o novo e-mail:</h3>
+                <ol>
+                    <li>Volte para a página de alteração de e-mail</li>
+                    <li>Digite o código <span class="highlight">{{ code }}</span> no campo indicado</li>
+                    <li>Clique em "Confirmar" para ativar o novo e-mail</li>
+                    <li>A partir de agora, use este e-mail para fazer login</li>
+                </ol>
+            </div>
+
+            <div class="warning">
+                <strong>⚠️ Importante:</strong>
+                <ul style="margin: 10px 0 0 0; padding-left: 20px;">
+                    <li>Este código é válido por <strong>15 minutos</strong></li>
+                    <li>Use apenas uma vez</li>
+                    <li>Não compartilhe com ninguém</li>
+                    <li>Se não foi você quem solicitou, entre em contato conosco</li>
+                    <li>Após a confirmação, o e-mail antigo não poderá mais ser usado</li>
+                </ul>
+            </div>
+
+            <p style="margin-top: 25px;">
+                <strong>Novo e-mail:</strong> <span class="highlight">{{ email }}</span>
+            </p>
+
+            <p>Se você não solicitou esta alteração, entre em contato conosco imediatamente para proteger sua conta.</p>
+        </div>
+
+        <div class="footer">
+            <p><strong>FireFlies Platform</strong></p>
+            <p>Este é um email automático, não responda.</p>
+            <p style="font-size: 12px; margin-top: 15px;">
+                Se você não solicitou a mudança de email, entre em contato conosco imediatamente.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

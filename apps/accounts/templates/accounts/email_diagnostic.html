@@ -1,0 +1,353 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Diagnóstico de Email - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Header -->
+            <div class="text-center mb-4">
+                <h2 class="display-6 text-sans text-body">
+                    <i class="fas fa-envelope-open-text text-django-green me-2"></i>
+                    Diagnóstico de Email
+                </h2>
+                <p class="text-secondary text-body">Verifique e teste as configurações de envio de email</p>
+            </div>
+
+            <!-- Status das Configurações -->
+            <div class="card-django mb-4">
+                <div class="card-header card-django-header-comfortable bg-django-green text-light card-django">
+                    <h5 class="mb-0 text-sans text-body">
+                        <i class="fas fa-cog me-2"></i>Status das Configurações
+                    </h5>
+                </div>
+                <div class="card-body card-django-body-spacious card-django">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-sans text-body">Backend de Email:</h6>
+                            <p class="mb-2 text-body">
+                                <code>{{ config_status.backend }}</code>
+                                {% if config_status.backend == 'django.core.mail.backends.smtp.EmailBackend' %}
+                                    <span class="badge badge-enhanced bg-success ms-2">SMTP</span>
+                                {% elif config_status.backend == 'django.core.mail.backends.console.EmailBackend' %}
+                                    <span class="badge badge-enhanced bg-warning ms-2">Console</span>
+                                {% else %}
+                                    <span class="badge badge-enhanced bg-secondary ms-2">Outro</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-sans text-body">Status:</h6>
+                            {% if config_status.can_send %}
+                                <span class="badge badge-enhanced bg-success">
+                                    <i class="fas fa-check me-1"></i>Pronto para enviar
+                                </span>
+                            {% else %}
+                                <span class="badge badge-enhanced bg-danger">
+                                    <i class="fas fa-times me-1"></i>Não configurado
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    {% if config_status.issues %}
+                    <div class="alert alert-warning mt-3">
+                        <h6 class="text-sans text-body"><i class="fas fa-exclamation-triangle me-2"></i>Problemas encontrados:</h6>
+                        <ul class="mb-0">
+                            {% for issue in config_status.issues %}
+                            <li>{{ issue }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Configurações Atuais -->
+            {% if config_status.backend == 'django.core.mail.backends.smtp.EmailBackend' %}
+            <div class="card-django mb-4">
+                <div class="card-header card-django-header-comfortable bg-info text-light card-django">
+                    <h5 class="mb-0 text-sans text-body">
+                        <i class="fas fa-server me-2"></i>Configurações SMTP
+                    </h5>
+                </div>
+                <div class="card-body card-django-body-spacious card-django">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Servidor:</strong> {{ email_config.EMAIL_HOST|default:"Não configurado" }}</p>
+                            <p><strong>Porta:</strong> {{ email_config.EMAIL_PORT|default:"Não configurado" }}</p>
+                            <p><strong>Usuário:</strong> {{ email_config.EMAIL_HOST_USER|default:"Não configurado" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>TLS:</strong> 
+                                {% if email_config.EMAIL_USE_TLS %}
+                                    <span class="text-success">Ativado</span>
+                                {% else %}
+                                    <span class="text-danger">Desativado</span>
+                                {% endif %}
+                            </p>
+                            <p><strong>SSL:</strong> 
+                                {% if email_config.EMAIL_USE_SSL %}
+                                    <span class="text-success">Ativado</span>
+                                {% else %}
+                                    <span class="text-danger">Desativado</span>
+                                {% endif %}
+                            </p>
+                            <p><strong>Email Remetente:</strong> {{ email_config.DEFAULT_FROM_EMAIL|default:"Não configurado" }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Teste de Conexão -->
+            {% if config_status.can_send %}
+            <div class="card-django mb-4">
+                <div class="card-header card-django-header-comfortable bg-success text-light card-django">
+                    <h5 class="mb-0 text-sans text-body">
+                        <i class="fas fa-plug me-2"></i>Teste de Conexão
+                    </h5>
+                </div>
+                <div class="card-body card-django-body-spacious card-django">
+                    {% if connection_status %}
+                        {% if connection_status.success %}
+                            <div class="alert alert-success">
+                                <i class="fas fa-check-circle me-2"></i>{{ connection_status.message }}
+                            </div>
+                        {% else %}
+                            <div class="alert alert-danger">
+                                <i class="fas fa-times-circle me-2"></i>{{ connection_status.message }}
+                            </div>
+                        {% endif %}
+                    {% endif %}
+                    
+                    <button type="button" class="btn btn-outline text-sans-success" onclick="testConnection()">
+                        <i class="fas fa-plug me-2"></i>Testar Conexão SMTP
+                    </button>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Teste de Envio -->
+            {% if config_status.can_send %}
+            <div class="card-django mb-4">
+                <div class="card-header card-django-header-comfortable bg-warning text-body card-django">
+                    <h5 class="mb-0 text-sans text-body">
+                        <i class="fas fa-paper-plane me-2"></i>Teste de Envio
+                    </h5>
+                </div>
+                <div class="card-body card-django-body-spacious card-django">
+                    <p>Envie um email de teste para verificar se tudo está funcionando:</p>
+                    
+                    <div class="row">
+                        <div class="col-md-8">
+                            <input type="email" class="form-control form-control-enhanced" id="testEmail" 
+                                   value="{{ user_email }}" placeholder="Email de destino">
+                        </div>
+                        <div class="col-md-4">
+                            <button type="button" class="btn btn-warning text-sans w-100" onclick="sendTestEmail()">
+                                <i class="fas fa-paper-plane me-2"></i>Enviar Teste
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div id="testResult" class="mt-3"></div>
+                </div>
+            </div>
+
+            <!-- Teste de Redefinição de Senha -->
+            <div class="card-django mb-4">
+                <div class="card-header card-django-header-comfortable bg-danger text-light card-django">
+                    <h5 class="mb-0 text-sans text-body">
+                        <i class="fas fa-key me-2"></i>Teste de Redefinição de Senha
+                    </h5>
+                </div>
+                <div class="card-body card-django-body-spacious card-django">
+                    <p>Teste o envio de códigos de redefinição de senha:</p>
+                    
+                    <div class="row">
+                        <div class="col-md-8">
+                            <input type="email" class="form-control form-control-enhanced" id="resetTestEmail" 
+                                   value="{{ user_email }}" placeholder="Email para teste">
+                        </div>
+                        <div class="col-md-4">
+                            <button type="button" class="btn btn-danger text-sans w-100" onclick="testPasswordReset()">
+                                <i class="fas fa-key me-2"></i>Testar Código
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div id="resetTestResult" class="mt-3"></div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Ações -->
+            <div class="card-django">
+                <div class="card-header card-django-header-comfortable bg-secondary text-light card-django">
+                    <h5 class="mb-0 text-sans text-body">
+                        <i class="fas fa-tools me-2"></i>Ações
+                    </h5>
+                </div>
+                <div class="card-body card-django-body-spacious card-django">
+                    <div class="row">
+                        <div class="col-md-4 mb-2">
+                            <!-- Linha removida: <a href="{% url 'accounts:quick_email_setup' %}" class="btn btn-primary w-100 btn-enhanced"> -->
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            {% if user.is_superuser %}
+                            <a href="{% url 'config:email_config' %}" class="btn btn-info w-100 btn-enhanced">
+                                <i class="fas fa-cogs me-2"></i>Configuração Avançada
+                            </a>
+                            {% else %}
+                            <button type="button" class="btn btn-info text-sans w-100" disabled title="Apenas superusuários">
+                                <i class="fas fa-cogs me-2"></i>Configuração Avançada
+                            </button>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <button type="button" class="btn btn-success text-sans w-100" onclick="location.reload()">
+                                <i class="fas fa-sync me-2"></i>Atualizar Status
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+async function testConnection() {
+    const btn = event.target;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Testando...';
+    btn.disabled = true;
+    
+    try {
+        const response = await fetch('{% url "accounts:test_connection" %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const data = await response.json();
+        
+        const alertClass = data.success ? 'alert-success' : 'alert-danger';
+        const icon = data.success ? 'check-circle' : 'times-circle';
+        
+        // Atualizar a seção de teste de conexão
+        const connectionCard = btn.closest('.card-body');
+        const existingAlert = connectionCard.querySelector('.alert');
+        if (existingAlert) {
+            existingAlert.remove();
+        }
+        
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert ${alertClass}`;
+        alertDiv.innerHTML = `<i class="fas fa-${icon} me-2"></i>${data.message}`;
+        connectionCard.insertBefore(alertDiv, btn);
+        
+    } catch (error) {
+        console.error('Erro:', error);
+        alert('Erro ao testar conexão');
+    } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }
+}
+
+async function sendTestEmail() {
+    const email = document.getElementById('testEmail').value;
+    const resultDiv = document.getElementById('testResult');
+    
+    if (!email) {
+        resultDiv.innerHTML = '<div class="alert alert-warning">Digite um email válido</div>';
+        return;
+    }
+    
+    const btn = event.target;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Enviando...';
+    btn.disabled = true;
+    
+    try {
+        const response = await fetch('{% url "accounts:test_email_send" %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ email: email })
+        });
+        
+        const data = await response.json();
+        
+        const alertClass = data.success ? 'alert-success' : 'alert-danger';
+        const icon = data.success ? 'check-circle' : 'times-circle';
+        
+        resultDiv.innerHTML = `<div class="alert ${alertClass}">
+            <i class="fas fa-${icon} me-2"></i>${data.message}
+        </div>`;
+        
+    } catch (error) {
+        console.error('Erro:', error);
+        resultDiv.innerHTML = '<div class="alert alert-danger">Erro ao enviar email de teste</div>';
+    } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }
+}
+
+async function testPasswordReset() {
+    const email = document.getElementById('resetTestEmail').value;
+    const resultDiv = document.getElementById('resetTestResult');
+    
+    if (!email) {
+        resultDiv.innerHTML = '<div class="alert alert-warning">Digite um email válido</div>';
+        return;
+    }
+    
+    const btn = event.target;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Enviando...';
+    btn.disabled = true;
+    
+    try {
+        const response = await fetch('{% url "accounts:test_password_reset" %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: `test_email=${encodeURIComponent(email)}`
+        });
+        
+        const data = await response.json();
+        
+        const alertClass = data.success ? 'alert-success' : 'alert-danger';
+        const icon = data.success ? 'check-circle' : 'times-circle';
+        
+        let message = data.message;
+        if (data.success && data.test_code) {
+            message += `<br><small class="text-secondary">Código gerado: <strong>${data.test_code}</strong></small>`;
+        }
+        
+        resultDiv.innerHTML = `<div class="alert ${alertClass}">
+            <i class="fas fa-${icon} me-2"></i>${message}
+        </div>`;
+        
+    } catch (error) {
+        console.error('Erro:', error);
+        resultDiv.innerHTML = '<div class="alert alert-danger">Erro ao testar redefinição de senha</div>';
+    } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }
+}
+</script>
+{% endblock %}

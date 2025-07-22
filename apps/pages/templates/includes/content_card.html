@@ -1,0 +1,76 @@
+{# Card reutilizável para artigos, livros, mangás e audiolivros seguindo padrão de destaque #}
+<div class="card content-card shadow-sm mb-4 h-100 hover-lift">
+    {% if image_url %}
+        <div class="img-container img-container-16-9">
+            <a href="{{ detail_url }}" tabindex="-1">
+                <img src="{{ image_url }}" class="card-img-top img-optimized" alt="{{ image_alt|default:title }}" loading="lazy" onerror="this.style.display='none'">
+                <div class="img-overlay"></div>
+            </a>
+        </div>
+    {% endif %}
+    <div class="card-body d-flex flex-column">
+        {% if category %}
+            <div class="mb-2">
+                <span class="badge bg-theme-primary">
+                    {% if category_icon %}<i class="{{ category_icon }} me-1"></i>{% endif %}
+                    {{ category }}
+                </span>
+            </div>
+        {% endif %}
+        <h5 class="card-title mb-1 fw-bold">
+            <a href="{{ detail_url }}" class="text-decoration-none text-theme-dark">{{ title|truncatechars:80 }}</a>
+        </h5>
+        {% if subtitle %}
+        <div class="small text-theme-secondary mb-1">{{ subtitle }}</div>
+        {% endif %}
+        <div class="d-flex flex-wrap align-items-center gap-3 small text-theme-secondary mb-2">
+            {% if author %}<span><i class="fas fa-user me-1"></i>{{ author }}</span>{% endif %}
+            {% if date %}<span><i class="fas fa-calendar me-1"></i>{{ date }}</span>{% endif %}
+            {% if extra_info %}{{ extra_info }}{% endif %}
+        </div>
+        {% if description %}
+        <p class="mb-2 text-theme-muted small">{{ description|truncatechars:120 }}</p>
+        {% endif %}
+        <div class="mt-auto d-flex flex-wrap gap-2">
+            {% if primary_action_url and primary_action_label %}
+            <a href="{{ primary_action_url }}" class="btn btn-outline-primary btn-sm" title="{{ primary_action_label }}">
+                <i class="fas fa-arrow-right me-1"></i> {{ primary_action_label }}
+            </a>
+            {% endif %}
+            {% if secondary_action_url and secondary_action_label %}
+            <a href="{{ secondary_action_url }}" class="btn btn-outline-secondary btn-sm" title="{{ secondary_action_label }}">
+                <i class="fas fa-edit"></i> {{ secondary_action_label }}
+            </a>
+            {% endif %}
+            {% if extra_actions %}{{ extra_actions }}{% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.hover-lift {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.hover-lift:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+}
+.img-container {
+    position: relative;
+    overflow: hidden;
+}
+.img-container-16-9 {
+    aspect-ratio: 16/9;
+}
+.img-optimized {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+.img-overlay {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none;
+}
+</style> 

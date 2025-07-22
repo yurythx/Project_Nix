@@ -1,0 +1,7 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% block content %}
+<h1>{% if form.instance.pk %}Editar Página{% else %}Nova Página{% endif %}</h1>
+<form method="post">{% csrf_token %}{{ form|crispy }}<button type="submit">Salvar</button></form>
+<a href="{% url 'pages:page_list' %}">Voltar</a>
+{% endblock %} 

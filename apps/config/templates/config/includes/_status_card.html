@@ -1,0 +1,22 @@
+<div class="card shadow mb-4" role="region" aria-label="{{ title }}">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">
+            <i class="{{ icon_class }} me-2"></i>{{ title }}
+        </h6>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            {% for item in items %}
+            <div class="col-sm-6 mb-3">
+                <div class="small text-muted">{{ item.label }}</div>
+                {% if item.badge_class %}
+                    <span class="badge {{ item.badge_class }}">{{ item.value }}</span>
+                {% else %}
+                    <div class="font-weight-bold">{{ item.value }}</div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% if block.super %}{{ block.super }}{% endif %}
+    </div>
+</div> 

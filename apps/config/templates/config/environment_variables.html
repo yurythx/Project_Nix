@@ -1,0 +1,52 @@
+{% extends 'config/base_config.html' %}
+{% load crispy_forms_tags %}
+{% load config_extras %}
+
+{% block config_title %}Variáveis de Ambiente (.env){% endblock %}
+
+{% block config_content %}
+<div class="container my-4">
+    <h1 class="h3 mb-4 text-sans text-body">
+        <i class="fas fa-code me-2 text-django-green"></i>Variáveis de Ambiente (.env)
+    </h1>
+    {% if messages %}
+        <div class="my-3">
+            {% for message in messages %}
+                {% include 'config/includes/_alert.html' with type=message.tags|default:'info' message=message icon_class=None %}
+            {% endfor %}
+        </div>
+    {% endif %}
+    <div class="card-django border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                {{ form|crispy }}
+                <div class="d-flex gap-2 mt-3">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i>Salvar .env
+                    </button>
+                    <button type="submit" name="backup" value="1" class="btn btn-outline-secondary">
+                        <i class="fas fa-copy me-1"></i>Criar Backup
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <h2 class="h4 mt-5 mb-3 text-sans text-body">
+        <i class="fas fa-history me-2 text-django-green"></i>Backups Recentes do .env
+    </h2>
+    <div class="card-django border-0 shadow-sm mb-4">
+        <div class="card-body p-0">
+            {% with headers=[
+                {'label': 'Arquivo'},
+                {'label': 'Tamanho'},
+                {'label': 'Modificado em'}
+            ] %}
+            {% with rows=backup_files|map:'env_backup_row' %}
+                {% include 'config/includes/_table.html' with headers=headers rows=rows caption='Tabela de backups do .env' %}
+            {% endwith %}
+            {% endwith %}
+        </div>
+    </div>
+</div>
+{% endblock %} 

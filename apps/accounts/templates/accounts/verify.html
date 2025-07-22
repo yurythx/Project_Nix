@@ -1,0 +1,199 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Verificação - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <!-- Header da Página -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h2 mb-1 text-sans text-body">
+                        <i class="fas fa-check-circle me-2 text-django-green"></i>Verificação
+                    </h1>
+                    <p class="text-secondary mb-0 text-body">Verificar sua conta</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <!-- Card de Verificação -->
+            <div class="card-django border-0 shadow-sm">
+                <div class="profile-card-header bg-info text-light text-center">
+                    <h4 class="mb-0 text-sans text-body">
+                        <i class="fas fa-shield-alt me-2"></i>Verificação
+                    </h4>
+                </div>
+                <div class="card-body profile-card-body">
+                    <div class="text-center mb-4">
+                        <i class="fas fa-envelope fa-3x text-info mb-3"></i>
+                        <h5 class="text-sans text-body">Código de Verificação</h5>
+                        <p class="text-secondary text-body">
+                            Enviamos um código de 6 dígitos para seu e-mail.
+                            Digite o código abaixo para verificar sua conta.
+                        </p>
+                    </div>
+
+                    <!-- Mensagens -->
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {% if message.tags == 'success' %}
+                                    <i class="fas fa-check-circle me-2"></i>
+                                {% elif message.tags == 'error' %}
+                                    <i class="fas fa-exclamation-circle me-2"></i>
+                                {% elif message.tags == 'warning' %}
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                {% else %}
+                                    <i class="fas fa-info-circle me-2"></i>
+                                {% endif %}
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <!-- Formulário de Verificação -->
+                    <div class="form-django">
+                        {% crispy form %}
+                    </div>
+
+                    <!-- Countdown Timer -->
+                    <div class="text-center mt-4">
+                        <div class="alert alert-light border">
+                            <small class="text-secondary">
+                                <i class="fas fa-clock me-1"></i>
+                                O código expira em <span id="countdown" class="fw-bold text-warning">15:00</span> minutos
+                            </small>
+                        </div>
+                    </div>
+
+                    <!-- Reenviar Código -->
+                    <div class="text-center mt-3">
+                        <p class="text-secondary">
+                            Não recebeu o código?
+                            <button type="button" class="btn btn-link text-django-green p-0" onclick="resendCode()">
+                                <i class="fas fa-redo me-1"></i>Reenviar código
+                            </button>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dicas -->
+            <div class="card-django border-0 shadow-sm mt-4">
+                <div class="profile-card-header">
+                    <h6 class="mb-0 text-sans text-body">
+                        <i class="fas fa-lightbulb me-2 text-django-green"></i>Dicas
+                    </h6>
+                </div>
+                <div class="card-body profile-card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            <small>Verifique sua caixa de entrada</small>
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            <small>Verifique a pasta de spam/lixo eletrônico</small>
+                        </li>
+                        <li class="mb-0">
+                            <i class="fas fa-check text-success me-2"></i>
+                            <small>O código tem 6 dígitos numéricos</small>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Countdown timer - 15 minutos
+    let timeLeft = 900; // 15 minutes in seconds
+
+    function updateCountdown() {
+        const minutes = Math.floor(timeLeft / 60);
+        const seconds = timeLeft % 60;
+        const display = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+        const countdownElement = document.getElementById('countdown');
+        if (countdownElement) {
+            countdownElement.textContent = display;
+
+            // Mudar cor conforme o tempo
+            if (timeLeft <= 300) { // 5 minutos
+                countdownElement.className = 'fw-bold text-danger';
+            } else if (timeLeft <= 600) { // 10 minutos
+                countdownElement.className = 'fw-bold text-warning';
+            }
+        }
+
+        if (timeLeft <= 0) {
+            // Código expirado
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-warning';
+            alertDiv.innerHTML = `
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                O código expirou. Solicite um novo código.
+            `;
+
+            const form = document.querySelector('form');
+            if (form) {
+                form.parentNode.insertBefore(alertDiv, form);
+                form.style.display = 'none';
+            }
+        } else {
+            timeLeft--;
+            setTimeout(updateCountdown, 1000);
+        }
+    }
+
+    // Iniciar countdown
+    updateCountdown();
+
+    // Auto-focus no campo de código
+    const codeInput = document.getElementById('id_code');
+    if (codeInput) {
+        codeInput.focus();
+
+        // Formatar entrada (apenas números)
+        codeInput.addEventListener('input', function() {
+            // Remove caracteres não numéricos
+            this.value = this.value.replace(/\D/g, '');
+
+            // Limita a 6 dígitos
+            if (this.value.length > 6) {
+                this.value = this.value.slice(0, 6);
+            }
+
+            // Auto-submit quando 6 dígitos são inseridos
+            if (this.value.length === 6) {
+                // Opcional: auto-submit
+                // this.form.submit();
+            }
+        });
+
+        // Permitir apenas números
+        codeInput.addEventListener('keypress', function(e) {
+            if (!/\d/.test(e.key) && !['Backspace', 'Delete', 'Tab', 'Enter'].includes(e.key)) {
+                e.preventDefault();
+            }
+        });
+    }
+});
+
+// Função para reenviar código
+function resendCode() {
+    if (confirm('Deseja solicitar um novo código de verificação?')) {
+        // Redirecionar para página de registro para começar novamente
+        window.location.href = '{% url "accounts:register" %}';
+    }
+}
+</script>
+{% endblock %}

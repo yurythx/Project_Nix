@@ -1,0 +1,343 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load articles_tags %}
+
+{% block title %}{{ article.seo_title|default:article.title }} - {{ block.super }}{% endblock %}
+
+{% block meta_description %}{{ article.seo_description|default:article.excerpt|default:"" }}{% endblock %}
+{% block meta_keywords %}{{ article.meta_keywords|default:"" }}{% endblock %}
+
+{% block breadcrumbs %}
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a href="{% url 'pages:home' %}">Home</a>
+            </li>
+            <li class="breadcrumb-item">
+                <a href="{% url 'articles:article_list' %}">Artigos</a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">{{ article.title }}</li>
+        </ol>
+    </nav>
+{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Article Header -->
+            <article class="mb-5">
+                <header class="mb-4">
+                    <!-- Category -->
+                    {% if article.category %}
+                        <div class="mb-3">
+                            <span class="badge bg-theme-green">
+                                {% if article.category.icon %}<i class="{{ article.category.icon }} me-1"></i>{% endif %}
+                                {{ article.category.name }}
+                            </span>
+                        </div>
+                    {% endif %}
+
+                    <h1 class="display-5 fw-bold text-sans text-body">{{ article.title }}</h1>
+                    
+                    {% if article.excerpt %}
+                        <p class="lead text-theme-secondary text-body">{{ article.excerpt }}</p>
+                    {% endif %}
+                    
+                    <div class="d-flex align-items-center text-theme-secondary mb-3 flex-wrap flex-md-nowrap article-meta">
+                        <!-- Author -->
+                        {% if article.author %}
+                            <div class="d-flex align-items-center me-4 mb-2 mb-md-0">
+                                {% if article.author.avatar %}
+                                    <img src="{{ article.author.avatar.url }}" 
+                                         class="rounded-circle me-2" width="32" height="32" alt="{{ article.author.get_full_name }}">
+                                {% else %}
+                                    <div class="bg-theme-secondary rounded-circle d-flex align-items-center justify-content-center me-2" 
+                                         style="width: 32px; height: 32px;">
+                                        <i class="fas fa-user text-theme-secondary"></i>
+                                    </div>
+                                {% endif %}
+                                <small>{{ article.author.get_full_name|default:article.author.username }}</small>
+                            </div>
+                        {% endif %}
+                        <small class="mb-2 mb-md-0">
+                            <i class="fas fa-calendar me-1"></i>
+                            {{ article.published_at|date:"d/m/Y" }}
+                        </small>
+                        {% if article.updated_at != article.created_at %}
+                            <small class="ms-md-3 mb-2 mb-md-0">
+                                <i class="fas fa-edit me-1"></i>
+                                Atualizado em {{ article.updated_at|date:"d/m/Y" }}
+                            </small>
+                        {% endif %}
+                        {% if article.view_count %}
+                            <small class="ms-md-3 mb-2 mb-md-0">
+                                <i class="fas fa-eye me-1"></i>
+                                {{ article.view_count }} visualizações
+                            </small>
+                        {% endif %}
+                        {% if article.reading_time %}
+                            <small class="ms-md-3 mb-2 mb-md-0">
+                                <i class="fas fa-clock me-1"></i>
+                                {{ article.reading_time }} min de leitura
+                            </small>
+                        {% endif %}
+                    </div>
+
+                    <!-- Admin Actions -->
+                    {% if user.is_authenticated and user.is_staff or user.is_authenticated and user.is_superuser or user.is_authenticated and user|has_group:'Editor' %}
+                    <div class="alert alert-info d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-tools me-2"></i>
+                            <strong>Ações de Administrador ou Editor</strong>
+                        </div>
+                        <div>
+                            <a href="{% url 'articles:article_update' article.slug %}"
+                               class="btn btn-sm btn-warning me-2">
+                                <i class="fas fa-edit me-1"></i>Editar
+                            </a>
+                            <a href="{% url 'articles:article_delete' article.slug %}"
+                               class="btn btn-sm btn-danger">
+                                <i class="fas fa-trash me-1"></i>Deletar
+                            </a>
+                        </div>
+                    </div>
+                    {% endif %}
+                </header>
+
+                <!-- Article Content -->
+                <div class="article-content">
+                    {{ article.content|safe }}
+                </div>
+
+                <!-- Article Footer -->
+                <footer class="mt-5 pt-4 border-top">
+                    <div class="row">
+                        <div class="col-md-6">
+                            {% if article.tags.all %}
+                                <div class="mb-3">
+                                    <strong>Tags:</strong>
+                                    {% for tag in article.tags.all %}
+                                        <span class="badge bg-theme-secondary me-1">{{ tag.name }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </footer>
+            </article>
+
+            <!-- Author Bio -->
+            {% if article.author %}
+                <div class="card-django mb-5">
+                    <div class="card-body card-django">
+                        <div class="row align-items-center">
+                            <div class="col-auto">
+                                {% if article.author.avatar %}
+                                    <img src="{{ article.author.avatar.url }}"
+                                         class="rounded-circle avatar-lg" alt="{{ article.author.get_full_name|default:article.author.username }}">
+                                {% else %}
+                                    <div class="bg-theme-secondary rounded-circle icon-container-lg text-theme-secondary">
+                                        <i class="fas fa-user fa-2x"></i>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col">
+                                <h5 class="mb-1 text-sans text-body">{{ article.author.get_full_name|default:article.author.username }}</h5>
+                                {% if article.author.bio %}
+                                    <p class="text-theme-secondary mb-0 text-body">{{ article.author.bio }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Comments Section -->
+            {% if article.allow_comments %}
+            <section class="comments-section mt-5">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h3 class="h4">
+                        <i class="fas fa-comments"></i>
+                        Comentários
+                        <span class="badge bg-theme-secondary ms-2" id="comment-count">
+                            {{ article.comment_count }}
+                        </span>
+                    </h3>
+                    <a href="{% url 'articles:comment_list' slug=article.slug %}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-expand"></i>
+                        Ver todos
+                    </a>
+                </div>
+
+                <!-- Comment Form -->
+                <div class="comment-form-container mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-edit"></i>
+                                Deixe seu comentário
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="post" action="{% url 'articles:add_comment' slug=article.slug %}" id="comment-form">
+                                {% csrf_token %}
+
+                                <div id="comment-feedback" aria-live="polite">
+                                    {% if form.errors or form.non_field_errors %}
+                                        <div class="alert alert-danger">
+                                            {% for field in form %}
+                                                {% for error in field.errors %}
+                                                    <div><strong>{{ field.label }}:</strong> {{ error }}</div>
+                                                {% endfor %}
+                                            {% endfor %}
+                                            {% for error in form.non_field_errors %}
+                                                <div>{{ error }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-floating mb-3">
+                                            <input type="text" class="form-control" name="name" id="id_name"
+                                                   placeholder="Seu nome" required
+                                                   aria-describedby="name-help"
+                                                   {% if user.is_authenticated %}value="{{ user.get_full_name|default:user.username }}" readonly{% endif %}>
+                                            
+                                            {% if user.is_authenticated %}
+                                                <div class="form-text" id="name-help">Logado como: {{ user.get_full_name|default:user.username }}</div>
+                                            {% else %}
+                                                <div class="form-text" id="name-help">Como você gostaria de ser identificado</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-floating mb-3">
+                                            <input type="email" class="form-control" name="email" id="id_email"
+                                                   placeholder="Seu email" required
+                                                   aria-describedby="email-help"
+                                                   {% if user.is_authenticated %}value="{{ user.email }}" readonly{% endif %}>
+                                            
+                                            {% if user.is_authenticated %}
+                                                <div class="form-text" id="email-help">Email da conta: {{ user.email }}</div>
+                                            {% else %}
+                                                <div class="form-text" id="email-help">Seu email não será publicado</div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {% if not user.is_authenticated %}
+                                <div class="form-floating mb-3">
+                                    <input type="url" class="form-control" name="website" id="id_website"
+                                           placeholder="Seu website (opcional)" aria-describedby="website-help">
+                                 
+                                    <div class="form-text" id="website-help">URL do seu site ou blog</div>
+                                </div>
+                                {% endif %}
+
+                                <div class="form-floating mb-3">
+                                    <textarea class="form-control" name="content" id="id_content"
+                                              placeholder="Escreva seu comentário..." rows="4" required aria-describedby="content-help"></textarea>
+                                    
+                                    <div class="form-text" id="content-help">Compartilhe sua opinião, dúvida ou sugestão</div>
+                                </div>
+
+                                <!-- Honeypot -->
+                                <input type="text" name="website_url" style="display: none;" tabindex="-1" autocomplete="off">
+
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">
+                                        <i class="fas fa-info-circle"></i>
+                                        {% if user.is_authenticated and user.is_verified %}
+                                            Seu comentário será publicado imediatamente.
+                                        {% else %}
+                                            Seu comentário será moderado antes da publicação.
+                                        {% endif %}
+                                    </small>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-paper-plane"></i>
+                                        Enviar Comentário
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Comments List -->
+                <div id="comments-container">
+                    {% include 'articles/comments/comment_snippet.html' %}
+                </div>
+            </section>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Related Articles -->
+            {% if related_articles %}
+                <div class="card-django mb-4">
+                    <div class="card-header card-django">
+                        <h5 class="mb-0 text-sans text-body">
+                            <i class="fas fa-newspaper me-2"></i>Artigos Relacionados
+                        </h5>
+                    </div>
+                    <div class="card-body card-django">
+                        {% for related in related_articles %}
+                            <div class="d-flex mb-3">
+                                {% if related.featured_image %}
+                                    <img src="{{ related.featured_image.url }}" class="me-3 rounded" 
+                                         style="width: 60px; height: 60px; object-fit: cover;" alt="{{ related.title }}">
+                                {% else %}
+                                    <div class="me-3 bg-theme-secondary rounded d-flex align-items-center justify-content-center" 
+                                         style="width: 60px; height: 60px;">
+                                        <i class="fas fa-newspaper text-theme-secondary"></i>
+                                    </div>
+                                {% endif %}
+                                
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1 text-sans text-body">
+                                        <a href="{{ related.get_absolute_url }}" class="text-decoration-none">
+                                            {{ related.title|truncatechars:40 }}
+                                        </a>
+                                    </h6>
+                                    <small class="text-theme-secondary">
+                                        {{ related.published_at|date:"d/m/Y" }}
+                                    </small>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Table of Contents -->
+            <div class="card-django mb-4">
+                <div class="card-header card-django">
+                    <h5 class="mb-0 text-sans text-body">
+                        <i class="fas fa-list me-2"></i>Neste Artigo
+                    </h5>
+                </div>
+                <div class="card-body card-django">
+                    <div id="table-django-of-contents">
+                        <p class="text-theme-secondary mb-0 text-body">Carregando índice...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Back to Top -->
+            <div class="text-center">
+                <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" 
+                        class="btn btn-outline-secondary btn-sm text-sans">
+                    <i class="fas fa-arrow-up me-1"></i>Voltar ao topo
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="module" src="{% static 'js/article_comments_init.js' %}"></script>
+{% endblock %}

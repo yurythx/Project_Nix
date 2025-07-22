@@ -1,0 +1,175 @@
+{% extends 'config/base_config_page.html' %}
+{% load config_extras %}
+
+{% block config_title %}Detalhes do Grupo{% endblock %}
+{% block page_icon %}<i class="fas fa-layer-group me-2"></i>{% endblock %}
+{% block page_title %}{{ group.name }}{% endblock %}
+{% block page_actions %}
+<a href="{% url 'config:group_update' group.slug %}" class="btn btn-primary">
+    <i class="fas fa-edit me-2"></i>Editar
+</a>
+<a href="{% url 'config:group_delete' group.slug %}" class="btn btn-outline-danger">
+    <i class="fas fa-trash me-2"></i>Deletar
+</a>
+{% endblock %}
+
+{% block page_content %}
+<div class="row">
+    <div class="col-12 col-lg-8">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-info-circle me-2"></i>Informações do Grupo
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Nome:</label>
+                        <p class="mb-0">{{ group.name }}</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Slug:</label>
+                        <p class="mb-0"><code>{{ group.slug }}</code></p>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Descrição:</label>
+                    <p class="mb-0">{{ group.description|default:"Sem descrição" }}</p>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Criado em:</label>
+                        <p class="mb-0">{{ group.created_at|date:"d/m/Y H:i" }}</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Última atualização:</label>
+                        <p class="mb-0">{{ group.updated_at|date:"d/m/Y H:i" }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Membros do Grupo -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-users me-2"></i>Membros do Grupo
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if group.user_set.all %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Usuário</th>
+                                    <th>Email</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in group.user_set.all %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-sm me-3">
+                                                <div class="bg-django-green rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                                    <i class="fas fa-user text-white small"></i>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold">{{ user.get_full_name|default:user.username }}</div>
+                                                <small class="text-muted">@{{ user.username }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>{{ user.email }}</td>
+                                    <td>
+                                        {% if user.is_active %}
+                                            <span class="badge bg-success">Ativo</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Inativo</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-users fa-2x mb-3"></i>
+                        <p>Nenhum usuário neste grupo.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-12 col-lg-4">
+        <!-- Estatísticas -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-light">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>Estatísticas
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="border-end">
+                            <div class="h4 mb-0 text-primary">{{ group.user_set.count }}</div>
+                            <small class="text-muted">Membros</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="h4 mb-0 text-success">{{ group.permissions.count }}</div>
+                        <small class="text-muted">Permissões</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ações Rápidas -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-light">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-bolt me-2"></i>Ações Rápidas
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'config:group_update' group.slug %}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-edit me-2"></i>Editar Grupo
+                    </a>
+                    <a href="{% url 'config:group_list' %}" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-list me-2"></i>Ver Todos os Grupos
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Permissões -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-light">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-shield-alt me-2"></i>Permissões
+                </h6>
+            </div>
+            <div class="card-body">
+                {% if group.permissions.all %}
+                    <div class="mb-2">
+                        {% for permission in group.permissions.all %}
+                            <span class="badge bg-info me-1 mb-1">{{ permission.name }}</span>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted small">Nenhuma permissão atribuída.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

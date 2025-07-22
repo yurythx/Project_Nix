@@ -1,0 +1,190 @@
+{% extends 'base.html' %}
+
+{% block title %}Páginas{% if query %} - {{ query }}{% endif %} - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h2 text-sans text-body">
+                    <i class="fas fa-file-alt me-2"></i>
+                    {% if query %}
+                        Resultados para "{{ query }}"
+                    {% else %}
+                        Todas as Páginas
+                    {% endif %}
+                </h1>
+                
+                {% if query %}
+                    <a href="{% url 'pages:page_list' %}" class="btn btn-outline-secondary btn-enhanced">
+                        <i class="fas fa-times me-1"></i>Limpar busca
+                    </a>
+                {% endif %}
+            </div>
+
+            <!-- Search Form -->
+            <div class="card-django mb-4 mb-3">
+                <div class="card-body card-django-body-spacious card-django">
+                    <form method="get" class="row g-3 form-django" aria-label="Formulário de busca" role="form">
+                        <div class="col-md-9">
+                            <input type="search" class="form-control form-control-enhanced" name="q" 
+                                   value="{{ query }}" placeholder="Buscar páginas...">
+                        </div>
+                        <div class="col-md-3">
+                            <button type="submit" class="btn btn-primary w-100 text-sans">
+                                <i class="fas fa-search me-1"></i>Buscar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Results -->
+            {% if pages %}
+                <div class="row">
+                    {% for page in pages %}
+                        <div class="col-md-6 mb-4">
+                            <div class="card-django h-100">
+                                {% if page.featured_image %}
+                                    <img src="{{ page.featured_image.url }}" class="card-django-img-top" alt="{{ page.title }}" style="height: 200px; object-fit: cover;">
+                                {% endif %}
+                                
+                                <div class="card-body card-django-body-spacious card-django">
+                                    <h5 class="card-title text-sans text-body">
+                                        <a href="{% url 'pages:page_detail' page.slug %}" class="text-decoration-none">
+                                            {{ page.title }}
+                                        </a>
+                                    </h5>
+                                    
+                                    {% if page.excerpt %}
+                                        <p class="card-django-text text-theme-secondary text-body">{{ page.excerpt|truncatewords:20 }}</p>
+                                    {% endif %}
+                                    
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <small class="text-theme-secondary">
+                                            <i class="fas fa-calendar me-1"></i>
+                                            {{ page.created_at|date:"d/m/Y" }}
+                                        </small>
+                                        
+                                        {% if page.views_count %}
+                                            <small class="text-theme-secondary">
+                                                <i class="fas fa-eye me-1"></i>
+                                                {{ page.views_count }} visualizações
+                                            </small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                
+                                <div class="card-django-footer bg-transparent">
+                                    <a href="{% url 'pages:page_detail' page.slug %}" class="btn btn-outline-primary btn-sm btn-enhanced">
+                                        <i class="fas fa-arrow-right me-1"></i>Ler mais
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Pagination -->
+                {% if page_obj.has_other_pages %}
+                    <nav aria-label="Navegação de páginas">
+                        <ul class="pagination justify-content-center">
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=1{% if query %}&q={{ query }}{% endif %}">
+                                        <i class="fas fa-angle-double-left"></i>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}">
+                                        <i class="fas fa-angle-left"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+
+                            {% for num in page_obj.paginator.page_range %}
+                                {% if page_obj.number == num %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ num }}</span>
+                                    </li>
+                                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}">{{ num }}</a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}">
+                                        <i class="fas fa-angle-right"></i>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}">
+                                        <i class="fas fa-angle-double-right"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                {% endif %}
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-search fa-3x text-theme-secondary mb-3"></i>
+                    <h4 class="text-sans text-body">Nenhuma página encontrada</h4>
+                    {% if query %}
+                        <p class="text-theme-secondary text-body">Não encontramos páginas para "{{ query }}".</p>
+                        <a href="{% url 'pages:page_list' %}" class="btn btn-primary btn-enhanced">Ver todas as páginas</a>
+                    {% else %}
+                        <p class="text-theme-secondary text-body">Ainda não há páginas publicadas.</p>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <div class="card-django">
+                <div class="card-header card-django-header-comfortable card-django">
+                    <h5 class="mb-0 text-sans text-body">
+                        <i class="fas fa-fire me-2"></i>Páginas Populares
+                    </h5>
+                </div>
+                <div class="card-body card-django-body-spacious card-django">
+                    {% if popular_pages %}
+                        {% for page in popular_pages %}
+                            <div class="d-flex mb-3">
+                                {% if page.featured_image %}
+                                    <img src="{{ page.featured_image.url }}" class="me-3 rounded" 
+                                         style="width: 60px; height: 60px; object-fit: cover;" alt="{{ page.title }}">
+                                {% else %}
+                                    <div class="me-3 bg-theme-secondary rounded d-flex align-items-center justify-content-center" 
+                                         style="width: 60px; height: 60px;">
+                                        <i class="fas fa-file-alt text-theme-secondary"></i>
+                                    </div>
+                                {% endif %}
+                                
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1 text-sans text-body">
+                                        <a href="{% url 'pages:page_detail' page.slug %}" class="text-decoration-none">
+                                            {{ page.title|truncatechars:40 }}
+                                        </a>
+                                    </h6>
+                                    <small class="text-theme-secondary">
+                                        <i class="fas fa-eye me-1"></i>{{ page.views_count|default:0 }}
+                                    </small>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-theme-secondary mb-0 text-body">Nenhuma página popular ainda.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

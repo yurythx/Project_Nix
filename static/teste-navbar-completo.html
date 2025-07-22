@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste Completo - Navbar Mobile</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <link href="css/main.css" rel="stylesheet">
+    <style>
+        .debug-info {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            z-index: 10000;
+        }
+        .test-section {
+            min-height: 100vh;
+            padding: 2rem;
+            border-bottom: 2px solid var(--border-color);
+        }
+        .problem-indicator {
+            background: #ff4444;
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 3px;
+            font-size: 0.75rem;
+            margin-left: 0.5rem;
+        }
+        .ok-indicator {
+            background: #44ff44;
+            color: black;
+            padding: 0.25rem 0.5rem;
+            border-radius: 3px;
+            font-size: 0.75rem;
+            margin-left: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="debug-info">
+        <div>Largura: <span id="width">-</span>px</div>
+        <div>Altura: <span id="height">-</span>px</div>
+        <div>Orientação: <span id="orientation">-</span></div>
+        <div>Breakpoint: <span id="breakpoint">-</span></div>
+    </div>
+
+    <!-- Navbar Atual -->
+    <nav class="navbar navbar-expand-lg navbar-nix">
+        <div class="container">
+            <!-- Brand -->
+            <a class="navbar-brand" href="#">
+                <img src="favicon.ico" alt="Project Nix Logo" width="32" height="32" class="me-2">
+                Project Nix
+            </a>
+            
+            <!-- Mobile Toggle -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <!-- Navigation Links -->
+            <div class="collapse navbar-collapse position-relative" id="navbarNav">
+                <!-- Header do menu mobile -->
+                <div class="navbar-menu-header d-lg-none">
+                    <a class="navbar-menu-brand" href="#">
+                        <img src="favicon.ico" alt="Project Nix Logo" width="28" height="28">
+                        Project Nix
+                    </a>
+                    <button type="button" class="navbar-close-x" aria-label="Fechar menu">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <!-- Container do conteúdo do menu -->
+                <div class="navbar-menu-content d-lg-contents">
+                    <!-- Main Navigation -->
+                    <ul class="navbar-nav me-auto">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="#">
+                                <i class="fas fa-home me-1"></i>Home
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                <i class="fas fa-newspaper me-1"></i>Artigos
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                <i class="fas fa-book me-1"></i>Livros
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                <i class="fas fa-book-open me-1"></i>Mangás
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                <i class="fas fa-headphones me-1"></i>Audiolivros
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                <i class="fas fa-info-circle me-1"></i>Sobre
+                            </a>
+                        </li>
+                    </ul>
+
+                    <!-- Search Form Mobile -->
+                    <div class="navbar-search-section d-lg-none">
+                        <form class="form-nix">
+                            <div class="input-group">
+                                <input class="form-control" type="search" placeholder="Buscar...">
+                                <button class="btn btn-outline-light" type="submit">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Search Form Desktop -->
+                    <form class="d-none d-lg-flex me-3 form-nix align-items-center">
+                        <div class="input-group">
+                            <input class="form-control" type="search" placeholder="Buscar...">
+                            <button class="btn btn-outline-light" type="submit">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <!-- User Menu -->
+                    <ul class="navbar-nav align-items-center">
+                        <!-- Theme Toggle Desktop -->
+                        <li class="nav-item me-2 d-none d-lg-block">
+                            <div class="theme-toggle">
+                                <button class="theme-option" data-theme="light">
+                                    <i class="fas fa-sun"></i>
+                                </button>
+                                <button class="theme-option" data-theme="dark">
+                                    <i class="fas fa-moon"></i>
+                                </button>
+                            </div>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                <i class="fas fa-sign-in-alt me-1"></i>Entrar
+                            </a>
+                        </li>
+                    </ul>
+
+                    <!-- Seção do usuário no menu mobile -->
+                    <div class="navbar-user-section d-lg-none">
+                        <!-- Theme Toggle Mobile -->
+                        <div class="text-center mb-3">
+                            <div class="theme-toggle">
+                                <button class="theme-option" data-theme="light">
+                                    <i class="fas fa-sun"></i>
+                                </button>
+                                <button class="theme-option" data-theme="dark">
+                                    <i class="fas fa-moon"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <a href="#" class="btn btn-outline-light">
+                                <i class="fas fa-sign-in-alt me-2"></i>Entrar
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Conteúdo de Teste -->
+    <div class="test-section">
+        <h1>🔍 Análise de Problemas Identificados</h1>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <h3>❌ Problemas Encontrados</h3>
+                <ul>
+                    <li>Classes obsoletas no template <span class="problem-indicator">CRÍTICO</span></li>
+                    <li>Alinhamento inconsistente de ícones <span class="problem-indicator">VISUAL</span></li>
+                    <li>Breakpoints conflitantes <span class="problem-indicator">RESPONSIVO</span></li>
+                    <li>JavaScript duplicado <span class="problem-indicator">PERFORMANCE</span></li>
+                    <li>Cores hardcoded no template <span class="problem-indicator">MANUTENÇÃO</span></li>
+                    <li>Estrutura HTML complexa <span class="problem-indicator">COMPLEXIDADE</span></li>
+                </ul>
+            </div>
+            
+            <div class="col-md-6">
+                <h3>✅ Soluções Necessárias</h3>
+                <ul>
+                    <li>Limpar classes obsoletas <span class="ok-indicator">PRIORIDADE 1</span></li>
+                    <li>Unificar alinhamentos <span class="ok-indicator">PRIORIDADE 1</span></li>
+                    <li>Simplificar breakpoints <span class="ok-indicator">PRIORIDADE 2</span></li>
+                    <li>Otimizar JavaScript <span class="ok-indicator">PRIORIDADE 2</span></li>
+                    <li>Usar variáveis CSS <span class="ok-indicator">PRIORIDADE 3</span></li>
+                    <li>Refatorar HTML <span class="ok-indicator">PRIORIDADE 3</span></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>📱 Teste de Responsividade</h2>
+        <p>Redimensione a janela para testar diferentes breakpoints:</p>
+        
+        <div class="row">
+            <div class="col-12">
+                <div class="alert alert-info">
+                    <h5>Instruções de Teste:</h5>
+                    <ol>
+                        <li><strong>Desktop (≥992px):</strong> Menu horizontal, busca inline</li>
+                        <li><strong>Tablet (768-991px):</strong> Menu hambúrguer, layout adaptado</li>
+                        <li><strong>Mobile (≤767px):</strong> Menu fullscreen, navegação vertical</li>
+                        <li><strong>Mobile pequeno (≤360px):</strong> Layout compacto</li>
+                        <li><strong>Landscape:</strong> Layout otimizado para orientação horizontal</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+        // Debug info
+        function updateDebugInfo() {
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            const orientation = width > height ? 'landscape' : 'portrait';
+            
+            let breakpoint = 'xl';
+            if (width < 576) breakpoint = 'xs';
+            else if (width < 768) breakpoint = 'sm';
+            else if (width < 992) breakpoint = 'md';
+            else if (width < 1200) breakpoint = 'lg';
+            
+            document.getElementById('width').textContent = width;
+            document.getElementById('height').textContent = height;
+            document.getElementById('orientation').textContent = orientation;
+            document.getElementById('breakpoint').textContent = breakpoint;
+        }
+
+        window.addEventListener('resize', updateDebugInfo);
+        updateDebugInfo();
+
+        // Fechar menu ao clicar no botão X
+        document.querySelector('.navbar-close-x')?.addEventListener('click', function() {
+            const navbarCollapse = document.querySelector('.navbar-collapse');
+            const bsCollapse = bootstrap.Collapse.getInstance(navbarCollapse);
+            if (bsCollapse) {
+                bsCollapse.hide();
+            }
+        });
+
+        console.log('🧪 Teste completo da navbar carregado');
+    </script>
+</body>
+</html>

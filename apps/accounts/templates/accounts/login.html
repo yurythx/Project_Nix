@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Login - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <!-- Header da Página -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h2 mb-1 text-sans text-body">
+                        <i class="fas fa-sign-in-alt me-2 text-django-green"></i>Entrar no Sistema
+                    </h1>
+                    <p class="text-secondary mb-0 text-body">Faça login com seu e-mail ou nome de usuário</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <!-- Card de Login -->
+            <div class="card-django border-0 shadow-sm mb-4">
+                <div class="card-body profile-card-body">
+                    <div class="text-center mb-4">
+                        <i class="fas fa-user-circle fa-3x text-django-green mb-3"></i>
+                        <h3 class="text-sans text-body">Login</h3>
+                    </div>
+
+                    <!-- Formulário de Login -->
+                    <div class="form-django">
+                        {% crispy form %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Informações de Ajuda -->
+            <div class="card-django border-0 shadow-sm">
+                <div class="profile-card-header">
+                    <h6 class="mb-0 text-sans text-body">
+                        <i class="fas fa-info-circle me-2 text-django-green"></i>Como fazer login?
+                    </h6>
+                </div>
+                    <div class="row text-center">
+                        <div class="col-md-6">
+                            <div class="mb-2">
+                                <i class="fas fa-envelope text-django-green me-1"></i>
+                                <small class="text-sans"><strong>Com E-mail:</strong></small>
+                            </div>
+                            <small class="text-muted text-sans">usuario@exemplo.com</small>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-2">
+                                <i class="fas fa-user text-django-green me-1"></i>
+                                <small class="text-sans"><strong>Com Usuário:</strong></small>
+                            </div>
+                            <small class="text-muted text-sans">meuusuario</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Links Úteis -->
+            
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-focus no campo de login
+    const loginField = document.querySelector('input[name="username"]');
+    if (loginField) {
+        loginField.focus();
+    }
+
+    // Adiciona botão de mostrar/ocultar senha
+    const passwordField = document.querySelector('input[type="password"]');
+    if (passwordField) {
+        // Cria o botão/ícone
+        const wrapper = document.createElement('div');
+        wrapper.style.position = 'relative';
+        passwordField.parentNode.insertBefore(wrapper, passwordField);
+        wrapper.appendChild(passwordField);
+        passwordField.style.paddingRight = '2.5rem';
+        
+        const toggleBtn = document.createElement('button');
+        toggleBtn.type = 'button';
+        toggleBtn.className = 'btn btn-outline-secondary btn-sm btn-eye-password';
+        toggleBtn.style.position = 'absolute';
+        toggleBtn.style.top = '50%';
+        toggleBtn.style.right = '0.5rem';
+        toggleBtn.style.transform = 'translateY(-50%)';
+        toggleBtn.style.zIndex = '10';
+        toggleBtn.style.border = 'none';
+        toggleBtn.style.background = 'none';
+        toggleBtn.style.padding = '0 0.5rem';
+        toggleBtn.innerHTML = '<i class="fas fa-eye"></i>';
+        wrapper.appendChild(toggleBtn);
+
+        toggleBtn.addEventListener('click', function() {
+            if (passwordField.type === 'password') {
+                passwordField.type = 'text';
+                toggleBtn.innerHTML = '<i class="fas fa-eye-slash"></i>';
+            } else {
+                passwordField.type = 'password';
+                toggleBtn.innerHTML = '<i class="fas fa-eye"></i>';
+            }
+        });
+    }
+
+    // Feedback visual no envio do formulário
+    const form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const submitBtn = this.querySelector('input[type="submit"], button[type="submit"]');
+            if (submitBtn) {
+                const originalText = submitBtn.value || submitBtn.innerHTML;
+                submitBtn.value = 'Entrando...';
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Entrando...';
+                submitBtn.disabled = true;
+                submitBtn.classList.add('disabled');
+                
+                // Restaurar texto original em caso de erro
+                setTimeout(function() {
+                    if (submitBtn.disabled) {
+                        submitBtn.value = originalText;
+                        submitBtn.innerHTML = originalText;
+                        submitBtn.disabled = false;
+                        submitBtn.classList.remove('disabled');
+                    }
+                }, 10000); // 10 segundos timeout
+            }
+        });
+    }
+
+    // Melhorar acessibilidade dos campos
+    const inputs = document.querySelectorAll('input[type="text"], input[type="email"], input[type="password"]');
+    inputs.forEach(function(input) {
+        input.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const form = this.closest('form');
+                if (form) {
+                    form.submit();
+                }
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

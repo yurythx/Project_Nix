@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load articles_tags %}
+
+{% comment %} Estilos migrados para main.css. Removido article-list.css {% endcomment %}
+
+{% block extra_js %}
+{# JS específico removido. Use main.js para interações globais. #}
+{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h2 mb-1 text-sans text-body">
+                        <i class="fas fa-newspaper me-2 text-theme-primary"></i>
+                        {% if category %}
+                            Artigos em <span class="text-theme-primary">{{ category.name }}</span>
+                        {% else %}
+                            Todos os Artigos
+                        {% endif %}
+                    </h1>
+                    <p class="text-theme-secondary mb-0 text-body">Leitura de artigos, livros, mangás e audiolivros</p>
+                </div>
+                <div>
+                    {% if user.is_authenticated and user.is_staff or user.is_authenticated and user.is_superuser or user.is_authenticated and user|has_group:'Editor' %}
+                        <a href="{% url 'articles:article_create' %}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Novo Artigo
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+            {% if articles %}
+                <div class="row g-4">
+                    {% for article in articles %}
+                    <div class="col-12">
+                        {% include 'includes/content_card.html' with 
+                            image_url=article.featured_image.url if article.featured_image else None
+                            image_alt=article.featured_image_alt|default:article.title
+                            detail_url=article.get_absolute_url
+                            title=article.title
+                            subtitle=article.subtitle
+                            author=article.author.get_full_name|default:article.author.username
+                            date=article.published_at|date:'d M, Y'
+                            description=article.excerpt
+                            primary_action_url=article.get_absolute_url
+                            primary_action_label='Ler mais'
+                            secondary_action_url=article|edit_url if user.is_authenticated and (user.is_staff or user.is_superuser or user|has_group:'Editor') else None
+                            secondary_action_label='Editar' if user.is_authenticated and (user.is_staff or user.is_superuser or user|has_group:'Editor') else None
+                            extra_info='<span><i class="fas fa-comments me-1"></i>{}</span><span><i class="fas fa-eye me-1"></i>{}</span>'.format(article.comment_count, article.view_count|default:0)|safe
+                        %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% if page_obj.has_other_pages %}
+                <nav aria-label="Paginação" class="mt-5">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Anterior</a>
+                            </li>
+                        {% endif %}
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if page_obj.number == num %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ num }}</span>
+                                </li>
+                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}">Próximo</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-newspaper fa-5x text-theme-secondary mb-3"></i>
+                    <h3 class="text-theme-secondary text-sans text-body">Nenhum artigo encontrado</h3>
+                    <p class="text-theme-secondary text-body">Ainda não há artigos publicados.</p>
+                </div>
+            {% endif %}
+        </div>
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm mb-4 article-list-card">
+                <div class="card-header bg-theme-secondary text-theme-light">
+                    <h6 class="mb-0"><i class="fas fa-search me-2"></i>Buscar Artigos</h6>
+                </div>
+                <div class="card-body">
+                    <form method="get" action="{% url 'articles:search' %}" aria-label="Formulário de busca" role="form">
+                        <div class="input-group">
+                            <input type="text" name="q" class="form-control" placeholder="Digite sua busca...">
+                            <button class="btn btn-primary" type="submit">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="card border-0 shadow-sm mb-4 article-list-card">
+                <div class="card-header bg-theme-info text-theme-light">
+                    <h6 class="mb-0"><i class="fas fa-folder me-2"></i>Categorias</h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group mb-4">
+                        {% if categories %}
+                            {% for cat in categories %}
+                                <a href="{{ cat.get_absolute_url }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center {% if category and cat.pk == category.pk %}active{% endif %}">
+                                    {% if cat.icon %}<i class="{{ cat.icon }} me-2"></i>{% endif %}
+                                    {{ cat.name }}
+                                    <span class="badge bg-theme-primary rounded-pill">{{ cat.articles.count }}</span>
+                                </a>
+                            {% endfor %}
+                        {% else %}
+                            <li class="list-group-item text-center text-muted">Nenhuma categoria cadastrada.</li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

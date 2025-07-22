@@ -1,0 +1,8 @@
+<li class="nav-item">
+    <a class="nav-link {% if is_active %}active{% endif %}"
+       href="{% url 'config:'|add:url_name %}"
+       {% if description %}title="{{ description }}"{% endif %}
+       aria-label="{{ title }}">
+        <i class="{{ icon }} me-2" aria-hidden="true"></i>{{ title }}
+    </a>
+</li>

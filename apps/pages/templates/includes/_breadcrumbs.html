@@ -1,0 +1,27 @@
+{% comment %}
+Include de breadcrumbs padronizado.
+Uso: {% include 'includes/_breadcrumbs.html' with breadcrumbs=breadcrumbs %}
+O contexto 'breadcrumbs' deve ser uma lista de dicts: {title, url (opcional), is_current (opcional)}
+{% endcomment %}
+
+{% if breadcrumbs %}
+<nav aria-label="breadcrumb" class="bg-theme-secondary border-bottom">
+    <div class="container">
+        <ol class="breadcrumb mb-0 py-2">
+            {% for breadcrumb in breadcrumbs %}
+                {% if breadcrumb.is_current or not breadcrumb.url %}
+                    <li class="breadcrumb-item active" aria-current="page">
+                        {{ breadcrumb.title }}
+                    </li>
+                {% else %}
+                    <li class="breadcrumb-item">
+                        <a href="{{ breadcrumb.url }}" class="text-decoration-none">
+                            {{ breadcrumb.title }}
+                        </a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+        </ol>
+    </div>
+</nav>
+{% endif %} 

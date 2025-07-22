@@ -1,0 +1,183 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - Artigos{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Header -->
+            <div class="text-center mb-4">
+                <div class="mb-3">
+                    <i class="fas fa-exclamation-triangle text-warning" style="font-size: 4rem;"></i>
+                </div>
+                <h1 class="h2 mb-1 text-danger">Confirmar Exclusão</h1>
+                <p class="text-muted">Esta ação não pode ser desfeita</p>
+            </div>
+
+            <!-- Card de Confirmação -->
+            <div class="card shadow-sm border-warning">
+                <div class="card-header bg-warning bg-opacity-10 border-warning">
+                    <h5 class="card-title mb-0 text-warning">
+                        <i class="fas fa-trash-alt me-2"></i>Deletar Artigo
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Informações do Artigo -->
+                    <div class="row mb-4">
+                        {% if object.featured_image %}
+                        <div class="col-md-4">
+                            <img src="{{ object.featured_image.url }}" 
+                                 alt="{{ object.featured_image_alt|default:object.title }}"
+                                 class="img-fluid rounded">
+                        </div>
+                        <div class="col-md-8">
+                        {% else %}
+                        <div class="col-12">
+                        {% endif %}
+                            <h4 class="mb-2">{{ object.title }}</h4>
+                            <p class="text-muted mb-2">{{ object.excerpt|truncatewords:30 }}</p>
+                            
+                            <div class="row text-sm">
+                                <div class="col-sm-6">
+                                    <strong>Autor:</strong> {{ object.author.get_full_name|default:object.author.username }}
+                                </div>
+                                <div class="col-sm-6">
+                                    <strong>Status:</strong> 
+                                    <span class="badge 
+                                        {% if object.status == 'published' %}bg-success
+                                        {% elif object.status == 'draft' %}bg-secondary
+                                        {% elif object.status == 'archived' %}bg-warning
+                                        {% else %}bg-info{% endif %}">
+                                        {{ object.get_status_display }}
+                                    </span>
+                                </div>
+                                <div class="col-sm-6">
+                                    <strong>Categoria:</strong> {{ object.category|default:"Sem categoria" }}
+                                </div>
+                                <div class="col-sm-6">
+                                    <strong>Criado em:</strong> {{ object.created_at|date:"d/m/Y H:i" }}
+                                </div>
+                                {% if object.published_at %}
+                                <div class="col-sm-6">
+                                    <strong>Publicado em:</strong> {{ object.published_at|date:"d/m/Y H:i" }}
+                                </div>
+                                {% endif %}
+                                <div class="col-sm-6">
+                                    <strong>Visualizações:</strong> {{ object.view_count }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Aviso -->
+                    <div class="alert alert-danger d-flex align-items-center" role="alert">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <div>
+                            <strong>Atenção!</strong> Você está prestes a deletar permanentemente este artigo. 
+                            Esta ação não pode ser desfeita e todos os dados relacionados serão perdidos.
+                        </div>
+                    </div>
+
+                    <!-- Consequências -->
+                    <div class="mb-4">
+                        <h6 class="text-danger mb-2">O que será perdido:</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-times text-danger me-2"></i>Conteúdo completo do artigo</li>
+                            <li><i class="fas fa-times text-danger me-2"></i>Imagem destacada e metadados</li>
+                            <li><i class="fas fa-times text-danger me-2"></i>Estatísticas de visualização</li>
+                            <li><i class="fas fa-times text-danger me-2"></i>Comentários associados (se houver)</li>
+                            <li><i class="fas fa-times text-danger me-2"></i>Links e referências externas</li>
+                        </ul>
+                    </div>
+
+                    <!-- Formulário de Confirmação -->
+                    <form method="post" class="d-flex justify-content-between align-items-center">
+                        {% csrf_token %}
+                        
+                        <div>
+                            <a href="{% url 'articles:article_list' %}" class="btn btn-outline-secondary me-2">
+                                <i class="fas fa-arrow-left me-1"></i>Cancelar
+                            </a>
+                            <a href="{{ object.get_absolute_url }}" class="btn btn-outline-info me-2">
+                                <i class="fas fa-eye me-1"></i>Visualizar
+                            </a>
+                            <a href="{% url 'articles:article_update' object.slug %}" class="btn btn-outline-warning">
+                                <i class="fas fa-edit me-1"></i>Editar
+                            </a>
+                        </div>
+                        
+                        <div>
+                            <button type="submit" class="btn btn-danger" onclick="return confirm('Tem certeza que deseja deletar este artigo? Esta ação não pode ser desfeita.')">
+                                <i class="fas fa-trash-alt me-1"></i>Sim, Deletar Artigo
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Alternativas -->
+            <div class="card mt-4 border-info">
+                <div class="card-header bg-info bg-opacity-10 border-info">
+                    <h6 class="card-title mb-0 text-info">
+                        <i class="fas fa-lightbulb me-2"></i>Alternativas à Exclusão
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <p class="mb-3">Considere estas alternativas antes de deletar permanentemente:</p>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-start mb-3">
+                                <i class="fas fa-archive text-warning me-2 mt-1"></i>
+                                <div>
+                                    <strong>Arquivar</strong><br>
+                                    <small class="text-muted">Manter o artigo mas removê-lo da listagem pública</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-start mb-3">
+                                <i class="fas fa-edit text-primary me-2 mt-1"></i>
+                                <div>
+                                    <strong>Rascunho</strong><br>
+                                    <small class="text-muted">Converter para rascunho para edição futura</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Adiciona confirmação extra no botão de deletar
+    const deleteButton = document.querySelector('button[type="submit"]');
+    if (deleteButton) {
+        deleteButton.addEventListener('click', function(e) {
+            const confirmed = confirm(
+                'ÚLTIMA CONFIRMAÇÃO:\n\n' +
+                'Você tem certeza absoluta que deseja deletar este artigo?\n' +
+                'Esta ação é IRREVERSÍVEL e todos os dados serão perdidos permanentemente.\n\n' +
+                'Digite "DELETAR" para confirmar:'
+            );
+            
+            if (confirmed) {
+                const userInput = prompt('Digite "DELETAR" para confirmar:');
+                if (userInput !== 'DELETAR') {
+                    e.preventDefault();
+                    alert('Exclusão cancelada. Texto de confirmação incorreto.');
+                }
+            } else {
+                e.preventDefault();
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

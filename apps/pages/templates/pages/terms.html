@@ -1,0 +1,207 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Termos de Uso - Project Nix{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h2 mb-1 text-sans text-body">
+                        <i class="fas fa-file-contract me-2" style="color: var(--nix-accent);"></i>Termos de Uso
+                    </h1>
+                    <p class="text-theme-secondary mb-0 text-body">Termos e condições de uso</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body profile-card-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Importante:</strong> Ao usar nossa plataforma, você concorda com estes termos.
+                        <br><small>Última atualização: {% now "d/m/Y" %}</small>
+                    </div>
+                    
+                    <h2 class="text-sans text-body">1. Aceitação dos Termos</h2>
+                    <p>Ao acessar e usar o Project Nix, você aceita e concorda em cumprir estes Termos de Uso. Se você não concordar com qualquer parte destes termos, não deve usar nossa plataforma.</p>
+
+                    <h2 class="text-sans text-body">2. Descrição do Serviço</h2>
+                    <p>O Project Nix é um sistema de gerenciamento de conteúdo que oferece:</p>
+                    <ul>
+                        <li>Criação e gerenciamento de páginas</li>
+                        <li>Sistema de artigos e blog</li>
+                        <li>Gerenciamento de usuários</li>
+                        <li>Ferramentas administrativas</li>
+                    </ul>
+                    
+                    <h2 class="text-sans text-body">3. Registro e Conta de Usuário</h2>
+                    <h3 class="text-sans text-body">3.1 Elegibilidade</h3>
+                    <p>Para usar nossos serviços, você deve:</p>
+                    <ul>
+                        <li>Ter pelo menos 18 anos de idade</li>
+                        <li>Fornecer informações precisas e atualizadas</li>
+                        <li>Manter a confidencialidade da sua senha</li>
+                        <li>Ser responsável por todas as atividades em sua conta</li>
+                    </ul>
+                    
+                    <h3 class="text-sans text-body">3.2 Responsabilidades do Usuário</h3>
+                    <p>Você é responsável por:</p>
+                    <ul>
+                        <li>Manter suas informações de conta atualizadas</li>
+                        <li>Proteger suas credenciais de acesso</li>
+                        <li>Notificar sobre uso não autorizado da conta</li>
+                        <li>Cumprir todas as leis aplicáveis</li>
+                    </ul>
+                    
+                    <h2 class="text-sans text-body">4. Uso Aceitável</h2>
+                    <h3 class="text-sans text-body">4.1 Condutas Permitidas</h3>
+                    <p>Você pode usar nossa plataforma para:</p>
+                    <ul>
+                        <li>Criar e gerenciar conteúdo legítimo</li>
+                        <li>Colaborar com outros usuários</li>
+                        <li>Personalizar sua experiência</li>
+                        <li>Acessar recursos disponíveis</li>
+                    </ul>
+                    
+                    <h3 class="text-sans text-body">4.2 Condutas Proibidas</h3>
+                    <p>É expressamente proibido:</p>
+                    <ul>
+                        <li>Publicar conteúdo ilegal, ofensivo ou prejudicial</li>
+                        <li>Violar direitos de propriedade intelectual</li>
+                        <li>Tentar acessar sistemas não autorizados</li>
+                        <li>Distribuir malware ou código malicioso</li>
+                        <li>Fazer spam ou enviar comunicações não solicitadas</li>
+                        <li>Interferir no funcionamento da plataforma</li>
+                    </ul>
+                    
+                    <h2 class="text-sans text-body">5. Propriedade Intelectual</h2>
+                    <h3 class="text-sans text-body">5.1 Nossos Direitos</h3>
+                    <p>O Project Nix e todo seu conteúdo são protegidos por direitos autorais e outras leis de propriedade intelectual.</p>
+                    
+                    <h3 class="text-sans text-body">5.2 Seu Conteúdo</h3>
+                    <p>Você mantém os direitos sobre o conteúdo que cria, mas nos concede licença para:</p>
+                    <ul>
+                        <li>Hospedar e exibir seu conteúdo</li>
+                        <li>Fazer backups e cópias de segurança</li>
+                        <li>Melhorar nossos serviços</li>
+                    </ul>
+                    
+                    <h2 class="text-sans text-body">6. Privacidade e Dados</h2>
+                    <p>O tratamento dos seus dados pessoais é regido por nossa <a href="{% url 'pages:privacy' %}" style="color: var(--nix-accent);">Política de Privacidade</a>, que faz parte integrante destes termos.</p>
+                    
+                    <h2 class="text-sans text-body">7. Limitação de Responsabilidade</h2>
+                    <p>Nossa responsabilidade é limitada ao máximo permitido por lei. Não nos responsabilizamos por:</p>
+                    <ul>
+                        <li>Perda de dados ou conteúdo</li>
+                        <li>Interrupções no serviço</li>
+                        <li>Danos indiretos ou consequenciais</li>
+                        <li>Ações de terceiros</li>
+                    </ul>
+                    
+                    <h2 class="text-sans text-body">8. Modificações dos Termos</h2>
+                    <p>Reservamos o direito de modificar estes termos a qualquer momento. Mudanças significativas serão comunicadas através de:</p>
+                    <ul>
+                        <li>Notificação por email</li>
+                        <li>Aviso na plataforma</li>
+                        <li>Atualização da data de modificação</li>
+                    </ul>
+                    
+                    <h2 class="text-sans text-body">9. Rescisão</h2>
+                    <p>Podemos suspender ou encerrar sua conta se você:</p>
+                    <ul>
+                        <li>Violar estes termos</li>
+                        <li>Usar a plataforma de forma inadequada</li>
+                        <li>Não pagar taxas devidas (se aplicável)</li>
+                    </ul>
+                    
+                    <h2 class="text-sans text-body">10. Lei Aplicável</h2>
+                    <p>Estes termos são regidos pelas leis brasileiras. Qualquer disputa será resolvida nos tribunais competentes do Brasil.</p>
+                    
+                    <h2 class="text-sans text-body">11. Contato</h2>
+                    <p>Para questões sobre estes termos:</p>
+                    
+                    <div class="bg-surface p-3 rounded">
+                        <p class="mb-2 text-body"><strong>Email:</strong> legal@projectnix.com</p>
+                        <p class="mb-2 text-body"><strong>Telefone:</strong> (11) 99999-9999</p>
+                        <div class="info-value"><strong>Endereço:</strong> São Paulo, SP - Brasil</div>
+                    </div>
+                    
+                    <div class="mt-4 p-3 bg-theme-success text-theme-light rounded">
+                        <h6 class="text-sans text-body">
+                            <i class="fas fa-handshake me-2"></i>Compromisso
+                        </h6>
+                        <p class="mb-0 small text-body">
+                            Estamos comprometidos em fornecer um serviço de qualidade e manter relacionamentos transparentes com nossos usuários.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body profile-card-body">
+                    <h4 class="text-sans text-body mb-3">
+                        <i class="fas fa-question-circle me-2" style="color: var(--nix-accent);"></i>Dúvidas Frequentes
+                    </h4>
+                    
+                    <div class="accordion" id="termsFAQ">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                                    Posso usar o conteúdo de outros usuários?
+                                </button>
+                            </h2>
+                            <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#termsFAQ">
+                                <div class="accordion-body">
+                                    Não, você deve respeitar os direitos autorais de outros usuários.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                                    O que acontece se eu violar os termos?
+                                </button>
+                            </h2>
+                            <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#termsFAQ">
+                                <div class="accordion-body">
+                                    Podemos suspender ou encerrar sua conta, dependendo da gravidade da violação.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card border-0 shadow-sm">
+                <div class="card-body profile-card-body">
+                    <h4 class="text-sans text-body mb-3">
+                        <i class="fas fa-file-alt me-2" style="color: var(--nix-accent);"></i>Documentos Relacionados
+                    </h4>
+                    
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <a href="{% url 'pages:privacy' %}" class="text-decoration-none" style="color: var(--nix-accent);">
+                                <i class="fas fa-shield-alt me-2"></i>Política de Privacidade
+                            </a>
+                        </li>
+                        <li class="mb-2">
+                            <a href="{% url 'pages:contact' %}" class="text-decoration-none" style="color: var(--nix-accent);">
+                                <i class="fas fa-envelope me-2"></i>Contato
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

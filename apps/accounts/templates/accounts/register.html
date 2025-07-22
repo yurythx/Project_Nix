@@ -1,0 +1,199 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Registro - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <!-- Header da Página -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h2 mb-1 text-sans text-body">
+                        <i class="fas fa-user-plus me-2 text-django-green"></i>Registro
+                    </h1>
+                    <p class="text-secondary mb-0 text-body">Crie sua conta no sistema</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <!-- Card de Registro -->
+            <div class="card-django border-0 shadow-sm">
+                <div class="profile-card-header bg-django-green text-light text-center">
+                    <h4 class="mb-0 text-sans text-body">
+                        <i class="fas fa-user-plus me-2"></i>Criar Conta
+                    </h4>
+                </div>
+                <div class="card-body profile-card-body">
+                    <!-- Mensagens -->
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {% if message.tags == 'success' %}
+                                    <i class="fas fa-check-circle me-2"></i>
+                                {% elif message.tags == 'error' %}
+                                    <i class="fas fa-exclamation-circle me-2"></i>
+                                {% elif message.tags == 'warning' %}
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                {% else %}
+                                    <i class="fas fa-info-circle me-2"></i>
+                                {% endif %}
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <!-- Mensagem de sucesso após registro -->
+                    {% if registration_success %}
+                        <div class="alert alert-success mt-3">
+                            <i class="fas fa-envelope me-2"></i>
+                            Sua conta foi criada! Verifique seu e-mail para ativar a conta antes de fazer login.
+                            <br>
+                            <span class="small">Não recebeu o e-mail? <a href="{% url 'accounts:resend_verification' %}?email={{ form.email.value }}">Reenviar confirmação</a></span>
+                        </div>
+                    {% endif %}
+
+                    <div class="text-center mb-4">
+                        <p class="text-secondary text-body">
+                            <i class="fas fa-user-plus me-1"></i>
+                            Preencha os dados abaixo para criar sua conta
+                        </p>
+                    </div>
+
+                    <!-- Formulário de Registro -->
+                    <div class="form-django">
+                        {% crispy form %}
+                    </div>
+
+                    <!-- Dica -->
+                    <div class="mt-3">
+                        <div class="alert alert-info border-0">
+                            <div class="d-flex align-items-start">
+                                <i class="fas fa-info-circle text-info me-2 mt-1"></i>
+                                <div class="small">
+                                    <strong>Dica:</strong> Após criar sua conta, você receberá um código de verificação por e-mail.
+                                    Verifique também sua caixa de spam.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Links Úteis -->
+            <div class="text-center mt-4">
+                <p class="text-secondary">
+                    Já tem uma conta?
+                    <a href="{% url 'accounts:login' %}" class="text-django-green text-decoration-none">
+                        <i class="fas fa-sign-in-alt me-1"></i>Fazer Login
+                    </a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-focus no primeiro campo
+    const firstInput = document.querySelector('input[name="first_name"]');
+    if (firstInput) {
+        firstInput.focus();
+    }
+
+    // Elementos do formulário
+    const emailField = document.querySelector('input[name="email"]');
+    const usernameField = document.querySelector('input[name="username"]');
+    const password1Field = document.querySelector('input[name="password1"]');
+    const password2Field = document.querySelector('input[name="password2"]');
+    const form = document.querySelector('form');
+
+    // Auto-preenchimento do username baseado no email
+    if (emailField && usernameField) {
+        emailField.addEventListener('input', function() {
+            if (!usernameField.value) {
+                const email = this.value;
+                const username = email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '');
+                if (username) {
+                    usernameField.value = username;
+                }
+            }
+        });
+    }
+
+    // Validação de email
+    if (emailField) {
+        emailField.addEventListener('blur', function() {
+            const email = this.value;
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+            this.classList.remove('is-valid', 'is-invalid');
+
+            if (email && emailRegex.test(email)) {
+                this.classList.add('is-valid');
+            } else if (email) {
+                this.classList.add('is-invalid');
+            }
+        });
+    }
+
+    // Validação de senhas em tempo real
+    if (password1Field && password2Field) {
+        function validatePasswords() {
+            const pass1 = password1Field.value;
+            const pass2 = password2Field.value;
+
+            // Limpa classes anteriores
+            password1Field.classList.remove('is-valid', 'is-invalid');
+            password2Field.classList.remove('is-valid', 'is-invalid');
+
+            // Valida primeira senha
+            if (pass1.length >= 8) {
+                password1Field.classList.add('is-valid');
+            } else if (pass1.length > 0) {
+                password1Field.classList.add('is-invalid');
+            }
+
+            // Valida confirmação
+            if (pass2.length > 0) {
+                if (pass1 === pass2 && pass1.length >= 8) {
+                    password2Field.classList.add('is-valid');
+                } else {
+                    password2Field.classList.add('is-invalid');
+                }
+            }
+        }
+
+        password1Field.addEventListener('input', validatePasswords);
+        password2Field.addEventListener('input', validatePasswords);
+    }
+
+    // Feedback visual no envio do formulário
+    if (form) {
+        form.addEventListener('submit', function() {
+            const submitBtn = this.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Criando conta...';
+                submitBtn.disabled = true;
+            }
+        });
+    }
+
+    // Auto-dismiss de alertas após 5 segundos
+    const alerts = document.querySelectorAll('.alert');
+    alerts.forEach(alert => {
+        setTimeout(() => {
+            if (alert.parentElement) {
+                alert.classList.remove('show');
+                setTimeout(() => alert.remove(), 150);
+            }
+        }, 5000);
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Página não encontrada - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid min-vh-100 d-flex align-items-center justify-content-center">
+    <div class="row justify-content-center w-100">
+        <div class="col-lg-6 col-md-8 col-sm-10">
+            <div class="text-center">
+                <!-- Ícone de erro -->
+                <div class="mb-4">
+                    <i class="fas fa-exclamation-triangle text-theme-warning" style="font-size: 6rem;"></i>
+                </div>
+                
+                <!-- Título -->
+                <h1 class="display-1 fw-bold text-django-green mb-3">404</h1>
+                <h2 class="h3 mb-4">Página não encontrada</h2>
+                
+                <!-- Mensagem -->
+                <div class="mb-4">
+                    <p class="lead text-muted">
+                        Oops! A página que você está procurando não existe ou foi movida.
+                    </p>
+                    <p class="text-muted">
+                        Verifique se o endereço está correto ou use os links abaixo para navegar.
+                    </p>
+                </div>
+                
+                <!-- Ações -->
+                <div class="d-flex flex-column flex-sm-row gap-3 justify-content-center mb-5">
+                    <a href="{% url 'pages:home' %}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-home me-2"></i>Voltar ao Início
+                    </a>
+                    <a href="javascript:history.back()" class="btn btn-outline-secondary btn-lg">
+                        <i class="fas fa-arrow-left me-2"></i>Página Anterior
+                    </a>
+                </div>
+                
+                <!-- Links úteis -->
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="card h-100 border-0 shadow-sm">
+                            <div class="card-body text-center">
+                                <i class="fas fa-newspaper text-theme-primary mb-3" style="font-size: 2rem;"></i>
+                                <h5 class="card-title">Artigos</h5>
+                                <p class="card-text text-theme-muted">Confira nossos artigos mais recentes</p>
+                                <a href="{% url 'articles:article_list' %}" class="btn btn-outline-primary btn-sm">
+                                    Ver Artigos
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="card h-100 border-0 shadow-sm">
+                            <div class="card-body text-center">
+                                <i class="fas fa-info-circle text-theme-info mb-3" style="font-size: 2rem;"></i>
+                                <h5 class="card-title">Sobre Nós</h5>
+                                <p class="card-text text-theme-muted">Saiba mais sobre nossa empresa</p>
+                                <a href="{% url 'pages:about' %}" class="btn btn-outline-info btn-sm">
+                                    Conhecer
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="card h-100 border-0 shadow-sm">
+                            <div class="card-body text-center">
+                                <i class="fas fa-info-circle text-theme-success mb-3" style="font-size: 2rem;"></i>
+                                <h5 class="card-title">Sobre Nós</h5>
+                                <p class="card-text text-theme-muted">Conheça mais sobre o projeto</p>
+                                <a href="{% url 'pages:about' %}" class="btn btn-outline-success btn-sm">
+                                    Saiba Mais
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Busca -->
+                <div class="mt-5">
+                    <h5 class="mb-3">Ou tente buscar:</h5>
+                    <form method="get" action="{% url 'pages:search' %}" class="d-flex justify-content-center">
+                        <div class="input-group" style="max-width: 400px;">
+                            <input type="text" 
+                                   name="q" 
+                                   class="form-control" 
+                                   placeholder="Digite sua busca..."
+                                   aria-label="Campo de busca">
+                            <button class="btn btn-outline-primary" type="submit">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Estilos personalizados -->
+<style>
+.text-nix-accent {
+    color: var(--nix-accent) !important;
+}
+
+.btn-primary {
+    background-color: var(--nix-accent);
+    border-color: var(--nix-accent);
+}
+
+.btn-primary:hover {
+    background-color: var(--nix-accent-dark);
+    border-color: var(--nix-accent-dark);
+}
+
+.btn-outline-primary {
+    color: var(--nix-accent);
+    border-color: var(--nix-accent);
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--nix-accent);
+    border-color: var(--nix-accent);
+}
+
+.card {
+    transition: transform 0.2s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+/* Dark theme support */
+[data-theme="dark"] .card {
+    background-color: var(--bs-dark);
+    border-color: var(--bs-gray-700);
+}
+
+[data-theme="dark"] .text-muted {
+    color: var(--bs-gray-400) !important;
+}
+
+[data-theme="dark"] .btn-outline-secondary {
+    color: var(--bs-gray-300);
+    border-color: var(--bs-gray-600);
+}
+
+[data-theme="dark"] .btn-outline-secondary:hover {
+    background-color: var(--bs-gray-600);
+    border-color: var(--bs-gray-600);
+    color: white;
+}
+</style>
+{% endblock %}
