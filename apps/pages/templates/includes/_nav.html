@@ -38,21 +38,21 @@
 
                 <!-- Livros -->
                 <li class="nav-item">
-                    <a class="nav-link {% if 'books' in request.resolver_match.namespace %}active{% endif %}" href="#">
+                    <a class="nav-link {% if 'books' in request.resolver_match.namespace %}active{% endif %}" href="{% url 'books:book_list' %}">
                         <i class="fas fa-book me-1"></i>Livros
                     </a>
                 </li>
 
                 <!-- Mangás -->
                 <li class="nav-item">
-                    <a class="nav-link {% if 'mangas' in request.resolver_match.namespace %}active{% endif %}" href="#">
+                    <a class="nav-link {% if 'mangas' in request.resolver_match.namespace %}active{% endif %}" href="{% url 'mangas:manga_list' %}">
                         <i class="fas fa-book-open me-1"></i>Mangás
                     </a>
                 </li>
 
                 <!-- Audiolivros -->
                 <li class="nav-item">
-                    <a class="nav-link {% if 'audiobooks' in request.resolver_match.namespace %}active{% endif %}" href="#">
+                    <a class="nav-link {% if 'audiobooks' in request.resolver_match.namespace %}active{% endif %}" href="{% url 'audiobooks:audiobook_list' %}">
                         <i class="fas fa-headphones me-1"></i>Audiolivros
                     </a>
                 </li>

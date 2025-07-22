@@ -41,7 +41,7 @@
                     <h1 class="display-5 fw-bold text-sans text-body">{{ article.title }}</h1>
                     
                     {% if article.excerpt %}
-                        <p class="lead text-theme-secondary text-body">{{ article.excerpt }}</p>
+                        <p class="lead text-theme-secondary text-body">{{ article.excerpt|clean_html }}</p>
                     {% endif %}
                     
                     <div class="d-flex align-items-center text-theme-secondary mb-3 flex-wrap flex-md-nowrap article-meta">

@@ -232,6 +232,13 @@ class Article(models.Model):
         """Retorna URL absoluta do artigo"""
         return reverse('articles:article_detail', kwargs={'slug': self.slug})
 
+    def get_edit_url(self):
+        """Retorna URL de edição do artigo"""
+        try:
+            return reverse('articles:article_edit', kwargs={'slug': self.slug})
+        except:
+            return None
+
     def get_related_articles(self, limit=3):
         """Retorna artigos relacionados baseados na categoria e tags"""
         related = Article.objects.filter(

@@ -36,8 +36,8 @@
                 <div class="row g-4">
                     {% for article in articles %}
                     <div class="col-12">
-                        {% include 'includes/content_card.html' with 
-                            image_url=article.featured_image.url if article.featured_image else None
+                        {% include 'includes/content_card.html' with
+                            image_url=article.featured_image.url
                             image_alt=article.featured_image_alt|default:article.title
                             detail_url=article.get_absolute_url
                             title=article.title
@@ -47,9 +47,10 @@
                             description=article.excerpt
                             primary_action_url=article.get_absolute_url
                             primary_action_label='Ler mais'
-                            secondary_action_url=article|edit_url if user.is_authenticated and (user.is_staff or user.is_superuser or user|has_group:'Editor') else None
-                            secondary_action_label='Editar' if user.is_authenticated and (user.is_staff or user.is_superuser or user|has_group:'Editor') else None
-                            extra_info='<span><i class="fas fa-comments me-1"></i>{}</span><span><i class="fas fa-eye me-1"></i>{}</span>'.format(article.comment_count, article.view_count|default:0)|safe
+                            secondary_action_url=article.get_edit_url
+                            secondary_action_label='Editar'
+                            show_secondary=user.is_authenticated
+                            extra_info=article.comment_count
                         %}
                     </div>
                     {% endfor %}

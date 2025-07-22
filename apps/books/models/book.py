@@ -14,6 +14,7 @@ class Book(models.Model):
     updated_at = models.DateTimeField('Atualizado em', auto_now=True)
 
     class Meta:
+        app_label = 'books'
         verbose_name = 'Livro'
         verbose_name_plural = 'Livros'
         ordering = ['-created_at']
@@ -37,6 +38,7 @@ class BookProgress(models.Model):
     updated_at = models.DateTimeField('Atualizado em', auto_now=True)
 
     class Meta:
+        app_label = 'books'
         unique_together = ('user', 'book')
         verbose_name = 'Progresso de Leitura'
         verbose_name_plural = 'Progressos de Leitura'
@@ -50,6 +52,7 @@ class BookFavorite(models.Model):
     created_at = models.DateTimeField('Adicionado em', auto_now_add=True)
 
     class Meta:
+        app_label = 'books'
         unique_together = ('user', 'book')
         verbose_name = 'Livro Favorito'
         verbose_name_plural = 'Livros Favoritos'

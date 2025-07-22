@@ -1,6 +1,9 @@
 from django import template
 from django.utils import timezone
+from django.utils.html import strip_tags
+from django.utils.text import Truncator
 from apps.articles.models.article import Article
+import re
 
 register = template.Library()
 
@@ -79,3 +82,35 @@ def view_count_text(count):
 @register.filter(name='has_group')
 def has_group(user, group_name):
     return user.groups.filter(name=group_name).exists()
+
+
+@register.filter
+def clean_excerpt(text, length=120):
+    """Remove HTML tags e limita o texto do excerpt"""
+    if not text:
+        return ""
+
+    # Remove tags HTML
+    clean_text = strip_tags(text)
+
+    # Remove quebras de linha extras e espaços
+    clean_text = re.sub(r'\s+', ' ', clean_text).strip()
+
+    # Trunca o texto
+    truncator = Truncator(clean_text)
+    return truncator.chars(length, truncate='...')
+
+
+@register.filter
+def clean_html(text):
+    """Remove completamente as tags HTML do texto"""
+    if not text:
+        return ""
+
+    # Remove tags HTML
+    clean_text = strip_tags(text)
+
+    # Remove quebras de linha extras e espaços
+    clean_text = re.sub(r'\s+', ' ', clean_text).strip()
+
+    return clean_text

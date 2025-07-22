@@ -1,0 +1,1 @@
+default_app_config = 'apps.audiobooks.apps.AudiobooksConfig'

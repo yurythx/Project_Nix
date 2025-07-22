@@ -11,6 +11,7 @@ class Manga(models.Model):
     updated_at = models.DateTimeField('Atualizado em', auto_now=True)
 
     class Meta:
+        app_label = 'mangas'
         verbose_name = 'Mangá'
         verbose_name_plural = 'Mangás'
         ordering = ['-created_at']
@@ -36,6 +37,7 @@ class Capitulo(models.Model):
     updated_at = models.DateTimeField('Atualizado em', auto_now=True)
 
     class Meta:
+        app_label = 'mangas'
         verbose_name = 'Capítulo'
         verbose_name_plural = 'Capítulos'
         ordering = ['number']
@@ -62,6 +64,7 @@ class Pagina(models.Model):
     updated_at = models.DateTimeField('Atualizado em', auto_now=True)
 
     class Meta:
+        app_label = 'mangas'
         verbose_name = 'Página'
         verbose_name_plural = 'Páginas'
         ordering = ['number']

@@ -3,4 +3,5 @@ from django.apps import AppConfig
 
 class MangasConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'mangas'
+    name = 'apps.mangas'
+    verbose_name = 'Mangás'

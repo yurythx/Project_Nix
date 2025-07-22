@@ -34,6 +34,9 @@ urlpatterns = [
     path('accounts/', include('apps.accounts.urls')),
     path('config/', include('apps.config.urls')),
     path('artigos/', include('apps.articles.urls')),
+    path('livros/', include('apps.books.urls')),
+    path('mangas/', include('apps.mangas.urls')),
+    path('audiolivros/', include('apps.audiobooks.urls')),
     path('tinymce/', include('tinymce.urls')),
 
     # Health checks

@@ -124,6 +124,9 @@ LOCAL_APPS = [
     'apps.config',
     'apps.pages',
     'apps.articles',
+    'apps.books',
+    'apps.mangas',
+    'apps.audiobooks',
     # Adicione outros módulos aqui
 ]
 
@@ -143,7 +146,7 @@ def get_active_local_apps():
         )
     except Exception:
         # Fallback: usa variável de ambiente
-        active_modules = os.environ.get('ACTIVE_MODULES', 'accounts,config,pages,articles').split(',')
+        active_modules = os.environ.get('ACTIVE_MODULES', 'accounts,config,pages,articles,books,mangas,audiobooks').split(',')
         active_apps = ['apps.' + m for m in active_modules if 'apps.' + m in LOCAL_APPS]
 
     # Garante que os essenciais sempre estão presentes
