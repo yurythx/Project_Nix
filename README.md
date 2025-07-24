@@ -1,9 +1,45 @@
 # 🌟 Project Nix
 
+[![Python Version](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/)
+[![Django Version](https://img.shields.io/badge/django-5.2-brightgreen)](https://www.djangoproject.com/)
+[![Documentation Status](https://readthedocs.org/projects/project-nix/badge/?version=latest)](https://project-nix.readthedocs.io/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 Um sistema de gerenciamento de conteúdo moderno, modular e responsivo, com design elegante em paleta roxa. Desenvolvido com Django e arquitetura SOLID.
+
+## 📌 Índice
+
+- [🚀 Características](#-características)
+- [📋 Pré-requisitos](#-pré-requisitos)
+- [🛠️ Instalação Rápida](#️-instalação-rápida)
+- [🌍 Ambientes](#-ambientes)
+- [📁 Estrutura do Projeto](#-estrutura-do-projeto)
+- [🏗️ Arquitetura](#️-arquitetura)
+- [🔧 Configuração](#-configuração)
+- [🚀 Deploy](#-deploy-em-produção)
+- [🧪 Testes](#-testes)
+- [🤝 Como Contribuir](#-como-contribuir)
+- [📄 Licença](#-licença)
+- [📞 Suporte](#-suporte)
 
 ## 🚀 Características
 
+### 🔌 Módulos Principais
+- **Accounts**: Sistema de autenticação e gerenciamento de usuários
+- **Articles**: Publicação e gerenciamento de artigos com categorias e tags
+- **Books**: Gerenciamento de livros digitais e progresso de leitura
+- **Mangas**: Leitor de mangás online com suporte a capítulos e páginas
+- **Pages**: Criação e gerenciamento de páginas estáticas
+- **Config**: Painel de administração e configurações do sistema
+
+### 🛠️ Tecnologias
+- **Backend**: Django 5.2, Django REST Framework
+- **Frontend**: HTML5, CSS3, JavaScript, Bootstrap 5
+- **Banco de Dados**: PostgreSQL (produção), SQLite (desenvolvimento)
+- **Cache**: Redis (opcional)
+- **Ferramentas**: Docker, Gunicorn, Nginx
+
+### ✨ Funcionalidades
 - **Sistema Modular**: Módulos dinâmicos que podem ser habilitados/desabilitados
 - **Arquitetura SOLID**: Padrões de design modernos com injeção de dependências
 - **Tema Responsivo**: Interface moderna com suporte a temas claro/escuro
@@ -196,6 +232,31 @@ from apps.config.models.app_module_config import AppModuleConfiguration
 AppModuleConfiguration.objects.filter(app_name='articles').update(is_enabled=True)
 "
 ```
+
+## 🧪 Testes
+
+### Executando Testes
+```bash
+# Executar todos os testes
+python manage.py test
+
+# Executar testes de um app específico
+python manage.py test apps.accounts
+
+# Executar testes com cobertura
+coverage run --source='.' manage.py test
+coverage report -m
+
+# Executar testes de integração
+pytest tests/integration/
+```
+
+### Boas Práticas de Testes
+1. **Testes Unitários**: Teste cada função/método isoladamente
+2. **Testes de Integração**: Teste a interação entre componentes
+3. **Testes de API**: Use o Django REST Framework test client
+4. **Fixtures**: Use fixtures para dados de teste consistentes
+5. **Mocks**: Use mocks para dependências externas
 
 ## 🚀 Deploy em Produção
 
@@ -396,13 +457,23 @@ bash scripts/troubleshooting.sh
 
 ## 📄 Licença
 
-Este projeto está sob a licença MIT. Veja o arquivo `LICENSE` para mais detalhes.
+Este projeto está licenciado sob a licença MIT - veja o arquivo [LICENSE](LICENSE) para detalhes.
 
-## 🆘 Suporte
+## 📞 Suporte
 
-- **Issues**: [GitHub Issues](https://github.com/seu-usuario/fireflies/issues)
-- **Documentação**: [Wiki](https://github.com/seu-usuario/fireflies/wiki)
-- **Email**: suporte@fireflies.com
+Para suporte, por favor abra uma issue no nosso [repositório](https://github.com/seu-usuario/project-nix).
+
+### 📚 Recursos Adicionais
+- [Documentação Completa](docs/README.md)
+- [Guia de Estilo](docs/STYLE_GUIDE.md)
+- [Roadmap](docs/ROADMAP.md)
+- [Código de Conduta](docs/CODE_OF_CONDUCT.md)
+
+### 📅 Próximos Passos
+- [ ] Documentar API REST
+- [ ] Adicionar mais testes automatizados
+- [ ] Melhorar cobertura de código
+- [ ] Otimizar performance
 
 ## 🎯 Roadmap
 

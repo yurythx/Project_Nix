@@ -46,6 +46,17 @@
             </ul>
         </div>
 
+        <!-- Backup & Restauração -->
+        <div class="sidebar-section">
+            <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted text-sans">
+                <span><i class="fas fa-database me-2"></i>Backup & Restauração</span>
+            </h6>
+            <ul class="nav flex-column">
+                {% sidebar_item 'backup_database' 'fas fa-database' 'Backup Banco' 'Backup do banco de dados' %}
+                {% sidebar_item 'backup_media' 'fas fa-folder-open' 'Backup Mídia' 'Backup da mídia do site' %}
+            </ul>
+        </div>
+
         <!-- Moderação de Comentários -->
         {% if request.user.is_staff or request.user.is_superuser %}
         <div class="sidebar-section">

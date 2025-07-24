@@ -12,14 +12,14 @@ from apps.articles.views import (
     # TagListView,
 )
 from apps.articles.views.comment_views import (
-    add_comment,
-    add_reply,
-    comment_list,
-    moderate_comments,
-    moderate_comment_action,
-    comment_stats,
-    load_more_comments,
-    load_replies,
+    CommentCreateView,
+    ReplyCreateView,
+    CommentListView,
+    CommentModerationView,
+    CommentModerationActionView,
+    CommentStatsView,
+    LoadMoreCommentsView,
+    LoadRepliesView,
 )
 
 
@@ -36,16 +36,16 @@ urlpatterns = [
     path('<slug:slug>/deletar/', ArticleDeleteView.as_view(), name='article_delete'),
 
     # Moderação de comentários (staff apenas) - deve vir antes dos slugs
-    path('admin/comentarios/', moderate_comments, name='moderate_comments'),
-    path('admin/comentarios/<int:comment_id>/moderar/', moderate_comment_action, name='moderate_comment_action'),
-    path('admin/comentarios/stats/', comment_stats, name='comment_stats'),
+    path('admin/comentarios/', CommentModerationView.as_view(), name='moderate_comments'),
+    path('admin/comentarios/<int:comment_id>/moderar/', CommentModerationActionView.as_view(), name='moderate_comment_action'),
+    path('admin/comentarios/stats/', CommentStatsView.as_view(), name='comment_stats'),
 
     # Comentários
-    path('<slug:slug>/comentarios/', comment_list, name='comment_list'),
-    path('<slug:slug>/comentar/', add_comment, name='add_comment'),
-    path('<slug:slug>/comentarios/<int:comment_id>/responder/', add_reply, name='add_reply'),
-    path('comentarios/', load_more_comments, name='load_more_comments'),
-    path('comentarios/<int:comment_id>/replies/', load_replies, name='load_replies'),
+    path('<slug:slug>/comentarios/', CommentListView.as_view(), name='comment_list'),
+    path('<slug:slug>/comentar/', CommentCreateView.as_view(), name='add_comment'),
+    path('<slug:slug>/comentarios/<int:comment_id>/responder/', ReplyCreateView.as_view(), name='add_reply'),
+    path('comentarios/', LoadMoreCommentsView.as_view(), name='load_more_comments'),
+    path('comentarios/<int:comment_id>/replies/', LoadRepliesView.as_view(), name='load_replies'),
 
     # Artigos - Detalhes (deve vir por último para não conflitar)
     path('<slug:slug>/', ArticleDetailView.as_view(), name='article_detail'),

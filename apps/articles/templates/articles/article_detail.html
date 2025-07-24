@@ -7,6 +7,10 @@
 {% block meta_description %}{{ article.seo_description|default:article.excerpt|default:"" }}{% endblock %}
 {% block meta_keywords %}{{ article.meta_keywords|default:"" }}{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'articles/css/article-detail.css' %}">
+{% endblock %}
+
 {% block breadcrumbs %}
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
@@ -40,10 +44,7 @@
 
                     <h1 class="display-5 fw-bold text-sans text-body">{{ article.title }}</h1>
                     
-                    {% if article.excerpt %}
-                        <p class="lead text-theme-secondary text-body">{{ article.excerpt|clean_html }}</p>
-                    {% endif %}
-                    
+                   
                     <div class="d-flex align-items-center text-theme-secondary mb-3 flex-wrap flex-md-nowrap article-meta">
                         <!-- Author -->
                         {% if article.author %}
@@ -107,7 +108,9 @@
 
                 <!-- Article Content -->
                 <div class="article-content">
-                    {{ article.content|safe }}
+                    <div class="content-wrapper">
+                        {{ article.content|safe }}
+                    </div>
                 </div>
 
                 <!-- Article Footer -->
@@ -339,5 +342,9 @@
     </div>
 </div>
 
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'articles/js/article-detail.js' %}"></script>
 <script type="module" src="{% static 'js/article_comments_init.js' %}"></script>
 {% endblock %}

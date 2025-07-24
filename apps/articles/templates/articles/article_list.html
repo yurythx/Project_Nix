@@ -2,16 +2,65 @@
 {% load static %}
 {% load articles_tags %}
 
-{% comment %} Estilos migrados para main.css. Removido article-list.css {% endcomment %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'articles/css/article-list.css' %}">
+
+{% endblock %}
 
 {% block extra_js %}
-{# JS específico removido. Use main.js para interações globais. #}
+<script src="{% static 'articles/js/article-list.js' %}"></script>
 {% endblock %}
 
 {% block content %}
 <div class="container my-5">
     <div class="row">
         <div class="col-lg-8">
+            {# Seção de artigos em destaque #}
+            {% if featured_articles %}
+            <div class="mb-5">
+                <h2 class="h4 mb-4 text-theme-primary text-sans"><i class="fas fa-star me-2"></i>Conteúdo em Destaque</h2>
+                <div class="row g-4">
+                    {% for article in featured_articles %}
+                    <div class="col-md-6 col-12">
+                        <article class="card h-100 shadow-sm article-card border-primary border-2">
+                            {% if article.featured_image %}
+                            <div class="position-relative">
+                                <img src="{{ article.featured_image.url }}"
+                                     class="card-img-top"
+                                     alt="{{ article.title }}"
+                                     style="height: 200px; object-fit: cover;">
+                                {% if article.category %}
+                                <span class="badge bg-primary position-absolute top-0 start-0 m-2">
+                                    {{ article.category.name }}
+                                </span>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                            <div class="card-body d-flex flex-column">
+                                <h5 class="card-title mb-2">
+                                    <a href="{{ article.get_absolute_url }}" class="text-decoration-none text-dark">
+                                        {{ article.title }}
+                                    </a>
+                                </h5>
+                                <p class="card-text flex-grow-1">
+                                    {{ article.excerpt|clean_excerpt:100 }}
+                                </p>
+                                <div class="mt-auto d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">
+                                        <i class="fas fa-user me-1"></i>
+                                        {{ article.author.get_full_name|default:article.author.username }}
+                                    </small>
+                                    <a href="{{ article.get_absolute_url }}" class="btn btn-outline-primary btn-sm ms-2">
+                                        <i class="fas fa-book-open me-1"></i>Ler
+                                    </a>
+                                </div>
+                            </div>
+                        </article>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <div>
                     <h1 class="h2 mb-1 text-sans text-body">
@@ -35,23 +84,77 @@
             {% if articles %}
                 <div class="row g-4">
                     {% for article in articles %}
-                    <div class="col-12">
-                        {% include 'includes/content_card.html' with
-                            image_url=article.featured_image.url
-                            image_alt=article.featured_image_alt|default:article.title
-                            detail_url=article.get_absolute_url
-                            title=article.title
-                            subtitle=article.subtitle
-                            author=article.author.get_full_name|default:article.author.username
-                            date=article.published_at|date:'d M, Y'
-                            description=article.excerpt
-                            primary_action_url=article.get_absolute_url
-                            primary_action_label='Ler mais'
-                            secondary_action_url=article.get_edit_url
-                            secondary_action_label='Editar'
-                            show_secondary=user.is_authenticated
-                            extra_info=article.comment_count
-                        %}
+                    <div class="col-lg-6 col-md-6 col-12">
+                        <article class="card h-100 shadow-sm article-card">
+                            {% if article.featured_image %}
+                            <div class="position-relative">
+                                <img src="{{ article.featured_image.url }}"
+                                     class="card-img-top"
+                                     alt="{{ article.title }}"
+                                     style="height: 250px; object-fit: cover;">
+                                {% if article.category %}
+                                <span class="badge bg-primary position-absolute top-0 start-0 m-2">
+                                    {{ article.category.name }}
+                                </span>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+
+                            <div class="card-body d-flex flex-column">
+                                <h5 class="card-title mb-2">
+                                    <a href="{{ article.get_absolute_url }}" class="text-decoration-none text-dark">
+                                        {{ article.title }}
+                                    </a>
+                                </h5>
+
+                                {% if article.subtitle %}
+                                <h6 class="card-subtitle mb-3 text-muted">{{ article.subtitle }}</h6>
+                                {% endif %}
+
+                                <p class="card-text flex-grow-1">
+                                    {{ article.excerpt|clean_excerpt:120 }}
+                                </p>
+
+                                <div class="mt-auto">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <small class="text-muted">
+                                            <i class="fas fa-user me-1"></i>
+                                            {{ article.author.get_full_name|default:article.author.username }}
+                                        </small>
+                                        <small class="text-muted">
+                                            <i class="fas fa-calendar me-1"></i>
+                                            {{ article.published_at|date:'d/m/Y' }}
+                                        </small>
+                                    </div>
+
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div class="article-stats">
+                                            <small class="text-muted me-3">
+                                                <i class="fas fa-eye me-1"></i>
+                                                {{ article.view_count|default:0 }}
+                                            </small>
+                                            <small class="text-muted">
+                                                <i class="fas fa-comments me-1"></i>
+                                                {{ article.comment_count|default:0 }}
+                                            </small>
+                                        </div>
+
+                                        <div class="article-actions">
+                                            <a href="{{ article.get_absolute_url }}"
+                                               class="btn btn-primary btn-sm">
+                                                <i class="fas fa-book-open me-1"></i>Ler
+                                            </a>
+                                            {% if user.is_staff and article.get_edit_url %}
+                                            <a href="{{ article.get_edit_url }}"
+                                               class="btn btn-outline-secondary btn-sm ms-1">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </article>
                     </div>
                     {% endfor %}
                 </div>

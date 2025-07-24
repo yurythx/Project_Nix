@@ -3497,3 +3497,28 @@ footer a:hover {
         font-size: 16px;
     }
 }
+
+[data-theme="dark"] .toast-dark-mode.bg-success,
+[data-theme="dark"] .toast-dark-mode.bg-success {
+    background-color: rgba(30, 77, 58, 0.95) !important;
+    border-color: #198754 !important;
+    color: #fff !important;
+}
+[data-theme="dark"] .toast-dark-mode.bg-danger,
+[data-theme="dark"] .toast-dark-mode.bg-danger {
+    background-color: rgba(90, 30, 30, 0.95) !important;
+    border-color: #dc3545 !important;
+    color: #fff !important;
+}
+[data-theme="dark"] .toast-dark-mode.bg-warning,
+[data-theme="dark"] .toast-dark-mode.bg-warning {
+    background-color: rgba(90, 74, 30, 0.95) !important;
+    border-color: #ffc107 !important;
+    color: #fff !important;
+}
+[data-theme="dark"] .toast-dark-mode.bg-info,
+[data-theme="dark"] .toast-dark-mode.bg-info {
+    background-color: rgba(30, 58, 90, 0.95) !important;
+    border-color: #0dcaf0 !important;
+    color: #fff !important;
+}

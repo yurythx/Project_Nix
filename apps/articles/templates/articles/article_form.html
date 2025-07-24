@@ -143,6 +143,27 @@
 
 {% block extra_js %}
 {{ form.media }}
+<!-- Fallback TinyMCE CDN caso não carregue automaticamente -->
+<script>
+if (typeof tinymce === 'undefined') {
+  var script = document.createElement('script');
+  script.src = 'https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js';
+  script.referrerPolicy = 'origin';
+  script.onload = function() {
+    tinymce.init({
+      selector: 'textarea#id_content',
+      plugins: 'paste image link lists code',
+      toolbar: 'undo redo | bold italic underline | alignleft aligncenter alignright | bullist numlist | link image | code',
+      paste_data_images: true,
+      menubar: false,
+      statusbar: true,
+      branding: false,
+      language: 'pt_BR'
+    });
+  };
+  document.head.appendChild(script);
+}
+</script>
 <!-- TinyMCE Unified Config já carregado no base.html -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {

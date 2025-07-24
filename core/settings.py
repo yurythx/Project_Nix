@@ -118,6 +118,24 @@ ALLOWED_HOSTS = get_allowed_hosts()
 # Apps essenciais (nunca podem ser desativados)
 CORE_APPS = ['apps.accounts', 'apps.config', 'apps.pages']
 
+# Apps essenciais do Django e de terceiros
+ESSENTIAL_APPS = [
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'crispy_forms',
+    'crispy_bootstrap5',
+    'tinymce',
+    'axes',
+    'csp',  
+    'rest_framework',
+    'drf_yasg',
+    'corsheaders',
+]
+
 # Apps locais
 LOCAL_APPS = [
     'apps.accounts',
@@ -160,28 +178,23 @@ def get_active_local_apps():
 ACTIVE_LOCAL_APPS = get_active_local_apps()
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'crispy_forms',
-    'crispy_bootstrap5',
-    'tinymce',
-    # Apps locais ativos
+    *ESSENTIAL_APPS,
     *ACTIVE_LOCAL_APPS,
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'apps.config.middleware.setup_middleware.SetupMiddleware',
+    'corsheaders.middleware.CorsMiddleware',  # Deve vir logo após SecurityMiddleware
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'axes.middleware.AxesMiddleware',
+    'csp.middleware.CSPMiddleware',  # Corrigido de 'django_csp.middleware.CSPMiddleware'
+    # 'ratelimit.middleware.RatelimitMiddleware',  # Comentado para isolar erro
     'apps.accounts.middleware.RateLimitMiddleware',
     'apps.accounts.middleware.AccessControlMiddleware',
     'apps.accounts.middleware.SmartRedirectMiddleware',
@@ -227,8 +240,10 @@ LOGOUT_REDIRECT_URL = '/'
 
 # Backends de Autenticação
 AUTHENTICATION_BACKENDS = [
-    'apps.accounts.backends.EmailOrUsernameModelBackend',  # Backend principal
-    'django.contrib.auth.backends.ModelBackend',  # Backend padrão como fallback
+    'axes.backends.AxesStandaloneBackend',
+    'apps.accounts.backends.EmailOrUsernameModelBackend',
+    'django.contrib.auth.backends.ModelBackend',
+    # outros backends...
 ]
 
 # =============================================================================
@@ -373,11 +388,26 @@ def get_security_settings() -> Dict[str, Any]:
 
     # Configurações básicas sempre ativas
     settings = {
+        # Headers de segurança
         'SECURE_BROWSER_XSS_FILTER': True,
         'SECURE_CONTENT_TYPE_NOSNIFF': True,
         'X_FRAME_OPTIONS': 'DENY',
         'SECURE_REFERRER_POLICY': 'strict-origin-when-cross-origin',
         'SECURE_CROSS_ORIGIN_OPENER_POLICY': 'same-origin',
+        
+        # Configurações de sessão
+        'SESSION_COOKIE_HTTPONLY': True,
+        'SESSION_COOKIE_SAMESITE': 'Lax',
+        'CSRF_COOKIE_HTTPONLY': True,
+        'CSRF_COOKIE_SAMESITE': 'Lax',
+        
+        # Proteção contra clickjacking
+        'X_CONTENT_TYPE_OPTIONS': 'nosniff',
+        'X_XSS_PROTECTION': '1; mode=block',
+        
+        # Configurações de upload seguras
+        'FILE_UPLOAD_PERMISSIONS': 0o644,
+        'FILE_UPLOAD_DIRECTORY_PERMISSIONS': 0o755,
     }
 
     # Configurações específicas por ambiente
@@ -404,6 +434,44 @@ def get_security_settings() -> Dict[str, Any]:
         })
 
     return settings
+
+# Configuração correta para django-csp 3.x
+CSP_DEFAULT_SRC = ("'self'",)
+CSP_BASE_URI = ("'self'",)
+CSP_CONNECT_SRC = ("'self'",)
+CSP_FONT_SRC = (
+    "'self'",
+    "https://fonts.gstatic.com",
+    "https://cdnjs.cloudflare.com"
+)
+CSP_FORM_ACTION = ("'self'",)
+CSP_FRAME_SRC = ("'self'",)
+CSP_IMG_SRC = (
+    "'self'",
+    "data:",
+    "https://cdn.jsdelivr.net"
+)
+CSP_SCRIPT_SRC = (
+    "'self'",
+    "'unsafe-inline'",
+    "'unsafe-eval'",
+    "https://cdn.jsdelivr.net"
+)
+CSP_STYLE_SRC = (
+    "'self'",
+    "'unsafe-inline'",
+    "https://cdn.jsdelivr.net",
+    "https://fonts.googleapis.com",
+    "https://cdnjs.cloudflare.com"
+)
+
+# Apenas relatar violações em desenvolvimento
+
+# Configurações de proteção contra força bruta
+AXES_ENABLED = not DEBUG
+AXES_FAILURE_LIMIT = 5  # Número de tentativas antes do bloqueio
+AXES_COOLOFF_TIME = 1  # 1 hora de bloqueio
+AXES_LOCKOUT_TEMPLATE = 'account/lockout.html'  # Template personalizado para bloqueio
 
 # Aplicar configurações de segurança
 security_settings = get_security_settings()
@@ -499,8 +567,6 @@ CACHES = get_cache_config()
 # Configurações de Rate Limiting
 RATELIMIT_ENABLE = os.environ.get('RATELIMIT_ENABLE', 'True').lower() == 'true'
 RATELIMIT_USE_CACHE = os.environ.get('RATELIMIT_USE_CACHE', 'default')
-
-
 
 # Crispy Forms Configuration
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
@@ -718,15 +784,14 @@ if SENTRY_DSN:
 # Versão do sistema para uso no wizard e exibição
 VERSION = '1.0.0'
 
-# TinyMCE mínimo para colagem de imagens e formatação
 TINYMCE_DEFAULT_CONFIG = {
-    'height': 500,
-    'plugins': 'paste image link lists code',
-    'toolbar': 'undo redo | bold italic underline | alignleft aligncenter alignright | bullist numlist | link image | code',
-    'paste_data_images': True,
-    'menubar': False,
+    'height': 400,
+    'menubar': True,
+    'plugins': 'link image code lists',
+    'toolbar': 'undo redo | formatselect | bold italic underline | alignleft aligncenter alignright | bullist numlist | link image | code',
+    'branding': False,  # Remove o link de upgrade
     'statusbar': True,
-    'branding': False,
     'language': 'pt_BR',
-    'setup': "function(editor) {\n        editor.on('PastePostProcess', function(e) {\n            var iframes = e.node.querySelectorAll('iframe');\n            iframes.forEach(function(iframe) {\n                if (!iframe.parentElement.classList.contains('video-responsive')) {\n                    var wrapper = document.createElement('div');\n                    wrapper.className = 'video-responsive';\n                    iframe.parentNode.insertBefore(wrapper, iframe);\n                    wrapper.appendChild(iframe);\n                }\n            });\n        });\n    }"
+    'content_style': "body { font-family: 'Inter', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }",
+    'setup': "function(editor) {\n  function syncFontAndTheme() {\n    var theme = document.documentElement.getAttribute('data-theme');\n    var doc = editor.getDoc();\n    if (doc) {\n      doc.body.style.fontFamily = 'Inter, Roboto, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif';\n      if (theme === 'dark') {\n        doc.documentElement.setAttribute('data-theme', 'dark');\n      } else {\n        doc.documentElement.removeAttribute('data-theme');\n      }\n    }\n  }\n  editor.on('init', syncFontAndTheme);\n  window.addEventListener('themechange', syncFontAndTheme);\n}",
 }

@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Conta Bloqueada" %}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">{% trans "Conta Temporariamente Bloqueada" %}</h4>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <i class="fas fa-lock fa-5x text-danger mb-3"></i>
+                        <h2>{% trans "Acesso Bloqueado" %}</h2>
+                    </div>
+                    
+                    <div class="alert alert-warning">
+                        <p class="mb-0">
+                            {% blocktrans %}
+                            Por questões de segurança, sua conta foi bloqueada temporariamente devido a várias tentativas de login sem sucesso.
+                            Tente novamente em 1 hora ou clique no link abaixo para redefinir sua senha.
+                            {% endblocktrans %}
+                        </p>
+                    </div>
+                    
+                    <div class="d-grid gap-3 mt-4">
+                        <a href="{% url 'account_reset_password' %}" class="btn btn-primary">
+                            <i class="fas fa-key me-2"></i>{% trans "Redefinir Senha" %}
+                        </a>
+                        <a href="{% url 'home' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-home me-2"></i>{% trans "Voltar para a Página Inicial" %}
+                        </a>
+                    </div>
+                    
+                    <div class="mt-4 text-center text-muted">
+                        <small>
+                            {% blocktrans %}
+                            Se você acredita que isso é um erro, entre em contato com o suporte através do email: 
+                            <a href="mailto:{{ DEFAULT_FROM_EMAIL }}">{{ DEFAULT_FROM_EMAIL }}</a>
+                            {% endblocktrans %}
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

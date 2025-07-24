@@ -222,3 +222,41 @@ class ICommentService(ABC):
         :return: Comentário marcado
         """
         pass
+
+
+class IContentProcessorService(ABC):
+    """
+    Interface para processamento de conteúdo
+
+    Princípios SOLID aplicados:
+    - Single Responsibility: Apenas processamento de conteúdo
+    - Open/Closed: Extensível para novos tipos de processamento
+    """
+
+    @abstractmethod
+    def clean_content(self, content: str) -> str:
+        """
+        Limpa conteúdo HTML removendo elementos problemáticos
+        :param content: Conteúdo HTML bruto
+        :return: Conteúdo HTML limpo
+        """
+        pass
+
+    @abstractmethod
+    def extract_excerpt(self, content: str, max_length: int = 160) -> str:
+        """
+        Extrai excerpt limpo do conteúdo
+        :param content: Conteúdo HTML
+        :param max_length: Tamanho máximo do excerpt
+        :return: Excerpt limpo sem HTML
+        """
+        pass
+
+    @abstractmethod
+    def process_for_display(self, content: str) -> str:
+        """
+        Processa conteúdo para exibição otimizada
+        :param content: Conteúdo HTML
+        :return: Conteúdo formatado para exibição
+        """
+        pass

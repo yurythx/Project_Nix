@@ -28,6 +28,8 @@ from apps.accounts.services.auth_service import AuthService
 from apps.accounts.services.profile_service import ProfileService
 from apps.accounts.services.email_service import EmailService
 from apps.articles.services.article_service import ArticleService
+from apps.articles.services.category_service import CategoryService
+from apps.articles.services.content_processor_service import ContentProcessorService
 from apps.pages.services.page_service import PageService
 
 # Imports opcionais com tratamento
@@ -147,8 +149,22 @@ class ServiceFactory:
             service_class = self._get_implementation_class('IArticleService', ArticleService)
             self._services_cache[cache_key] = service_class(article_repository=article_repo)
         return self._services_cache[cache_key]
-    
-    def create_registration_service(self, 
+
+    def create_category_service(self) -> 'ICategoryService':
+        """Cria CategoryService"""
+        cache_key = "category_service"
+        if cache_key not in self._services_cache:
+            self._services_cache[cache_key] = CategoryService()
+        return self._services_cache[cache_key]
+
+    def create_content_processor_service(self) -> 'IContentProcessorService':
+        """Cria ContentProcessorService"""
+        cache_key = "content_processor_service"
+        if cache_key not in self._services_cache:
+            self._services_cache[cache_key] = ContentProcessorService()
+        return self._services_cache[cache_key]
+
+    def create_registration_service(self,
                                   user_repository: IUserRepository = None,
                                   verification_repository: IVerificationRepository = None,
                                   email_service: IEmailService = None) -> IRegistrationService:

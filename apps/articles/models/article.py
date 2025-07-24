@@ -5,7 +5,6 @@ from django.contrib.auth import get_user_model
 from django.core.validators import MinLengthValidator
 from django.utils import timezone
 
-User = get_user_model()
 
 class ArticleQuerySet(models.QuerySet):
     def published(self):
@@ -103,14 +102,14 @@ class Article(models.Model):
     
     # Autoria
     author = models.ForeignKey(
-        User,
+        'accounts.User',
         on_delete=models.CASCADE,
         related_name='authored_articles',
         verbose_name='autor',
         help_text='Autor principal do artigo'
     )
     contributors = models.ManyToManyField(
-        User,
+        'accounts.User',
         blank=True,
         related_name='contributed_articles',
         verbose_name='colaboradores',
@@ -235,7 +234,7 @@ class Article(models.Model):
     def get_edit_url(self):
         """Retorna URL de edição do artigo"""
         try:
-            return reverse('articles:article_edit', kwargs={'slug': self.slug})
+            return reverse('articles:article_update', kwargs={'slug': self.slug})
         except:
             return None
 

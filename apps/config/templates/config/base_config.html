@@ -1,179 +1,35 @@
-{% load static %}
-{% load config_extras %}
-<!DOCTYPE html>
-<html lang="pt-br" class="h-100">
-<head>
-    {% include 'includes/_head.html' %}
-    <title>{% block config_title %}Configurações{% endblock %} - Project Nix Admin</title>
-    
-    <!-- Config Admin CSS removido. Estilos migrados para main.css -->
-    
-    {% block extra_css %}{% endblock %}
-</head>
-<body class="d-flex flex-column h-100">
-    <!-- Skip to main content -->
-    <a class="visually-hidden-focusable" href="#main-content">Pular para o conteúdo principal</a>
+{% extends 'base.html' %}
 
-    <!-- Header -->
-    <header>
-        <!-- Config Navigation - Adaptada da navbar principal -->
-        <nav class="navbar navbar-expand-lg navbar-nix">
-            <div class="container">
-                <!-- Brand -->
-                <a class="navbar-brand" href="{% url 'pages:home' %}">
-                    <img src="/static/favicon.ico" alt="Project Nix Logo" width="32" height="32" class="me-2">
-                    Project Nix
-                </a>
-
-                <!-- Mobile Toggle -->
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-
-                <!-- Sidebar Toggle for Mobile -->
-                <button class="navbar-toggler d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" aria-controls="sidebar" aria-expanded="false" aria-label="Toggle sidebar">
-                    <i class="fas fa-bars"></i>
-                </button>
-
-                <!-- Navigation Links -->
-                <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav me-auto">
-                        <!-- Link para voltar ao site -->
-                        <li class="nav-item">
-                            <a class="nav-link text-info" href="{% url 'pages:home' %}">
-                                <i class="fas fa-arrow-left me-1"></i>Voltar ao Site
-                            </a>
-                        </li>
-                    </ul>
-
-                    <!-- User Menu - Igual ao principal -->
-                    <ul class="navbar-nav align-items-center">
-                        <!-- Theme Toggle -->
-                        <li class="nav-item me-2">
-                            <div class="theme-toggle" role="radiogroup" aria-label="Escolher tema">
-                                <button class="theme-option" data-theme="light" title="Tema claro" aria-label="Tema claro" role="radio">
-                                    <i class="fas fa-sun"></i>
-                                </button>
-                                <button class="theme-option" data-theme="dark" title="Tema escuro" aria-label="Tema escuro" role="radio">
-                                    <i class="fas fa-moon"></i>
-                                </button>
-                            </div>
-                        </li>
-
-                        {% if user.is_authenticated %}
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userDropdown" role="button"
-                                   data-bs-toggle="dropdown" aria-expanded="false" aria-label="Menu do usuário">
-                                    <div class="avatar-sm me-2">
-                                        <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 24px; height: 24px; background-color: var(--nix-accent) !important;">
-                                            <i class="fas fa-user text-white small"></i>
-                                        </div>
-                                    </div>
-                                    <span class="d-none d-md-inline">{{ user.get_full_name|default:user.username }}</span>
-                                </a>
-                                <ul class="dropdown-menu dropdown-menu-end">
-                                    <li>
-                                        <h6 class="dropdown-header text-sans text-body">
-                                            <i class="fas fa-user me-2"></i>{{ user.email }}
-                                        </h6>
-                                    </li>
-                                    <li><hr class="dropdown-divider"></li>
-
-                                    <!-- Profile -->
-                                    <li><a class="dropdown-item" href="{% url 'accounts:profile' %}">
-                                        <i class="fas fa-user-circle me-2"></i>Meu Perfil
-                                    </a></li>
-
-                                    <!-- Settings -->
-                                    <li><a class="dropdown-item" href="{% url 'accounts:settings' %}">
-                                        <i class="fas fa-cog me-2"></i>Configurações
-                                    </a></li>
-
-                                    <!-- Logout -->
-                                    <li><a class="dropdown-item text-danger" href="{% url 'accounts:logout' %}">
-                                        <i class="fas fa-sign-out-alt me-2"></i>Sair
-                                    </a></li>
-                                </ul>
-                            </li>
-                        {% else %}
-                            <!-- Guest Menu -->
-                            <li class="nav-item">
-                                <a class="nav-link" href="{% url 'accounts:login' %}">
-                                    <i class="fas fa-sign-in-alt me-1"></i>Entrar
-                                </a>
-                            </li>
-                        {% endif %}
-                    </ul>
-                </div>
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar fixo à esquerda, sempre visível em md+ -->
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="sidebar" aria-labelledby="sidebarLabel">
+            <div class="offcanvas-header d-md-none">
+                <h5 class="offcanvas-title" id="sidebarLabel">Menu de Configurações</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#sidebar" aria-label="Close"></button>
             </div>
-        </nav>
-    </header>
-
-    <!-- Toasts -->
-    {% include 'includes/_toasts.html' %}
-
-    <!-- Breadcrumbs -->
-    {% block breadcrumbs %}
-        {% include 'includes/_breadcrumbs.html' with breadcrumbs=breadcrumbs %}
-    {% endblock %}
-
-    <!-- Main Content with Sidebar -->
-    <main id="main-content" class="flex-shrink-0">
-        <div class="container-fluid">
-            <div class="row">
-                <!-- Sidebar fixo à esquerda, sempre visível em md+ -->
-                <div class="offcanvas-md offcanvas-start" tabindex="-1" id="sidebar" aria-labelledby="sidebarLabel">
-                    <div class="offcanvas-header d-md-none">
-                        <h5 class="offcanvas-title" id="sidebarLabel">Menu de Configurações</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#sidebar" aria-label="Close"></button>
-                    </div>
-                    <div class="offcanvas-body p-0">
-                        {% include 'config/includes/sidebar.html' %}
-                    </div>
-                </div>
-
-                <!-- Conteúdo principal alinhado à direita do sidebar -->
-                <main class="col-12 px-2 px-md-4" id="config-main-content">
-                    <div class="config-content">
-                        {% block config_content %}
-                        <!-- Content goes here -->
-                        <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                            <h1 class="h2 config-page-title">
-                                <i class="fas fa-cog me-2" style="color: var(--nix-accent);"></i>Painel de Configurações
-                            </h1>
-                        </div>
-                        <p class="lead">Sistema de administração do Project Nix</p>
-                        {% endblock %}
-                    </div>
-                </main>
+            <div class="offcanvas-body p-0">
+                {% include 'config/includes/sidebar.html' %}
             </div>
         </div>
-    </main>
+        <!-- Conteúdo principal alinhado à direita do sidebar -->
+        <main class="col-12 px-2 px-md-4" id="config-main-content">
+            <div class="config-content">
+                {% block config_content %}
+                <!-- Content goes here -->
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2 config-page-title">
+                        <i class="fas fa-cog me-2" style="color: var(--nix-accent);"></i>Painel de Configurações
+                    </h1>
+                </div>
+                <p class="lead">Sistema de administração do Project Nix</p>
+                {% endblock %}
+            </div>
+        </main>
+    </div>
+</div>
+{% endblock %}
 
-    <!-- Footer -->
-    {% include 'includes/_footer.html' %}
-
-    <!-- JavaScript -->
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
-            integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
-            crossorigin="anonymous"></script>
-
-    <!-- Nix Theme Toggle -->
-    <script src="{% static 'js/theme-toggle.js' %}"></script>
-
-    <!-- Image Optimizer -->
-    <script src="{% static 'js/image-optimizer.js' %}"></script>
-
-    <!-- Animations -->
-    <script src="{% static 'js/animations.js' %}"></script>
-
-    <!-- Performance Optimizer -->
-    <script src="{% static 'js/performance.js' %}"></script>
-
-    <!-- Custom JS -->
-    <script src="{% static 'js/main.js' %}"></script>
-
-    {% block extra_js %}{% endblock %}
-</body>
-</html>
+{% block extra_css %}{% endblock %}
+{% block extra_js %}{% endblock %}

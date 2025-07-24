@@ -52,7 +52,7 @@ from apps.config.views.users import (
     UserListView, UserCreateView, UserUpdateView, UserDeleteView
 )
 from apps.config.views.backup_views import (
-    backup_database, backup_media, restore_database, restore_media, download_backup
+    BackupDatabaseView, BackupMediaView, restore_database, restore_media, download_backup
 )
 
 
@@ -146,8 +146,8 @@ urlpatterns = [
     path('comentarios/', lambda request: redirect('articles:moderate_comments'), name='comment_moderation'),
 
     # Backup & Restauração
-    path('backup/database/', backup_database, name='backup_database'),
-    path('backup/media/', backup_media, name='backup_media'),
+    path('backup/database/', BackupDatabaseView.as_view(), name='backup_database'),
+    path('backup/media/', BackupMediaView.as_view(), name='backup_media'),
     path('restore/database/', restore_database, name='restore_database'),
     path('restore/media/', restore_media, name='restore_media'),
     path('backup/download/<str:backup_type>/<str:filename>/', download_backup, name='download_backup'),

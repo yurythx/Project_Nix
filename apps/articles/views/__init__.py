@@ -1,4 +1,8 @@
+"""
+Views do app articles seguindo princípios SOLID
+"""
 from .article_views import (
+    BaseArticleView,
     ArticleListView,
     ArticleDetailView,
     ArticleSearchView,
@@ -6,12 +10,22 @@ from .article_views import (
     ArticleUpdateView,
     ArticleDeleteView,
     CategoryDetailView,
-    CategoryListView
+    CategoryListView,
+    EditorOrAdminRequiredMixin,
 )
-# from .category_views import CategoryDetailView, CategoryListView
-# from .tag_views import TagDetailView, TagListView
+from .comment_views import (
+    CommentCreateView,
+    ReplyCreateView,
+    CommentListView,
+    CommentModerationView,
+    CommentModerationActionView,
+    CommentStatsView,
+    LoadMoreCommentsView,
+    LoadRepliesView,
+)
 
 __all__ = [
+    'BaseArticleView',
     'ArticleListView',
     'ArticleDetailView',
     'ArticleSearchView',
@@ -20,6 +34,15 @@ __all__ = [
     'ArticleDeleteView',
     'CategoryDetailView',
     'CategoryListView',
-    # 'TagDetailView',
-    # 'TagListView',
+    'EditorOrAdminRequiredMixin',
+]
+__all__ += [
+    'CommentCreateView',
+    'ReplyCreateView',
+    'CommentListView',
+    'CommentModerationView',
+    'CommentModerationActionView',
+    'CommentStatsView',
+    'LoadMoreCommentsView',
+    'LoadRepliesView',
 ]

@@ -1,43 +1,34 @@
-{% extends 'config/base_config_page.html' %}
-{% block content %}
+{% extends 'config/base_config.html' %}
+
+{% block config_content %}
+<!-- Conteúdo do backup do banco de dados -->
 <div class="container my-5">
-    <h2>Backup e Restauração do Banco de Dados</h2>
-    <div class="mb-4">
-        <a href="{% url 'config:backup_database' %}" class="btn btn-success">
-            <i class="fas fa-download"></i> Gerar Novo Backup
-        </a>
-    </div>
-    {% if backups %}
-        <h5>Backups Recentes</h5>
-        <ul class="list-group mb-4">
-            {% for bkp in backups %}
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                    <a href="{% url 'config:download_backup' backup_type='database' filename=bkp.name %}" download>{{ bkp.name }}</a>
-                    <span class="badge bg-secondary">{{ bkp.size }} bytes</span>
-                    <span class="text-muted">{{ bkp.modified|date:'d/m/Y H:i' }}</span>
-                </li>
+    <h1 class="h3 mb-4">Backup do Banco de Dados</h1>
+    <!-- Conteúdo específico do backup -->
+    {% block page_content %}{% endblock %}
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Arquivo</th>
+                <th>Tamanho</th>
+                <th>Data</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for backup in backups %}
+            <tr>
+                <td>{{ backup.name }}</td>
+                <td>{{ backup.size|filesizeformat }}</td>
+                <td>{{ backup.modified|date:'d/m/Y H:i' }}</td>
+                <td>
+                    <a href="{% url 'config:download_backup' 'database' backup.name %}" class="btn btn-sm btn-outline-success">Download</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4" class="text-center text-muted">Nenhum backup encontrado.</td></tr>
             {% endfor %}
-        </ul>
-    {% else %}
-        <div class="alert alert-info">Nenhum backup recente encontrado.</div>
-    {% endif %}
-    <form method="post" enctype="multipart/form-data" onsubmit="return confirm('Tem certeza que deseja restaurar o banco? Esta ação é irreversível!');">
-        {% csrf_token %}
-        <div class="mb-3">
-            <label for="id_backup_file" class="form-label">Arquivo de Backup (.backup)</label>
-            <input type="file" class="form-control" id="id_backup_file" name="backup_file" accept=".backup" required>
-        </div>
-        <button type="submit" class="btn btn-danger">
-            <i class="fas fa-upload"></i> Restaurar Banco
-        </button>
-    </form>
-    <div class="alert alert-warning mt-4">
-        <strong>Atenção:</strong> Esta ação irá sobrescrever todos os dados atuais do banco de dados!
-    </div>
-    {% if messages %}
-        {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} mt-3">{{ message }}</div>
-        {% endfor %}
-    {% endif %}
+        </tbody>
+    </table>
 </div>
 {% endblock %} 

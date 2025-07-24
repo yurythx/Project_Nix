@@ -6,13 +6,7 @@ from django.core.validators import MinLengthValidator
 class Category(models.Model):
     """Modelo para categorias de artigos"""
     
-    name = models.CharField(
-        'nome',
-        max_length=100,
-        unique=True,
-        validators=[MinLengthValidator(2)],
-        help_text='Nome da categoria'
-    )
+    name = models.CharField(max_length=100, unique=False)
     slug = models.SlugField(
         'slug',
         max_length=100,
@@ -90,10 +84,25 @@ class Category(models.Model):
     def __str__(self):
         return self.name
 
+    def _generate_unique_slug(self):
+        if not self.name:
+            return 'categoria-sem-nome'
+        base_slug = slugify(self.name)
+        if not base_slug:
+            base_slug = 'categoria-sem-nome'
+        slug = base_slug
+        counter = 1
+        while Category.objects.filter(slug=slug).exclude(pk=self.pk).exists():
+            slug = f"{base_slug}-{counter}"
+            counter += 1
+        return slug
+
     def save(self, *args, **kwargs):
-        """Gera slug automaticamente se não fornecido"""
         if not self.slug:
-            self.slug = slugify(self.name)
+            self.slug = self._generate_unique_slug()
+        else:
+            if Category.objects.filter(slug=self.slug).exclude(pk=self.pk).exists():
+                self.slug = self._generate_unique_slug()
         super().save(*args, **kwargs)
 
     def get_absolute_url(self):

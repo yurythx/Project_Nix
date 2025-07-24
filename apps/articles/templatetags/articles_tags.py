@@ -3,6 +3,7 @@ from django.utils import timezone
 from django.utils.html import strip_tags
 from django.utils.text import Truncator
 from apps.articles.models.article import Article
+
 import re
 
 register = template.Library()
@@ -114,3 +115,42 @@ def clean_html(text):
     clean_text = re.sub(r'\s+', ' ', clean_text).strip()
 
     return clean_text
+
+
+@register.filter
+def clean_article_content(content):
+    """Limpa o conteúdo do artigo removendo elementos problemáticos"""
+    if not content:
+        return ""
+
+    # Remove elementos estruturais problemáticos
+    content = re.sub(r'<article[^>]*class="[^"]*single-grid[^"]*"[^>]*>.*?</article>', '', content, flags=re.DOTALL)
+    content = re.sub(r'<header[^>]*>.*?</header>', '', content, flags=re.DOTALL)
+    content = re.sub(r'<footer[^>]*>.*?</footer>', '', content, flags=re.DOTALL)
+
+    # Remove widgets e elementos comerciais
+    content = re.sub(r'<div[^>]*class="[^"]*widget[^"]*"[^>]*>.*?</div>', '', content, flags=re.DOTALL)
+    content = re.sub(r'<div[^>]*class="[^"]*achados[^"]*"[^>]*>.*?</div>', '', content, flags=re.DOTALL)
+    content = re.sub(r'<div[^>]*class="[^"]*block-before-content[^"]*"[^>]*>.*?</div>', '', content, flags=re.DOTALL)
+    content = re.sub(r'<div[^>]*class="[^"]*by[^"]*"[^>]*>.*?</div>', '', content, flags=re.DOTALL)
+    content = re.sub(r'<div[^>]*class="[^"]*author[^"]*"[^>]*>.*?</div>', '', content, flags=re.DOTALL)
+    content = re.sub(r'<div[^>]*class="[^"]*time[^"]*"[^>]*>.*?</div>', '', content, flags=re.DOTALL)
+    content = re.sub(r'<div[^>]*class="[^"]*entry[^"]*"[^>]*>.*?</div>', '', content, flags=re.DOTALL)
+    content = re.sub(r'<div[^>]*class="[^"]*grid8[^"]*"[^>]*>.*?</div>', '', content, flags=re.DOTALL)
+
+    # Remove parágrafos problemáticos
+    content = re.sub(r'<p[^>]*class="[^"]*flipboard-subtitle[^"]*"[^>]*>.*?</p>', '', content, flags=re.DOTALL)
+    content = re.sub(r'<p[^>]*class="[^"]*olho[^"]*"[^>]*>.*?</p>', '', content, flags=re.DOTALL)
+
+    # Remove atributos desnecessários mas mantém a estrutura
+    content = re.sub(r'class="[^"]*"', '', content)
+    content = re.sub(r'data-[^=]*="[^"]*"', '', content)
+    content = re.sub(r'style="[^"]*"', '', content)
+    content = re.sub(r'id="[^"]*"', '', content)
+
+    # Limpa espaços extras
+    content = re.sub(r'>\s+<', '><', content)
+    content = re.sub(r'\s+', ' ', content)
+
+    return content.strip()
+
