@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Categorias de Artigos | {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-3">Categorias de Artigos</h1>
+    {% if categories %}
+        <div class="row">
+            {% for category in categories %}
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title">
+                                <a href="{% url 'articles:category_detail' category.slug %}">{{ category.name }}</a>
+                            </h5>
+                            {% if category.description %}
+                                <p class="card-text">{{ category.description|truncatewords:25 }}</p>
+                            {% endif %}
+                        </div>
+                        <div class="card-footer text-muted small">
+                            {{ category.articles.count }} artigo{{ category.articles.count|pluralize }}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info mt-4">
+            Nenhuma categoria encontrada.
+        </div>
+    {% endif %}
+    <a href="{% url 'articles:article_list' %}" class="btn btn-secondary mt-3">Ver todos os artigos</a>
+</div>
+{% endblock %} 

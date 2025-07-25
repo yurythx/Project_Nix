@@ -445,11 +445,16 @@ CSP_FONT_SRC = (
     "https://cdnjs.cloudflare.com"
 )
 CSP_FORM_ACTION = ("'self'",)
-CSP_FRAME_SRC = ("'self'",)
+# Permitir imagens de qualquer domínio
 CSP_IMG_SRC = (
     "'self'",
     "data:",
-    "https://cdn.jsdelivr.net"
+    "*"
+)
+# Permitir iframes de qualquer domínio
+CSP_FRAME_SRC = (
+    "'self'",
+    "*"
 )
 CSP_SCRIPT_SRC = (
     "'self'",
@@ -640,7 +645,20 @@ LOGGING = {
             'level': LOG_LEVEL,
             'propagate': False,
         },
+        # Logger dedicado para backup/restauração
+        'config.backup': {
+            'handlers': ['backup_file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
     },
+}
+# Handler dedicado para backup.log
+LOGGING['handlers']['backup_file'] = {
+    'level': 'INFO',
+    'class': 'logging.FileHandler',
+    'filename': str(BASE_DIR / 'logs' / 'backup.log'),
+    'formatter': 'verbose',
 }
 
 # =============================================================================

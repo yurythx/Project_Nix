@@ -3522,3 +3522,7 @@ footer a:hover {
     border-color: #0dcaf0 !important;
     color: #fff !important;
 }
+
+[data-theme="dark"] .form-label.fw-bold {
+    color: #fff !important;
+}

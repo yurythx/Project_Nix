@@ -63,6 +63,20 @@
     border: none;
 }
 
+/* Aumenta a altura do TinyMCE */
+.tox-tinymce, .mce-tinymce, textarea#id_content {
+    min-height: 600px !important;
+    height: 70vh !important;
+    max-height: 1200px !important;
+}
+@media (max-width: 767px) {
+    .tox-tinymce, .mce-tinymce, textarea#id_content {
+        min-height: 350px !important;
+        height: 45vh !important;
+        max-height: 600px !important;
+    }
+}
+
 /* Modo escuro para TinyMCE */
 [data-theme="dark"] .tox-tinymce {
     background-color: #2d3748 !important;
@@ -76,20 +90,26 @@
     border-color: #4a5568 !important;
 }
 
-[data-theme="dark"] .tox .tox-tbtn {
+[data-theme="dark"] .tox .tox-tbtn,
+[data-theme="dark"] .tox .tox-tbtn svg,
+[data-theme="dark"] .tox .tox-tbtn__select-label {
     background-color: #2d3748 !important;
     border-color: #4a5568 !important;
-    color: #e2e8f0 !important;
+    color: #fff !important;
+    fill: #fff !important;
 }
 
-[data-theme="dark"] .tox .tox-tbtn:hover {
+[data-theme="dark"] .tox .tox-tbtn:hover,
+[data-theme="dark"] .tox .tox-tbtn:focus {
     background-color: #4a5568 !important;
-    color: #ffffff !important;
+    color: #fff !important;
+    fill: #fff !important;
 }
 
 [data-theme="dark"] .tox .tox-tbtn--enabled {
     background-color: #3182ce !important;
-    color: #ffffff !important;
+    color: #fff !important;
+    fill: #fff !important;
 }
 
 [data-theme="dark"] .tox .tox-menu {
@@ -103,7 +123,7 @@
 
 [data-theme="dark"] .tox .tox-collection__item:hover {
     background-color: #4a5568 !important;
-    color: #ffffff !important;
+    color: #fff !important;
 }
 
 [data-theme="dark"] .tox .tox-edit-area {
@@ -118,9 +138,63 @@
     border-color: #4a5568 !important;
 }
 
+[data-theme="dark"] .tox .tox-statusbar {
+    background-color: #1a202c !important;
+    color: #e2e8f0 !important;
+}
+
 .form-label.fw-bold {
     color: #495057;
     margin-bottom: 0.5rem;
+}
+
+[data-theme="dark"] .form-label.fw-bold {
+    color: #fff !important;
+}
+
+[data-theme="dark"] h1,
+[data-theme="dark"] .form-text,
+[data-theme="dark"] .character-counter,
+[data-theme="dark"] .btn-link,
+[data-theme="dark"] .form-control,
+[data-theme="dark"] .form-select,
+[data-theme="dark"] label,
+[data-theme="dark"] .text-muted,
+[data-theme="dark"] .text-secondary,
+[data-theme="dark"] .text-body {
+    color: #fff !important;
+}
+
+[data-theme="dark"] .character-counter.text-danger {
+    color: var(--nix-danger) !important;
+}
+
+/* TinyMCE conteúdo do iframe no dark mode - força texto branco */
+[data-theme="dark"] iframe.tox-edit-area__iframe {
+    background: #1a202c !important;
+}
+[data-theme="dark"] .tox-edit-area__iframe body,
+[data-theme="dark"] .tox-edit-area__iframe p,
+[data-theme="dark"] .tox-edit-area__iframe h1,
+[data-theme="dark"] .tox-edit-area__iframe h2,
+[data-theme="dark"] .tox-edit-area__iframe h3,
+[data-theme="dark"] .tox-edit-area__iframe h4,
+[data-theme="dark"] .tox-edit-area__iframe h5,
+[data-theme="dark"] .tox-edit-area__iframe h6,
+[data-theme="dark"] .tox-edit-area__iframe span,
+[data-theme="dark"] .tox-edit-area__iframe div,
+[data-theme="dark"] .tox-edit-area__iframe a {
+    color: #fff !important;
+    background: #1a202c !important;
+}
+
+/* Força texto branco no body do iframe do TinyMCE via ::part (caso suporte) */
+[data-theme="dark"] .tox-edit-area__iframe::part(body),
+[data-theme="dark"] .tox-edit-area__iframe::part(p),
+[data-theme="dark"] .tox-edit-area__iframe::part(span),
+[data-theme="dark"] .tox-edit-area__iframe::part(div),
+[data-theme="dark"] .tox-edit-area__iframe::part(a) {
+    color: #fff !important;
 }
 
 .card-header {
@@ -157,8 +231,11 @@ if (typeof tinymce === 'undefined') {
       paste_data_images: true,
       menubar: false,
       statusbar: true,
-      branding: false,
-      language: 'pt_BR'
+      branding: false, // Remove logo e link de upgrade
+      promotion: false, // Remove botão de upgrade (raio)
+      language: 'pt_BR',
+      content_style: document.documentElement.getAttribute('data-theme') === 'dark' ?
+        'body { color: #fff !important; background: #1a202c !important; }' : '',
     });
   };
   document.head.appendChild(script);

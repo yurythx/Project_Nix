@@ -4,6 +4,11 @@
 <!-- Conteúdo do backup do banco de dados -->
 <div class="container my-5">
     <h1 class="h3 mb-4">Backup do Banco de Dados</h1>
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
     <!-- Conteúdo específico do backup -->
     {% block page_content %}{% endblock %}
     <table class="table table-striped">
@@ -12,6 +17,7 @@
                 <th>Arquivo</th>
                 <th>Tamanho</th>
                 <th>Data</th>
+                <th>SHA256</th>
                 <th>Ações</th>
             </tr>
         </thead>
@@ -21,12 +27,17 @@
                 <td>{{ backup.name }}</td>
                 <td>{{ backup.size|filesizeformat }}</td>
                 <td>{{ backup.modified|date:'d/m/Y H:i' }}</td>
+                <td style="font-size: 0.85em; word-break: break-all;">{{ backup.sha256|default:'-' }}</td>
                 <td>
                     <a href="{% url 'config:download_backup' 'database' backup.name %}" class="btn btn-sm btn-outline-success">Download</a>
+                    <form method="post" action="{% url 'config:delete_backup' 'database' backup.name %}" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja excluir este backup?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-outline-danger">Excluir</button>
+                    </form>
                 </td>
             </tr>
             {% empty %}
-            <tr><td colspan="4" class="text-center text-muted">Nenhum backup encontrado.</td></tr>
+            <tr><td colspan="5" class="text-center text-muted">Nenhum backup encontrado.</td></tr>
             {% endfor %}
         </tbody>
     </table>

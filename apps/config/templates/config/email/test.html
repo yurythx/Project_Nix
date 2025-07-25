@@ -82,71 +82,14 @@
     </div>
 </div>
 
-<!-- Formulário de Teste -->
+<!-- Dicas de Teste -->
 <div class="row mb-4">
     <div class="col-lg-8">
-        <div class="card shadow">
-            <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-theme-primary">
-                    <i class="fas fa-envelope me-2"></i>Enviar Email de Teste
-                </h6>
-            </div>
-            <div class="card-body">
-                {% if email_configured %}
-                    <form method="post" id="emailTestForm">
-                        {% csrf_token %}
-                        
-                        <div class="mb-3">
-                            <label for="id_recipient" class="form-label">Destinatário</label>
-                            <input type="email" class="form-control" id="id_recipient" name="recipient" 
-                                   placeholder="teste@exemplo.com" required>
-                            <div class="form-text">Email que receberá o teste</div>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="id_subject" class="form-label">Assunto</label>
-                            <input type="text" class="form-control" id="id_subject" name="subject" 
-                                   value="Teste de Email - Havoc">
-                            <div class="form-text">Assunto do email de teste</div>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="id_message" class="form-label">Mensagem</label>
-                            <textarea class="form-control" id="id_message" name="message" rows="4">Este é um email de teste do sistema Havoc. Se você recebeu esta mensagem, a configuração está funcionando corretamente!</textarea>
-                            <div class="form-text">Conteúdo do email de teste</div>
-                        </div>
-                        
-                        <div class="d-flex gap-2">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-paper-plane me-2"></i>Enviar Teste
-                            </button>
-                            <button type="button" class="btn btn-outline-info" id="quickTest">
-                                <i class="fas fa-bolt me-2"></i>Teste Rápido
-                            </button>
-                        </div>
-                    </form>
-                {% else %}
-                    <div class="text-center py-4">
-                        <i class="fas fa-exclamation-triangle fa-3x text-theme-warning mb-3"></i>
-                        <h5>Email não configurado</h5>
-                        <p class="text-muted">Configure o servidor de email antes de realizar testes.</p>
-                        <div class="d-flex gap-2 justify-content-center">
-                            <a href="{% url 'config:email_config' %}" class="btn btn-primary">
-                                <i class="fas fa-cog me-2"></i>Configurar Email
-                            </a>
-                            <button type="button" class="btn btn-outline-warning" onclick="syncAndRefresh()">
-                                <i class="fas fa-sync me-2"></i>Sincronizar e Atualizar
-                            </button>
-                        </div>
-                        <small class="text-muted mt-2 d-block">
-                            Se você acabou de configurar o email, clique em "Sincronizar e Atualizar" para aplicar as configurações.
-                        </small>
-                    </div>
-                {% endif %}
-            </div>
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>
+            Para testar o envio de emails, utilize as funcionalidades do sistema que disparam emails reais (ex: cadastro, recuperação de senha, notificações). O formulário de teste foi desativado.
         </div>
     </div>
-    
     <div class="col-lg-4">
         <div class="card shadow">
             <div class="card-header py-3">
@@ -160,17 +103,14 @@
                         <strong><i class="fas fa-check text-theme-success me-1"></i>Teste Básico:</strong>
                         <p class="mb-0">Use seu próprio email para verificar se o envio está funcionando.</p>
                     </div>
-                    
                     <div class="mb-3">
                         <strong><i class="fas fa-shield-alt text-theme-warning me-1"></i>Spam:</strong>
                         <p class="mb-0">Verifique a pasta de spam se não receber o email.</p>
                     </div>
-                    
                     <div class="mb-3">
                         <strong><i class="fas fa-clock text-theme-info me-1"></i>Tempo:</strong>
                         <p class="mb-0">Emails podem levar alguns minutos para chegar.</p>
                     </div>
-                    
                     <div class="mb-3">
                         <strong><i class="fas fa-bug text-theme-danger me-1"></i>Problemas:</strong>
                         <p class="mb-0">Verifique os logs do sistema em caso de erro.</p>
@@ -180,175 +120,4 @@
         </div>
     </div>
 </div>
-
-<!-- Histórico de Testes -->
-<div class="row">
-    <div class="col-12">
-        <div class="card shadow">
-            <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-theme-primary">
-                    <i class="fas fa-history me-2"></i>Histórico de Testes
-                </h6>
-            </div>
-            <div class="card-body">
-                <div id="testHistory">
-                    <div class="text-center text-muted py-3">
-                        <i class="fas fa-inbox fa-2x mb-2"></i>
-                        <p class="mb-0">Nenhum teste realizado ainda.</p>
-                        <small>Os testes de email aparecerão aqui quando realizados.</small>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<script>
-// Função para sincronizar e atualizar a página
-function syncAndRefresh() {
-    const btn = event.target;
-    const originalText = btn.innerHTML;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Sincronizando...';
-    btn.disabled = true;
-    
-    // Obter CSRF token de forma segura
-    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
-                     document.querySelector('meta[name=csrf-token]')?.getAttribute('content') ||
-                     '{{ csrf_token }}';
-    
-    fetch('{% url "config:email_sync" %}', {
-        method: 'POST',
-        headers: {
-            'X-CSRFToken': csrfToken,
-            'Content-Type': 'application/json',
-        },
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // Recarregar a página após sincronização
-            window.location.reload();
-        } else {
-            alert('❌ Erro ao sincronizar: ' + data.message);
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-        }
-    })
-    .catch(error => {
-        console.error('Erro:', error);
-        alert('❌ Erro inesperado ao sincronizar configurações');
-        btn.innerHTML = originalText;
-        btn.disabled = false;
-    });
-}
-
-// Teste rápido
-document.getElementById('quickTest')?.addEventListener('click', function() {
-    const userEmail = '{{ user.email }}';
-    if (userEmail) {
-        document.getElementById('id_recipient').value = userEmail;
-        document.getElementById('id_subject').value = 'Teste Rápido - Havoc';
-        document.getElementById('id_message').value = 'Este é um teste rápido do sistema de email do Havoc enviado em {{ "now"|date:"d/m/Y \\à\\s H:i" }}.';
-    }
-});
-
-// AJAX para teste rápido
-function sendQuickTest() {
-    const recipient = document.getElementById('id_recipient').value;
-    
-    if (!recipient) {
-        alert('Por favor, informe um email de destino.');
-        return;
-    }
-    
-    const button = document.getElementById('quickTest');
-    const originalText = button.innerHTML;
-    
-    button.disabled = true;
-    button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Enviando...';
-    
-    fetch('{% url "config:send_test_email_ajax" %}', {
-        method: 'POST',
-        headers: {
-            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-            'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: 'recipient=' + encodeURIComponent(recipient)
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            addToHistory('success', recipient, data.message);
-            showAlert('success', data.message);
-        } else {
-            addToHistory('error', recipient, data.error);
-            showAlert('danger', data.error);
-        }
-    })
-    .catch(error => {
-        addToHistory('error', recipient, 'Erro na conexão: ' + error);
-        showAlert('danger', 'Erro na conexão: ' + error);
-    })
-    .finally(() => {
-        button.disabled = false;
-        button.innerHTML = originalText;
-    });
-}
-
-// Adicionar ao histórico
-function addToHistory(type, recipient, message) {
-    const history = document.getElementById('testHistory');
-    const now = new Date().toLocaleString('pt-BR');
-    
-    // Se é o primeiro item, limpar mensagem de vazio
-    if (history.querySelector('.text-muted')) {
-        history.innerHTML = '';
-    }
-    
-    const item = document.createElement('div');
-    item.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show`;
-    item.innerHTML = `
-        <div class="d-flex justify-content-between align-items-start">
-            <div>
-                <strong>${type === 'success' ? 'Sucesso' : 'Erro'}:</strong> ${message}<br>
-                <small><strong>Destinatário:</strong> ${recipient} | <strong>Horário:</strong> ${now}</small>
-            </div>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    `;
-    
-    history.insertBefore(item, history.firstChild);
-}
-
-// Mostrar alerta
-function showAlert(type, message) {
-    const alertDiv = document.createElement('div');
-    alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
-    alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
-    alertDiv.innerHTML = `
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
-    
-    document.body.appendChild(alertDiv);
-    
-    // Auto-remover após 5 segundos
-    setTimeout(() => {
-        if (alertDiv.parentNode) {
-            alertDiv.remove();
-        }
-    }, 5000);
-}
-
-// Interceptar envio do formulário para adicionar ao histórico
-document.getElementById('emailTestForm')?.addEventListener('submit', function(e) {
-    const recipient = document.getElementById('id_recipient').value;
-    const subject = document.getElementById('id_subject').value;
-    
-    // Adicionar ao histórico (será atualizado pela resposta da página)
-    setTimeout(() => {
-        addToHistory('info', recipient, `Teste enviado: ${subject}`);
-    }, 100);
-});
-</script>
 {% endblock %}

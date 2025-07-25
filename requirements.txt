@@ -118,3 +118,6 @@ webencodings==0.5.1
     # via bleach
 whitenoise==6.9.0
     # via -r requirements.in
+pytest>=7.0
+pytest-django>=4.0
+coverage

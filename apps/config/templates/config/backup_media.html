@@ -4,8 +4,11 @@
 <!-- Conteúdo do backup de mídia -->
 <div class="container my-5">
     <h1 class="h3 mb-4">Backup de Mídia</h1>
-    <!-- Conteúdo específico do backup -->
-    {% block page_content %}{% endblock %}
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
     <table class="table table-striped">
         <thead>
             <tr>
@@ -23,6 +26,10 @@
                 <td>{{ backup.modified|date:'d/m/Y H:i' }}</td>
                 <td>
                     <a href="{% url 'config:download_backup' 'media' backup.name %}" class="btn btn-sm btn-outline-success">Download</a>
+                    <form method="post" action="{% url 'config:delete_backup' 'media' backup.name %}" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja excluir este backup?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-outline-danger">Excluir</button>
+                    </form>
                 </td>
             </tr>
             {% empty %}

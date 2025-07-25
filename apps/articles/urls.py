@@ -47,12 +47,12 @@ urlpatterns = [
     path('comentarios/', LoadMoreCommentsView.as_view(), name='load_more_comments'),
     path('comentarios/<int:comment_id>/replies/', LoadRepliesView.as_view(), name='load_replies'),
 
-    # Artigos - Detalhes (deve vir por último para não conflitar)
-    path('<slug:slug>/', ArticleDetailView.as_view(), name='article_detail'),
-
-    # Categorias (implementar depois)
+    # Categorias (deve vir antes dos slugs de artigo)
     path('categoria/', CategoryListView.as_view(), name='category_list'),
     path('categoria/<slug:slug>/', CategoryDetailView.as_view(), name='category_detail'),
+
+    # Artigos - Detalhes (deve vir por último para não conflitar)
+    path('<slug:slug>/', ArticleDetailView.as_view(), name='article_detail'),
 
     # Tags (implementar depois)
     # path('tag/', TagListView.as_view(), name='tag_list'),

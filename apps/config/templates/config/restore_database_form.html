@@ -2,16 +2,58 @@
 {% block content %}
 <div class="container my-5">
     <h2>Restaurar Banco de Dados</h2>
-    <form method="post" enctype="multipart/form-data">
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+    <form method="post" enctype="multipart/form-data" id="restore-form">
         {% csrf_token %}
         <div class="mb-3">
-            <label for="id_backup_file" class="form-label">Arquivo de Backup (.backup)</label>
-            <input type="file" class="form-control" id="id_backup_file" name="backup_file" accept=".backup" required>
+            <label for="id_backup_file" class="form-label">Arquivo de Backup (.backup, .sql, .sqlite3)</label>
+            <input type="file" class="form-control" id="id_backup_file" name="backup_file" accept=".backup,.sql,.sqlite3" required>
         </div>
         <button type="submit" class="btn btn-primary">Restaurar Banco</button>
+        <div class="progress mt-3" style="height: 24px; display: none;">
+            <div id="upload-progress-bar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%">0%</div>
+        </div>
     </form>
     <div class="alert alert-warning mt-4">
         <strong>Atenção:</strong> Esta ação irá sobrescrever todos os dados atuais do banco de dados!
     </div>
 </div>
+<script>
+document.getElementById('restore-form').addEventListener('submit', function(e) {
+    var form = this;
+    var fileInput = document.getElementById('id_backup_file');
+    if (fileInput.files.length === 0) return;
+    e.preventDefault();
+    var progressBar = document.getElementById('upload-progress-bar');
+    progressBar.style.width = '0%';
+    progressBar.textContent = '0%';
+    progressBar.parentElement.style.display = '';
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', '', true);
+    xhr.upload.onprogress = function(e) {
+        if (e.lengthComputable) {
+            var percent = Math.round((e.loaded / e.total) * 100);
+            progressBar.style.width = percent + '%';
+            progressBar.textContent = percent + '%';
+        }
+    };
+    xhr.onload = function() {
+        if (xhr.status === 200) {
+            progressBar.classList.add('bg-success');
+            progressBar.textContent = 'Concluído';
+            setTimeout(function(){ location.reload(); }, 1500);
+        } else {
+            progressBar.classList.add('bg-danger');
+            progressBar.textContent = 'Erro';
+        }
+    };
+    var formData = new FormData(form);
+    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+    xhr.send(formData);
+});
+</script>
 {% endblock %} 
