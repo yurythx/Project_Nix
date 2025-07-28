@@ -241,21 +241,28 @@ class ModuleService(IModuleService):
             new_modules = []
             updated_modules = []
 
+            # Apps que devem iniciar ativos por padrão
+            default_active_apps = ['articles', 'books', 'audiobooks', 'mangas']
+
             for app_path in installed_apps:
                 app_name = app_path.split('.')[-1]  # sempre sem prefixo
                 if app_name not in existing_modules:
                     # Cria novo módulo
+                    is_core = app_name in self.core_apps
+                    is_default_active = app_name in default_active_apps
+                    
                     module_data = {
                         'app_name': app_name,
                         'display_name': app_name.title(),
                         'description': f'Módulo {app_name}',
-                        'is_enabled': app_name in self.core_apps,
-                        'is_core': app_name in self.core_apps,
-                        'status': 'active' if app_name in self.core_apps else 'inactive'
+                        'is_enabled': is_core or is_default_active,
+                        'is_core': is_core,
+                        'status': 'active' if (is_core or is_default_active) else 'inactive'
                     }
                     new_module = self.create_module(module_data, user)
                     if new_module:
                         new_modules.append(new_module.app_name)
+                        logger.info(f"Módulo {app_name} criado por sistema")
                 else:
                     # Atualiza módulo existente se necessário
                     module = self.get_module_by_name(app_name)

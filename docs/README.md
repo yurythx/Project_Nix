@@ -1,130 +1,140 @@
-# 📚 Documentação FireFlies CMS
+# 📚 Documentação Project Nix
 
 ## 📋 Visão Geral
 
-Esta documentação abrange todos os aspectos do FireFlies CMS, um sistema de gerenciamento de conteúdo moderno desenvolvido com Django e arquitetura SOLID.
+Esta documentação abrange todos os aspectos do **Project Nix**, um sistema de gerenciamento de conteúdo moderno, modular e responsivo, desenvolvido com Django e arquitetura SOLID.
+
+## 🎯 Características Principais
+
+- **🏗️ Arquitetura SOLID**: Implementação completa dos princípios SOLID
+- **🔌 Sistema Modular**: Módulos dinâmicos habilitáveis/desabilitáveis
+- **🎨 Design System**: Paleta roxa elegante e acessível (WCAG 2.1 AA)
+- **⚡ Performance**: Otimizações de cache e consultas
+- **🔒 Segurança**: Middleware de segurança e rate limiting
+- **📱 Responsivo**: Interface adaptável para todos os dispositivos
 
 ## 📖 Índice da Documentação
 
-### 🏗️ Arquitetura e Design
+### 🏗️ **Arquitetura e Design**
 
-#### [Arquitetura Atual](ARQUITETURA_ATUAL.md)
-- **Descrição**: Documentação técnica completa sobre a arquitetura atual do sistema
-- **Conteúdo**: 
-  - Princípios arquiteturais (SOLID, Modularidade)
-  - Camadas do sistema (Presentation, Business, Data Access, Infrastructure)
-  - Implementação de padrões (Factory, Observer, Repository, Service Layer)
-  - Sistema de segurança e middleware
-  - Configurações de performance e monitoramento
-  - Fluxo de dados e eventos
-  - Métricas e comandos de manutenção
+#### [📋 Visão Geral da Arquitetura](ARQUITETURA.md)
+- Princípios arquiteturais (SOLID, Modularidade)
+- Camadas do sistema (Presentation, Business, Data Access, Infrastructure)
+- Padrões implementados (Factory, Observer, Repository, Service Layer)
+- Sistema de segurança e middleware
 
-#### [Sistema de Módulos](SISTEMA_MODULOS.md)
-- **Descrição**: Documentação completa sobre o sistema de módulos dinâmicos
-- **Conteúdo**:
-  - Visão geral e características principais
-  - Arquitetura do sistema de módulos
-  - Tipos de módulos (Core, Feature, Integration)
-  - Configuração e inicialização automática
-  - Interface web e controle de acesso
-  - Middleware de verificação
-  - API para módulos e troubleshooting
+#### [🔌 Sistema de Módulos](MODULOS.md)
+- Visão geral e características principais
+- Tipos de módulos (Core, Feature, Integration)
+- Configuração e inicialização automática
+- Interface web e controle de acesso
+- Middleware de verificação
 
-#### [Padrões SOLID](SOLID_PATTERNS_GUIDE.md)
-- **Descrição**: Guia detalhado sobre implementação dos princípios SOLID
-- **Conteúdo**:
-  - Single Responsibility Principle
-  - Open/Closed Principle
-  - Liskov Substitution Principle
-  - Interface Segregation Principle
-  - Dependency Inversion Principle
-  - Exemplos práticos de implementação
+#### [🎯 Padrões SOLID](SOLID.md)
+- Single Responsibility Principle
+- Open/Closed Principle
+- Liskov Substitution Principle
+- Interface Segregation Principle
+- Dependency Inversion Principle
+- Exemplos práticos de implementação
 
-#### [Factory e Observer](FACTORY_OBSERVER_GUIDE.md)
-- **Descrição**: Guia sobre padrões Factory e Observer implementados
-- **Conteúdo**:
-  - Factory Pattern para injeção de dependências
-  - Observer Pattern para sistema de eventos
-  - Implementação prática no código
-  - Casos de uso e exemplos
+#### [🏭 Factory e Observer](PADROES.md)
+- Factory Pattern para injeção de dependências
+- Observer Pattern para sistema de eventos
+- Implementação prática no código
+- Casos de uso e exemplos
 
-#### [Interfaces](INTERFACES_DOCUMENTATION.md)
-- **Descrição**: Documentação sobre o sistema de interfaces
-- **Conteúdo**:
-  - Definição de interfaces
-  - Implementação de contratos
-  - Injeção de dependências
-  - Testabilidade e manutenibilidade
+#### [🔗 Interfaces](INTERFACES.md)
+- Definição de interfaces
+- Implementação de contratos
+- Injeção de dependências
+- Testabilidade e manutenibilidade
 
-### 🚀 Deploy e Infraestrutura
+### 🚀 **Deploy e Infraestrutura**
 
-#### [Sistema de Deploy Atual](DEPLOY_ATUAL.md)
-- **Descrição**: Documentação completa sobre o sistema de deploy
-- **Conteúdo**:
-  - Características do deploy automatizado
-  - Arquitetura de deploy (Nginx, Gunicorn, Django, PostgreSQL, Redis)
-  - Scripts de deploy para Google Cloud
-  - Configurações de ambiente e variáveis
-  - Health checks e monitoramento
-  - Segurança e performance
-  - Backup e restore
+#### [🚀 Guia de Deploy](DEPLOY.md)
+- Características do deploy automatizado
+- Arquitetura de deploy (Nginx, Gunicorn, Django, PostgreSQL, Redis)
+- Scripts de deploy para Google Cloud
+- Configurações de ambiente e variáveis
+- Health checks e monitoramento
 
-#### [Guia de Deploy GCP](DEPLOY_GCP_GUIDE.md)
-- **Descrição**: Guia passo a passo para deploy no Google Cloud
-- **Conteúdo**:
-  - Pré-requisitos e configuração inicial
-  - Scripts automatizados de deploy
-  - Configuração pós-deploy
-  - Troubleshooting e diagnóstico
-  - Checklist de verificação
+#### [☁️ Deploy Google Cloud](DEPLOY_GCP.md)
+- Pré-requisitos e configuração inicial
+- Scripts automatizados de deploy
+- Configuração pós-deploy
+- Troubleshooting e diagnóstico
+- Checklist de verificação
 
-#### [Setup Wizard](SETUP_WIZARD_GUIDE.md)
-- **Descrição**: Guia sobre o sistema de configuração inicial
-- **Conteúdo**:
-  - Arquitetura SOLID do Setup Wizard
-  - Componentes principais
-  - Implementação de steps
-  - Configuração e personalização
+#### [⚙️ Setup Wizard](SETUP.md)
+- Arquitetura SOLID do Setup Wizard
+- Componentes principais
+- Implementação de steps
+- Configuração e personalização
 
-### 📊 Resumos e Checklists
+### 📊 **Desenvolvimento e Qualidade**
 
-#### [Resumo do Deploy](DEPLOY_SUMMARY.md)
-- **Descrição**: Resumo executivo do processo de deploy
-- **Conteúdo**:
-  - Visão geral do fluxo de deploy
-  - Etapas principais
-  - Arquitetura final
-  - Checklist de verificação
-  - Troubleshooting comum
+#### [🧪 Testes](TESTES.md)
+- Estrutura de testes
+- Testes unitários
+- Testes de integração
+- Cobertura de código
+- Boas práticas
 
-### 🔧 Scripts e Ferramentas
+#### [⚡ Performance](PERFORMANCE.md)
+- Otimizações de banco de dados
+- Sistema de cache
+- Otimizações de frontend
+- Monitoramento de performance
+- Ferramentas de análise
 
-#### [Scripts de Deploy](scripts/README_DEPLOY.md)
-- **Descrição**: Documentação dos scripts de deploy
-- **Conteúdo**:
-  - `deploy_gcp.sh`: Deploy principal no Google Cloud
-  - `post_deploy_setup.sh`: Configuração pós-deploy
-  - `troubleshooting.sh`: Diagnóstico e troubleshooting
-  - Instruções de uso e configuração
+#### [🔒 Segurança](SEGURANCA.md)
+- Configurações de segurança
+- Middleware de proteção
+- Rate limiting
+- Validação de dados
+- Headers de segurança
+
+### 📋 **Guias Práticos**
+
+#### [🛠️ Guia de Desenvolvimento](DESENVOLVIMENTO.md)
+- Configuração do ambiente
+- Estrutura do projeto
+- Convenções de código
+- Fluxo de trabalho
+- Debugging
+
+#### [👥 Guia de Contribuição](CONTRIBUICAO.md)
+- Como contribuir
+- Padrões de código
+- Processo de review
+- Documentação
+- Testes
+
+#### [📱 Frontend](FRONTEND.md)
+- Design system
+- Componentes
+- Responsividade
+- Acessibilidade
+- JavaScript
 
 ## 🎯 Como Usar Esta Documentação
 
 ### Para Desenvolvedores
-1. **Comece com** [Arquitetura Atual](ARQUITETURA_ATUAL.md) para entender a estrutura
-2. **Leia** [Sistema de Módulos](SISTEMA_MODULOS.md) para entender a modularidade
-3. **Consulte** [Padrões SOLID](SOLID_PATTERNS_GUIDE.md) para boas práticas
-4. **Use** [Factory e Observer](FACTORY_OBSERVER_GUIDE.md) para padrões específicos
+1. **Comece com** [Visão Geral da Arquitetura](ARQUITETURA.md)
+2. **Leia** [Sistema de Módulos](MODULOS.md)
+3. **Consulte** [Padrões SOLID](SOLID.md)
+4. **Use** [Guia de Desenvolvimento](DESENVOLVIMENTO.md)
 
 ### Para DevOps/Deploy
-1. **Comece com** [Sistema de Deploy Atual](DEPLOY_ATUAL.md) para visão geral
-2. **Siga** [Guia de Deploy GCP](DEPLOY_GCP_GUIDE.md) para deploy específico
-3. **Use** [Resumo do Deploy](DEPLOY_SUMMARY.md) como checklist
-4. **Consulte** [Scripts de Deploy](scripts/README_DEPLOY.md) para ferramentas
+1. **Comece com** [Guia de Deploy](DEPLOY.md)
+2. **Siga** [Deploy Google Cloud](DEPLOY_GCP.md)
+3. **Configure** [Setup Wizard](SETUP.md)
 
 ### Para Administradores
-1. **Leia** [Setup Wizard](SETUP_WIZARD_GUIDE.md) para configuração inicial
-2. **Consulte** [Sistema de Módulos](SISTEMA_MODULOS.md) para gerenciamento
-3. **Use** [Troubleshooting](scripts/README_DEPLOY.md) para problemas
+1. **Leia** [Setup Wizard](SETUP.md)
+2. **Consulte** [Sistema de Módulos](MODULOS.md)
+3. **Configure** [Segurança](SEGURANCA.md)
 
 ## 📝 Convenções da Documentação
 
@@ -152,23 +162,23 @@ Esta documentação abrange todos os aspectos do FireFlies CMS, um sistema de ge
 ## 🔄 Atualizações da Documentação
 
 ### Versão Atual
-- **Data**: Dezembro 2024
-- **Versão**: 2.0.0
-- **Status**: Atualizada e compatível com o sistema atual
+- **Data**: Julho 2025
+- **Versão**: 3.0.0
+- **Status**: Completamente reescrita e atualizada
 
 ### Mudanças Recentes
-- ✅ Removida documentação antiga incompatível
-- ✅ Criada documentação técnica completa
-- ✅ Adicionados guias práticos de deploy
-- ✅ Documentado sistema de módulos
-- ✅ Incluídos scripts automatizados
+- ✅ Documentação completamente reescrita
+- ✅ Nome atualizado para "Project Nix"
+- ✅ Estrutura simplificada e organizada
+- ✅ Removida documentação obsoleta
+- ✅ Novos guias práticos criados
 
 ### Próximas Atualizações
 - [ ] Documentação da API REST
 - [ ] Guia de desenvolvimento de módulos
-- [ ] Documentação de testes
-- [ ] Guia de contribuição
-- [ ] Documentação de performance
+- [ ] Documentação de testes avançados
+- [ ] Guia de contribuição detalhado
+- [ ] Documentação de performance avançada
 
 ## 🤝 Contribuição
 
@@ -190,17 +200,17 @@ Esta documentação abrange todos os aspectos do FireFlies CMS, um sistema de ge
 ## 📞 Suporte
 
 ### Recursos de Ajuda
-- **Issues**: [GitHub Issues](https://github.com/seu-usuario/fireflies/issues)
-- **Wiki**: [Documentação Wiki](https://github.com/seu-usuario/fireflies/wiki)
-- **Email**: suporte@fireflies.com
+- **Issues**: [GitHub Issues](https://github.com/seu-usuario/project-nix/issues)
+- **Wiki**: [Documentação Wiki](https://github.com/seu-usuario/project-nix/wiki)
+- **Email**: suporte@projectnix.com
 
 ### Comunidade
-- **Discord**: [Servidor da Comunidade](https://discord.gg/fireflies)
-- **Telegram**: [Canal de Discussão](https://t.me/fireflies_cms)
-- **Blog**: [Artigos e Tutoriais](https://blog.fireflies.com)
+- **Discord**: [Servidor da Comunidade](https://discord.gg/project-nix)
+- **Telegram**: [Canal de Discussão](https://t.me/project_nix)
+- **Blog**: [Artigos e Tutoriais](https://blog.projectnix.com)
 
 ---
 
-**FireFlies CMS** - Documentação completa e atualizada ✨
+**Project Nix** - Documentação completa e atualizada ✨
 
-*Última atualização: Dezembro 2024* 
+*Última atualização: Julho 2025* 

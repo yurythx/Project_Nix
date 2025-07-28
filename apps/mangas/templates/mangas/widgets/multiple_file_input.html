@@ -1,0 +1,39 @@
+{% load i18n %}
+<div class="multiple-file-input">
+    <label for="{{ widget.attrs.id }}" class="file-upload-area">
+        <div class="file-upload-icon">
+            <i class="fas fa-cloud-upload-alt"></i>
+        </div>
+        <div class="file-upload-text">
+            <span class="file-upload-main">{% trans "Arraste e solte seus arquivos aqui" %}</span>
+            <span class="file-upload-sub">{% trans "ou clique para selecionar" %}</span>
+            <span class="file-upload-hint">
+                {% trans "Formatos suportados: .zip, .rar, .7z, .tar, .cbz, .cbr, .cb7, .cbt, .cba, .jpg, .jpeg, .png, .webp, .gif, .bmp, .tiff, .tif, .heic, .heif, .avif" %}
+            </span>
+        </div>
+        <input type="{{ widget.type }}" 
+               name="{{ widget.name }}"
+               id="{{ widget.attrs.id }}"
+               class="{{ widget.attrs.class }}"
+               {% if widget.attrs.multiple %}multiple{% endif %}
+               {% if widget.attrs.webkitdirectory %}webkitdirectory{% endif %}
+               {% if widget.attrs.directory %}directory{% endif %}
+               {% for name, value in widget.attrs.items %}
+                   {% if name not in 'id,class,multiple,webkitdirectory,directory' %}
+                       {{ name }}="{{ value|stringformat:'s' }}"
+                   {% endif %}
+               {% endfor %}>
+    </label>
+    
+    <div class="file-list" id="file-list-{{ widget.attrs.id }}">
+        {% for file in widget.value %}
+            <div class="file-item" data-filename="{{ file.name }}">
+                <span class="file-name">{{ file.name }}</span>
+                <span class="file-size">({{ file.size|filesizeformat }})</span>
+                <button type="button" class="remove-file" aria-label="{% trans 'Remover arquivo' %}">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        {% endfor %}
+    </div>
+</div>

@@ -1,47 +1,98 @@
 {% extends 'base.html' %}
 {% load static %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'mangas/css/manga-list.css' %}">
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'mangas/js/manga-list.js' %}"></script>
+{% endblock %}
+
 {% block title %}Mangás - Project Nix{% endblock %}
 
 {% block content %}
 <div class="container my-5">
     <div class="row">
-        <div class="col-12">
+        <div class="col-lg-8">
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <h1 class="h2 mb-0 text-sans text-body">
-                    <i class="fas fa-book-open me-2 text-theme-primary"></i>Mangás
-                </h1>
-                {% if user.is_authenticated and user.is_staff %}
-                <a href="{% url 'mangas:manga_create' %}" class="btn btn-primary">
-                    <i class="fas fa-plus me-2"></i>Novo Mangá
-                </a>
-                {% endif %}
+                <div>
+                    <h1 class="h2 mb-1 text-sans text-body">
+                        <i class="fas fa-book-open me-2 text-theme-primary"></i>Mangás
+                    </h1>
+                    <p class="text-theme-secondary mb-0 text-body">Explore nossa coleção de mangás disponíveis</p>
+                </div>
+                <div>
+                    {% if user.is_authenticated and user.is_staff %}
+                    <a href="{% url 'mangas:manga_create' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Novo Mangá
+                    </a>
+                    {% endif %}
+                </div>
             </div>
-            <form class="mb-4" method="get">
+
+            <form method="get" action="#" class="mb-4" aria-label="Buscar Mangás">
                 <div class="input-group">
                     <input type="text" name="q" class="form-control" placeholder="Buscar mangá..." value="{{ request.GET.q }}">
-                    <button class="btn btn-outline-primary" type="submit"><i class="fas fa-search"></i></button>
+                    <button class="btn btn-primary" type="submit">
+                        <i class="fas fa-search"></i>
+                    </button>
                 </div>
             </form>
+
             {% if mangas %}
                 <div class="row g-4">
                     {% for manga in mangas %}
-                    <div class="col-md-6 col-lg-4">
-                        {% include 'includes/content_card.html' with 
-                            image_url=manga.cover_image.url if manga.cover_image else None
-                            image_alt=manga.title
-                            detail_url=manga.get_absolute_url
-                            title=manga.title
-                            subtitle=None
-                            author=manga.author
-                            date=manga.created_at|date:'d M, Y'
-                            description=manga.description
-                            primary_action_url=manga.get_absolute_url
-                            primary_action_label='Ver detalhes'
-                        %}
+                    <div class="col-lg-6 col-md-6 col-12">
+                        <article class="card h-100 shadow-sm manga-card">
+                            {% if manga.cover_image %}
+                            <div class="position-relative">
+                                <img src="{{ manga.cover_image.url }}" 
+                                     class="card-img-top" 
+                                     alt="{{ manga.title }}" 
+                                     style="height: 250px; object-fit: cover;">
+                                <span class="badge bg-primary position-absolute top-0 start-0 m-2">
+                                    <i class="fas fa-book-open me-1"></i>Mangá
+                                </span>
+                            </div>
+                            {% endif %}
+                            <div class="card-body d-flex flex-column">
+                                <h5 class="card-title mb-2">
+                                    <a href="{{ manga.get_absolute_url }}" class="text-decoration-none text-dark">
+                                        {{ manga.title }}
+                                    </a>
+                                </h5>
+                                {% if manga.subtitle %}
+                                <h6 class="card-subtitle mb-3 text-muted">{{ manga.subtitle }}</h6>
+                                {% endif %}
+                                <p class="card-text flex-grow-1">{{ manga.description|truncatewords:40 }}</p>
+
+                                <div class="mt-auto">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <small class="text-muted">
+                                            <i class="fas fa-user me-1"></i>{{ manga.author }}
+                                        </small>
+                                        <small class="text-muted">
+                                            <i class="fas fa-calendar me-1"></i>{{ manga.created_at|date:"d/m/Y" }}
+                                        </small>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <a href="{{ manga.get_absolute_url }}" class="btn btn-primary btn-sm">
+                                            <i class="fas fa-book-open me-1"></i>Ver detalhes
+                                        </a>
+                                        {% if user.is_staff and manga.get_edit_url %}
+                                        <a href="{{ manga.get_edit_url }}" class="btn btn-outline-secondary btn-sm ms-1">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </article>
                     </div>
                     {% endfor %}
                 </div>
+
                 {% if is_paginated %}
                 <nav aria-label="Paginação" class="mt-5">
                     <ul class="pagination justify-content-center">
@@ -52,7 +103,7 @@
                         {% endif %}
                         {% for num in page_obj.paginator.page_range %}
                             {% if page_obj.number == num %}
-                                <li class="page-item active">
+                                <li class="page-item active" aria-current="page">
                                     <span class="page-link">{{ num }}</span>
                                 </li>
                             {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
@@ -69,6 +120,7 @@
                     </ul>
                 </nav>
                 {% endif %}
+
             {% else %}
                 <div class="text-center py-5">
                     <i class="fas fa-book-open fa-5x text-theme-secondary mb-3"></i>
@@ -77,6 +129,26 @@
                 </div>
             {% endif %}
         </div>
+
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm mb-4 manga-list-card">
+                <div class="card-header bg-theme-secondary text-theme-light">
+                    <h6 class="mb-0"><i class="fas fa-search me-2"></i>Buscar Mangás</h6>
+                </div>
+                <div class="card-body">
+                    <form method="get" action="#" aria-label="Formulário de busca" role="form">
+                        <div class="input-group">
+                            <input type="text" name="q" class="form-control" placeholder="Digite sua busca..." value="{{ request.GET.q }}">
+                            <button class="btn btn-primary" type="submit">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <!-- Se quiser, pode adicionar sidebar extra aqui, ex: categorias -->
+
+        </div>
     </div>
 </div>
-{% endblock %} 
+{% endblock %}

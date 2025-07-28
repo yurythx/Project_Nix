@@ -134,7 +134,6 @@ project-nix/
 │   └── urls.py            # URLs principais
 ├── static/                 # Arquivos estáticos
 ├── media/                  # Uploads
-├── templates/              # Templates globais
 ├── docs/                   # Documentação
 ├── scripts/                # Scripts de deploy
 └── requirements.txt        # Dependências Python

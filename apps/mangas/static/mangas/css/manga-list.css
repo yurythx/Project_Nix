@@ -1,0 +1,61 @@
+/* Manga List Styles */
+.manga-card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 0.5rem;
+    overflow: hidden;
+}
+
+.manga-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.manga-card .card-img-top {
+    height: 300px;
+    object-fit: cover;
+    width: 100%;
+}
+
+.manga-card .card-body {
+    padding: 1.25rem;
+}
+
+.manga-card .card-title {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #333;
+}
+
+.manga-card .card-text {
+    color: #6c757d;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+}
+
+.manga-card .badge {
+    font-weight: 500;
+    padding: 0.35em 0.65em;
+    font-size: 0.8em;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .manga-card .card-img-top {
+        height: 250px;
+    }
+}
+
+/* Loading animation */
+@keyframes pulse {
+    0% { opacity: 0.6; }
+    50% { opacity: 1; }
+    100% { opacity: 0.6; }
+}
+
+.loading {
+    animation: pulse 1.5s infinite ease-in-out;
+    background-color: #f8f9fa;
+    min-height: 200px;
+    border-radius: 0.5rem;
+}

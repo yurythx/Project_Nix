@@ -1,7 +1,107 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}{{ capitulo.manga.title }} - Capítulo {{ capitulo.number }}{% if capitulo.title %}: {{ capitulo.title }}{% endif %} - Mangás - Project Nix{% endblock %}
+{% block title %}{{ capitulo.manga.title }} - {% if capitulo.volume %}Volume {{ capitulo.volume.number }} - {% endif %}Capítulo {{ capitulo.number }}{% if capitulo.title %}: {{ capitulo.title }}{% endif %} - Mangás - Project Nix{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Estilos para o modo tela cheia */
+    .fullscreen-controls {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        padding: 10px 20px;
+        background-color: rgba(0, 0, 0, 0.7);
+        color: white;
+        z-index: 9999;
+        display: none;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .fullscreen-controls .chapter-info {
+        font-weight: bold;
+    }
+    
+    .fullscreen-controls .page-info {
+        margin: 0 20px;
+    }
+    
+    .fullscreen-controls .nav-buttons button {
+        background: none;
+        border: 1px solid white;
+        color: white;
+        padding: 5px 15px;
+        margin: 0 5px;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    
+    .fullscreen-controls .nav-buttons button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    
+    .fullscreen-controls .close-btn {
+        background: none;
+        border: none;
+        color: white;
+        font-size: 1.5rem;
+        cursor: pointer;
+    }
+    
+    .fullscreen-container {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: #000;
+        z-index: 9998;
+        overflow-y: auto;
+    }
+    
+    .fullscreen-page {
+        display: none;
+        max-width: 100%;
+        max-height: 100vh;
+        margin: 0 auto;
+        padding: 60px 20px 20px;
+        min-height: calc(100vh - 80px);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    .fullscreen-page.active {
+        display: flex;
+    }
+    
+    .fullscreen-page img {
+        max-width: 100%;
+        max-height: calc(100vh - 120px);
+        margin: 0 auto;
+        display: block;
+        object-fit: contain;
+    }
+    
+    .fullscreen-page .page-number {
+        color: white;
+        text-align: center;
+        margin-top: 10px;
+        font-size: 0.9rem;
+        opacity: 0.8;
+    }
+    
+    .fullscreen-toggle {
+        cursor: pointer;
+        white-space: nowrap;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="container my-5">
@@ -12,10 +112,44 @@
                     <ol class="breadcrumb">
                         <li class="breadcrumb-item"><a href="{% url 'mangas:manga_list' %}">Mangás</a></li>
                         <li class="breadcrumb-item"><a href="{% url 'mangas:manga_detail' capitulo.manga.slug %}">{{ capitulo.manga.title }}</a></li>
-                        <li class="breadcrumb-item active" aria-current="page">Capítulo {{ capitulo.number }}</li>
+                        {% if capitulo.volume %}
+                        <li class="breadcrumb-item"><a href="{% url 'mangas:manga_detail' capitulo.manga.slug %}#volume-{{ capitulo.volume.number }}">Volume {{ capitulo.volume.number }}{% if capitulo.volume.title %}: {{ capitulo.volume.title }}{% endif %}</a></li>
+                        {% endif %}
+                        <li class="breadcrumb-item active" aria-current="page">Capítulo {{ capitulo.number }}{% if capitulo.title %}: {{ capitulo.title }}{% endif %}</li>
                     </ol>
                 </nav>
-                <h1 class="h4 mb-3">{{ capitulo.manga.title }} - Capítulo {{ capitulo.number }}{% if capitulo.title %}: {{ capitulo.title }}{% endif %}</h1>
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <h1 class="h4 mb-1">{{ capitulo.manga.title }}</h1>
+                        <div class="d-flex align-items-center flex-wrap gap-2">
+                            {% if capitulo.volume %}
+                            <a href="{% url 'mangas:volume_detail' manga_slug=capitulo.manga.slug volume_slug=capitulo.volume.slug %}" class="text-decoration-none">
+                                <span class="badge bg-primary">
+                                    <i class="fas fa-book me-1"></i> Volume {{ capitulo.volume.number }}{% if capitulo.volume.title %}: {{ capitulo.volume.title }}{% endif %}
+                                </span>
+                            </a>
+                            {% endif %}
+                            <span class="badge bg-secondary">
+                                <i class="fas fa-file-alt me-1"></i> Capítulo {{ capitulo.number }}{% if capitulo.title %}: {{ capitulo.title }}{% endif %}
+                            </span>
+                            {% if capitulo.paginas.all %}
+                            <span class="badge bg-info text-dark">
+                                <i class="fas fa-file-image me-1"></i> {{ capitulo.paginas.count }} página{{ capitulo.paginas.count|pluralize }}
+                            </span>
+                            {% endif %}
+                            {% if capitulo.publication_date %}
+                            <span class="badge bg-light text-dark border">
+                                <i class="far fa-calendar-alt me-1"></i> {{ capitulo.publication_date|date:"d/m/Y" }}
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% if capitulo.paginas.all %}
+                    <button id="fullscreen-toggle" class="btn btn-outline-secondary btn-sm" title="Modo Tela Cheia">
+                        <i class="fas fa-expand"></i> Tela Cheia
+                    </button>
+                    {% endif %}
+                </div>
             </div>
             {% if capitulo.paginas.all %}
             <div id="manga-reader" class="mb-4">
@@ -34,27 +168,307 @@
             {% else %}
             <div class="alert alert-info">Nenhuma página cadastrada para este capítulo.</div>
             {% endif %}
-            <div class="d-flex gap-2">
-                <a href="{% url 'mangas:manga_detail' capitulo.manga.slug %}" class="btn btn-outline-secondary btn-sm">
-                    <i class="fas fa-arrow-left"></i> Voltar ao mangá
-                </a>
+            <div class="d-flex flex-wrap gap-2">
+                <div class="d-flex gap-2">
+                    {% if capitulo_anterior %}
+                    <a href="{% url 'mangas:capitulo_detail' manga_slug=capitulo.manga.slug capitulo_slug=capitulo_anterior.slug %}" class="btn btn-outline-primary btn-sm" title="Capítulo Anterior">
+                        <i class="fas fa-arrow-left"></i> Anterior
+                    </a>
+                    {% endif %}
+                    
+                    <a href="{% url 'mangas:manga_detail' capitulo.manga.slug %}" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-book"></i> Voltar ao mangá
+                    </a>
+                    
+                    {% if capitulo.volume %}
+                    <a href="{% url 'mangas:volume_detail' manga_slug=capitulo.manga.slug volume_slug=capitulo.volume.slug %}" class="btn btn-outline-info btn-sm">
+                        <i class="fas fa-layer-group"></i> Ver Volume
+                    </a>
+                    {% endif %}
+                    
+                    {% if proximo_capitulo %}
+                    <a href="{% url 'mangas:capitulo_detail' manga_slug=capitulo.manga.slug capitulo_slug=proximo_capitulo.slug %}" class="btn btn-outline-primary btn-sm" title="Próximo Capítulo">
+                        Próximo <i class="fas fa-arrow-right"></i>
+                    </a>
+                    {% endif %}
+                </div>
+                
                 {% if user.is_authenticated and user.is_staff %}
-                <a href="{% url 'mangas:pagina_create' capitulo.manga.slug capitulo.slug %}" class="btn btn-primary btn-sm">
-                    <i class="fas fa-plus"></i> Nova Página
-                </a>
+                <div class="d-flex gap-2 ms-auto">
+                    <a href="{% url 'mangas:capitulo_edit' manga_slug=capitulo.manga.slug capitulo_slug=capitulo.slug %}" class="btn btn-outline-warning btn-sm">
+                        <i class="fas fa-edit"></i> Editar
+                    </a>
+                    <a href="{% url 'mangas:pagina_create' capitulo.manga.slug capitulo.slug %}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-plus"></i> Nova Página
+                    </a>
+                </div>
                 {% endif %}
             </div>
+            
+            <!-- Navegação entre capítulos do volume -->
+            {% if outros_capitulos_volume %}
+            <div class="mt-4">
+                <h5 class="h6 mb-2 text-muted">Outros capítulos deste volume:</h5>
+                <div class="d-flex flex-wrap gap-2">
+                    {% for cap in outros_capitulos_volume %}
+                    <a href="{% url 'mangas:capitulo_detail' manga_slug=capitulo.manga.slug capitulo_slug=cap.slug %}" class="btn btn-sm {% if cap.id == capitulo.id %}btn-primary{% else %}btn-outline-primary{% endif %}" title="{% if cap.title %}{{ cap.title }}{% else %}Capítulo {{ cap.number }}{% endif %}">
+                        {{ cap.number }}
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Navegação entre volumes -->
+            {% if volumes %}
+            <div class="mt-4">
+                <h5 class="h6 mb-2 text-muted">Outros volumes:</h5>
+                <div class="d-flex flex-wrap gap-2">
+                    {% for vol in volumes %}
+                    <a href="{% url 'mangas:volume_detail' manga_slug=capitulo.manga.slug volume_slug=vol.slug %}" class="btn btn-sm btn-outline-secondary" title="Volume {{ vol.number }}{% if vol.title %}: {{ vol.title }}{% endif %}">
+                        Vol. {{ vol.number }} ({{ vol.capitulo_count }})
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
         </div>
     </div>
 </div>
+<!-- Container para o modo tela cheia -->
+<div id="fullscreen-container" class="fullscreen-container">
+    <div class="fullscreen-controls">
+        <div class="chapter-info">
+            {{ capitulo.manga.title }} - Capítulo {{ capitulo.number }}{% if capitulo.title %}: {{ capitulo.title }}{% endif %}
+        </div>
+        <div class="nav-buttons">
+            <button id="fs-prev-page" title="Página Anterior">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+            <span class="page-info">
+                <span id="fs-page-indicator">1 / {{ capitulo.paginas.count }}</span>
+            </span>
+            <button id="fs-next-page" title="Próxima Página">
+                <i class="fas fa-arrow-right"></i>
+            </button>
+        </div>
+        <button id="fs-close" class="close-btn" title="Sair do modo tela cheia">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+    
+    <div id="fullscreen-reader">
+        {% for pagina in capitulo.paginas.all %}
+        <div class="fullscreen-page" data-page="{{ forloop.counter0 }}">
+            <img src="{{ pagina.image.url }}" alt="Página {{ pagina.number }}">
+            <div class="page-number">Página {{ pagina.number }}</div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
 {% if capitulo.paginas.count > 0 %}
 <script src="{% static 'js/manga-viewer.js' %}"></script>
+<script src="{% static 'js/manga-fullscreen.js' %}"></script>
 <script>
+// Inicializa quando o DOM estiver pronto
 document.addEventListener('DOMContentLoaded', function() {
-    window.initMangaViewer && window.initMangaViewer({
-        total: {{ capitulo.paginas.count }},
-    });
+    // Inicializa o visualizador normal
+    if (window.initMangaViewer) {
+        window.initMangaViewer({
+            total: {{ capitulo.paginas.count }}
+        });
+    }
+
+    // Inicializa o visualizador em tela cheia
+    if (typeof MangaFullscreenViewer !== 'undefined') {
+        const fullscreenViewer = new MangaFullscreenViewer({
+            totalPages: {{ capitulo.paginas.count }},
+            startPage: 0
+        });
+        
+        // Expõe o visualizador para acesso global (opcional)
+        window.mangaFullscreenViewer = fullscreenViewer;
+        
+        // Configura o botão de alternar tela cheia
+        const fsToggle = document.getElementById('fullscreen-toggle');
+        if (fsToggle) {
+            fsToggle.addEventListener('click', function(e) {
+                e.preventDefault();
+                fullscreenViewer.open();
+            });
+        }
+    }
+});
+</script>
+    
+    // Mostra os controles do modo tela cheia
+    function showFsControls() {
+        if (fsControls) {
+            fsControls.style.display = 'flex';
+            // Esconde os controles após 3 segundos de inatividade
+            clearTimeout(hideControlsTimeout);
+            hideControlsTimeout = setTimeout(hideFsControls, 3000);
+        }
+    }
+    
+    // Esconde os controles do modo tela cheia
+    function hideFsControls() {
+        if (fsControls) {
+            fsControls.style.display = 'none';
+        }
+    }
+    
+    // Atualiza a página atual no modo tela cheia
+    function updateFsPage(index) {
+        if (index >= 0 && index < totalPages) {
+            currentFsPage = index;
+            fsPages.forEach((page, i) => {
+                if (i === index) {
+                    page.classList.add('active');
+                } else {
+                    page.classList.remove('active');
+                }
+            });
+            
+            // Atualiza o indicador de página
+            fsPageIndicator.textContent = (index + 1) + ' / ' + totalPages;
+            
+            // Atualiza o estado dos botões de navegação
+            fsPrevBtn.disabled = index === 0;
+            fsNextBtn.disabled = index === totalPages - 1;
+            
+            // Rola para a página atual
+            fsPages[index].scrollIntoView({ behavior: 'smooth', block: 'center' });
+            
+            // Mostra os controles ao mudar de página
+            showFsControls();
+        }
+    }
+    
+    // Navega para a página anterior no modo tela cheia
+    function prevFsPage() {
+        if (currentFsPage > 0) {
+            updateFsPage(currentFsPage - 1);
+        }
+    }
+    
+    // Navega para a próxima página no modo tela cheia
+    function nextFsPage() {
+        if (currentFsPage < totalPages - 1) {
+            updateFsPage(currentFsPage + 1);
+        }
+    }
+    
+    // Inicializa o modo tela cheia
+    if (fsToggle && fsContainer && fsReader) {
+        // Evento para abrir o modo tela cheia
+        fsToggle.addEventListener('click', function() {
+            // Ativa o container de tela cheia
+            fsContainer.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+            
+            // Sincroniza com a página atual do visualizador normal
+            const currentPage = document.querySelector('.manga-page[style*="display: block"]');
+            if (currentPage) {
+                const pageIndex = parseInt(currentPage.getAttribute('data-page'));
+                updateFsPage(pageIndex);
+            } else {
+                updateFsPage(0);
+            }
+            
+            // Mostra os controles
+            showFsControls();
+            
+            // Adiciona evento para fechar com a tecla ESC
+            document.addEventListener('keydown', handleKeyDown);
+        });
+        
+        // Fecha o modo tela cheia
+        function closeFullscreen() {
+            fsContainer.style.display = 'none';
+            document.body.style.overflow = '';
+            document.removeEventListener('keydown', handleKeyDown);
+            clearTimeout(hideControlsTimeout);
+        }
+        
+        // Manipulador de teclado para o modo tela cheia
+        function handleKeyDown(e) {
+            if (e.key === 'Escape') {
+                closeFullscreen();
+            } else if (e.key === 'ArrowLeft') {
+                prevFsPage();
+            } else if (e.key === 'ArrowRight') {
+                nextFsPage();
+            }
+        }
+        
+        // Eventos de clique nos controles
+        if (fsPrevBtn) fsPrevBtn.addEventListener('click', prevFsPage);
+        if (fsNextBtn) fsNextBtn.addEventListener('click', nextFsPage);
+        if (fsCloseBtn) fsCloseBtn.addEventListener('click', closeFullscreen);
+        
+        // Eventos de toque/arrastar para navegação
+        let touchStartX = 0;
+        let touchEndX = 0;
+        
+        fsReader.addEventListener('touchstart', function(e) {
+            touchStartX = e.changedTouches[0].screenX;
+            showFsControls();
+        }, false);
+        
+        fsReader.addEventListener('touchend', function(e) {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        }, false);
+        
+        function handleSwipe() {
+            const diff = touchStartX - touchEndX;
+            const swipeThreshold = 50; // Mínimo de pixels para considerar um swipe
+            
+            if (diff > swipeThreshold) {
+                // Swipe para a esquerda - próxima página
+                nextFsPage();
+            } else if (diff < -swipeThreshold) {
+                // Swipe para a direita - página anterior
+                prevFsPage();
+            }
+        }
+        
+        // Mostra/oculta controles ao mover o mouse
+        fsContainer.addEventListener('mousemove', function() {
+            showFsControls();
+        });
+        
+        // Esconde controles após um tempo sem movimento do mouse
+        fsContainer.addEventListener('mousemove', function(e) {
+            clearTimeout(hideControlsTimeout);
+            showFsControls();
+        });
+        
+        // Clique na página para navegar
+        fsReader.addEventListener('click', function(e) {
+            const rect = fsReader.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const third = rect.width / 3;
+            
+            if (clickX < third) {
+                // Clique no terço esquerdo - página anterior
+                prevFsPage();
+            } else if (clickX > third * 2) {
+                // Clique no terço direito - próxima página
+                nextFsPage();
+            } else {
+                // Clique no meio - mostra/oculta controles
+                if (fsControls.style.display === 'flex') {
+                    hideFsControls();
+                } else {
+                    showFsControls();
+                }
+            }
+        });
+    }
 });
 </script>
 {% endif %}
-{% endblock %} 
+{% endblock %}

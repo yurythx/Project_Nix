@@ -1,5 +1,6 @@
 {# Card reutilizável para artigos, livros, mangás e audiolivros seguindo padrão de destaque #}
 {% load articles_tags %}
+
 <div class="card content-card shadow-sm mb-4 h-100 hover-lift">
     {% if image_url %}
         <div class="img-container img-container-16-9">
@@ -22,7 +23,7 @@
             <a href="{{ detail_url }}" class="text-decoration-none text-theme-dark">{{ title|truncatechars:80 }}</a>
         </h5>
         {% if subtitle %}
-        <div class="small text-theme-secondary mb-1">{{ subtitle }}</div>
+            <div class="small text-theme-secondary mb-1">{{ subtitle }}</div>
         {% endif %}
         <div class="d-flex flex-wrap align-items-center gap-3 small text-theme-secondary mb-2">
             {% if author %}<span><i class="fas fa-user me-1"></i>{{ author }}</span>{% endif %}
@@ -30,18 +31,19 @@
             {% if extra_info %}{{ extra_info }}{% endif %}
         </div>
         {% if description %}
-        <p class="mb-2 text-theme-muted small">{{ description|clean_excerpt:120 }}</p>
+            {# Aqui aplicamos o filtro safe para renderizar HTML #}
+            <p class="mb-2 text-theme-muted small">{{ description|clean_excerpt:120|safe }}</p>
         {% endif %}
         <div class="mt-auto d-flex flex-wrap gap-2">
             {% if primary_action_url and primary_action_label %}
-            <a href="{{ primary_action_url }}" class="btn btn-outline-primary btn-sm" title="{{ primary_action_label }}">
-                <i class="fas fa-arrow-right me-1"></i> {{ primary_action_label }}
-            </a>
+                <a href="{{ primary_action_url }}" class="btn btn-outline-primary btn-sm" title="{{ primary_action_label }}">
+                    <i class="fas fa-arrow-right me-1"></i> {{ primary_action_label }}
+                </a>
             {% endif %}
             {% if secondary_action_url and secondary_action_label and show_secondary and user.is_authenticated and user.is_staff %}
-            <a href="{{ secondary_action_url }}" class="btn btn-outline-secondary btn-sm" title="{{ secondary_action_label }}">
-                <i class="fas fa-edit"></i> {{ secondary_action_label }}
-            </a>
+                <a href="{{ secondary_action_url }}" class="btn btn-outline-secondary btn-sm" title="{{ secondary_action_label }}">
+                    <i class="fas fa-edit"></i> {{ secondary_action_label }}
+                </a>
             {% endif %}
             {% if extra_actions %}{{ extra_actions }}{% endif %}
         </div>
@@ -74,4 +76,4 @@
     top: 0; left: 0; right: 0; bottom: 0;
     pointer-events: none;
 }
-</style> 
+</style>

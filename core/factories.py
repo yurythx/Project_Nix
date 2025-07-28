@@ -32,6 +32,20 @@ from apps.articles.services.category_service import CategoryService
 from apps.articles.services.content_processor_service import ContentProcessorService
 from apps.pages.services.page_service import PageService
 
+# Imports dos novos services
+try:
+    from apps.books.services.book_service import BookService
+except ImportError:
+    BookService = None
+try:
+    from apps.audiobooks.services.audiobook_service import AudiobookService
+except ImportError:
+    AudiobookService = None
+try:
+    from apps.mangas.services.manga_service import MangaService
+except ImportError:
+    MangaService = None
+
 # Imports opcionais com tratamento
 try:
     from apps.pages.services.navigation_service import NavigationService
@@ -74,6 +88,20 @@ from apps.pages.repositories.page_repository import DjangoPageRepository
 from apps.pages.repositories.seo_repository import DjangoSEORepository
 from apps.config.repositories.user_repository import DjangoUserRepository as DjangoConfigUserRepository
 
+# Imports dos novos repositories
+try:
+    from apps.books.repositories.book_repository import BookRepository
+except ImportError:
+    BookRepository = None
+try:
+    from apps.audiobooks.repositories.audiobook_repository import AudiobookRepository
+except ImportError:
+    AudiobookRepository = None
+try:
+    from apps.mangas.repositories.manga_repository import MangaRepository
+except ImportError:
+    MangaRepository = None
+
 # Interfaces
 from apps.accounts.interfaces.services import (
     IRegistrationService, IPasswordService, IAuthService, 
@@ -86,6 +114,20 @@ from apps.pages.interfaces.services import IPageService, ISEOService
 from apps.pages.interfaces.repositories import IPageRepository, ISEORepository
 from apps.config.interfaces.repositories import IUserRepository as IConfigUserRepository, IPermissionRepository, ISystemConfigRepository
 from apps.config.interfaces.services import IUserManagementService, IPermissionManagementService, ISystemConfigService, IModuleService, IEmailConfigService, IDatabaseService
+
+# Novas interfaces
+try:
+    from apps.books.interfaces.services import IBookService
+except ImportError:
+    IBookService = None
+try:
+    from apps.audiobooks.interfaces.services import IAudiobookService
+except ImportError:
+    IAudiobookService = None
+try:
+    from apps.mangas.interfaces.services import IMangaService
+except ImportError:
+    IMangaService = None
 
 class ServiceFactory:
     """
@@ -342,6 +384,42 @@ class ServiceFactory:
         if cache_key not in self._services_cache:
             self._services_cache[cache_key] = DatabaseService()
         
+        return self._services_cache[cache_key]
+
+    def create_book_service(self, book_repository: BookRepository = None) -> IBookService:
+        """Cria BookService com dependências injetadas"""
+        if not IBookService or not BookService:
+            raise ImportError("BookService não está disponível")
+        
+        cache_key = f"book_service_{id(book_repository)}"
+        if cache_key not in self._services_cache:
+            book_repo = book_repository or BookRepository()
+            service_class = self._get_implementation_class('IBookService', BookService)
+            self._services_cache[cache_key] = service_class(repository=book_repo)
+        return self._services_cache[cache_key]
+
+    def create_audiobook_service(self, audiobook_repository: AudiobookRepository = None) -> IAudiobookService:
+        """Cria AudiobookService com dependências injetadas"""
+        if not IAudiobookService or not AudiobookService:
+            raise ImportError("AudiobookService não está disponível")
+        
+        cache_key = f"audiobook_service_{id(audiobook_repository)}"
+        if cache_key not in self._services_cache:
+            audiobook_repo = audiobook_repository or AudiobookRepository()
+            service_class = self._get_implementation_class('IAudiobookService', AudiobookService)
+            self._services_cache[cache_key] = service_class(repository=audiobook_repo)
+        return self._services_cache[cache_key]
+
+    def create_manga_service(self, manga_repository: MangaRepository = None) -> IMangaService:
+        """Cria MangaService com dependências injetadas"""
+        if not IMangaService or not MangaService:
+            raise ImportError("MangaService não está disponível")
+        
+        cache_key = f"manga_service_{id(manga_repository)}"
+        if cache_key not in self._services_cache:
+            manga_repo = manga_repository or MangaRepository()
+            service_class = self._get_implementation_class('IMangaService', MangaService)
+            self._services_cache[cache_key] = service_class(repository=manga_repo)
         return self._services_cache[cache_key]
     
     def clear_cache(self):

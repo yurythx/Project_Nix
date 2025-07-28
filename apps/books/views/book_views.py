@@ -29,6 +29,14 @@ class BookDetailView(DetailView):
     slug_field = 'slug'
     slug_url_kwarg = 'slug'
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        book = self.object
+        file_name = book.file.name.lower() if book.file else ''
+        context['is_epub'] = file_name.endswith('.epub')
+        context['is_pdf'] = file_name.endswith('.pdf')
+        return context
+
 class BookCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     model = Book
     form_class = BookForm

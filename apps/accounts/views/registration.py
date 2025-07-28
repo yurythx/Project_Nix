@@ -74,7 +74,7 @@ class RegistrationView(FormView):
             return redirect('pages:home')
         return super().get(request, *args, **kwargs)
 
-@method_decorator(ratelimit(key='ip', rate='10/h', method='POST', block=True), name='post')
+@method_decorator(ratelimit(key='ip', rate='10/h', block=True), name='post')
 class VerificationView(View):
     """View para verificação de e-mail"""
     template_name = 'accounts/verify.html'

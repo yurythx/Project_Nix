@@ -1,5 +1,7 @@
 from apps.mangas.interfaces.manga_repository_interface import MangaRepositoryInterface
-from apps.mangas.models.manga import Manga, Capitulo, Pagina
+from apps.mangas.models.manga import Manga
+from apps.mangas.models.capitulo import Capitulo
+from apps.mangas.models.pagina import Pagina
 from django.shortcuts import get_object_or_404
 
 class MangaRepository(MangaRepositoryInterface):

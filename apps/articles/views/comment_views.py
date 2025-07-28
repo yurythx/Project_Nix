@@ -37,7 +37,7 @@ def get_client_ip(request):
 class CommentCreateView(View):
     """CBV para adicionar comentário a um artigo"""
     @method_decorator(csrf_protect)
-    @method_decorator(ratelimit(key='ip', rate='10/h', method='POST', block=True))
+    @method_decorator(ratelimit(key='ip', rate='10/h', block=True))
     def post(self, request, slug):
         article = get_object_or_404(Article, slug=slug, status='published')
         comment_service = CommentService(CommentRepository())
@@ -72,7 +72,7 @@ class CommentCreateView(View):
 class ReplyCreateView(View):
     """CBV para adicionar resposta a um comentário"""
     @method_decorator(csrf_protect)
-    @method_decorator(ratelimit(key='ip', rate='10/h', method='POST', block=True))
+    @method_decorator(ratelimit(key='ip', rate='10/h', block=True))
     def post(self, request, slug, comment_id):
         article = get_object_or_404(Article, slug=slug, status='published')
         parent_comment = get_object_or_404(Comment, id=comment_id, article=article)

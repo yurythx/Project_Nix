@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block title %}Confirmar Exclusão de Capítulo{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">Confirmar Exclusão</h4>
+                </div>
+                <div class="card-body">
+                    <p class="lead">Tem certeza que deseja excluir o capítulo <strong>{{ object.number }} - {{ object.title }}</strong> do mangá <strong>{{ object.manga.title }}</strong>?</p>
+                    <p class="text-muted">Todas as páginas associadas a este capítulo também serão removidas.</p>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{{ object.manga.get_absolute_url }}" class="btn btn-secondary me-md-2">
+                                <i class="bi bi-x-circle"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-trash"></i> Sim, excluir
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

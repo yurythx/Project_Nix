@@ -36,33 +36,177 @@
                                 <a href="{% url 'mangas:capitulo_create' manga.slug %}" class="btn btn-primary btn-sm">
                                     <i class="fas fa-plus"></i> Novo Capítulo
                                 </a>
+                                <a href="{% url 'mangas:capitulo_complete_create' manga.slug %}" class="btn btn-success btn-sm">
+                                    <i class="fas fa-file-archive"></i> Upload Completo
+                                </a>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-theme-secondary text-theme-light">
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-theme-secondary text-theme-light d-flex justify-content-between align-items-center">
                     <h5 class="mb-0 text-sans text-body">
-                        <i class="fas fa-list me-2"></i>Capítulos
+                        <i class="fas fa-book me-2"></i>Volumes
                     </h5>
+                    <div class="btn-group">
+                        <a href="{% url 'mangas:volume_create' manga.slug %}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-plus me-1"></i> Adicionar Volume
+                        </a>
+                        {% if user.is_staff %}
+                        <a href="{% url 'mangas:capitulo_create' manga.slug %}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-plus-circle me-1"></i> Adicionar Capítulo
+                        </a>
+                        {% endif %}
+                    </div>
                 </div>
                 <div class="card-body">
-                    {% if manga.capitulos.all %}
-                        <ul class="list-group">
-                            {% for cap in manga.capitulos.all %}
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <a href="{% url 'mangas:capitulo_detail' manga.slug cap.slug %}">
-                                    Capítulo {{ cap.number }}{% if cap.title %}: {{ cap.title }}{% endif %}
-                                </a>
-                                <span class="badge bg-theme-primary rounded-pill">{{ cap.paginas.count }} pág.</span>
-                            </li>
-                            {% empty %}
-                            <li class="list-group-item text-center text-muted">Nenhum capítulo cadastrado.</li>
+                    {% if volumes %}
+                        <div class="accordion" id="volumesAccordion">
+                            {% for volume in volumes %}
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="heading{{ volume.number }}">
+                                    <button class="accordion-button {% if not forloop.first %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ volume.number }}" aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}" aria-controls="collapse{{ volume.number }}">
+                                        <div class="d-flex align-items-center w-100">
+                                            <div class="me-auto">
+                                                <span class="fw-bold">Volume {{ volume.number }}</span>
+                                                {% if volume.title %}
+                                                <span class="ms-2">{{ volume.title }}</span>
+                                                {% endif %}
+                                            </div>
+                                            <div class="ms-2">
+                                                <span class="badge bg-primary rounded-pill">
+                                                    {{ volume.capitulos.count }} capítulo{{ volume.capitulos.count|pluralize }}
+                                                </span>
+                                                {% if volume.cover_image %}
+                                                <span class="badge bg-info rounded-pill ms-1" title="Possui capa">
+                                                    <i class="fas fa-image"></i>
+                                                </span>
+                                                {% endif %}
+                                                {% if not volume.is_published %}
+                                                <span class="badge bg-warning text-dark rounded-pill ms-1" title="Rascunho">
+                                                    <i class="fas fa-eye-slash"></i>
+                                                </span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </button>
+                                </h2>
+                                <div id="collapse{{ volume.number }}" class="accordion-collapse collapse {% if forloop.first %}show{% endif %}" aria-labelledby="heading{{ volume.number }}" data-bs-parent="#volumesAccordion">
+                                    <div class="accordion-body p-0">
+                                        {% if user.is_staff %}
+                                        <div class="d-flex justify-content-end p-2 bg-light border-bottom">
+                                            <a href="{% url 'mangas:volume_edit' manga.slug volume.slug %}" class="btn btn-sm btn-outline-secondary me-1">
+                                                <i class="fas fa-edit me-1"></i> Editar Volume
+                                            </a>
+                                            <a href="{% url 'mangas:volume_delete' manga.slug volume.slug %}" class="btn btn-sm btn-outline-danger">
+                                                <i class="fas fa-trash me-1"></i> Excluir
+                                            </a>
+                                        </div>
+                                        {% endif %}
+                                        
+                                        <div class="list-group list-group-flush">
+                                            {% if volume.capitulos.exists %}
+                                                {% for capitulo in volume.capitulos.all %}
+                                                <div class="list-group-item">
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <div>
+                                                            <a href="{% url 'mangas:capitulo_detail' manga_slug=manga.slug capitulo_slug=capitulo.slug %}" class="text-decoration-none d-flex align-items-center">
+                                                                <i class="fas fa-file-alt me-2"></i>
+                                                                <div>
+                                                                    <div class="fw-medium">Capítulo {{ capitulo.number }}{% if capitulo.title %}: {{ capitulo.title }}{% endif %}</div>
+                                                                    <small class="text-muted">{{ capitulo.num_paginas|default:0 }} página{{ capitulo.num_paginas|default:0|pluralize }}</small>
+                                                                </div>
+                                                            </a>
+                                                        </div>
+                                                        <div class="btn-group">
+                                                            <a href="{% url 'mangas:capitulo_detail' manga_slug=manga.slug capitulo_slug=capitulo.slug %}" class="btn btn-sm btn-outline-primary" title="Ler capítulo">
+                                                                <i class="fas fa-book-reader"></i> Ler
+                                                            </a>
+                                                            {% if user.is_staff %}
+                                                            <a href="{% url 'mangas:capitulo_edit' manga_slug=manga.slug capitulo_slug=capitulo.slug %}" class="btn btn-sm btn-outline-secondary" title="Editar capítulo">
+                                                                <i class="fas fa-edit"></i>
+                                                            </a>
+                                                            <a href="{% url 'mangas:capitulo_delete' manga_slug=manga.slug capitulo_slug=capitulo.slug %}" class="btn btn-sm btn-outline-danger" title="Excluir capítulo">
+                                                                <i class="fas fa-trash"></i>
+                                                            </a>
+                                                            {% endif %}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                {% endfor %}
+                                            {% else %}
+                                                <div class="text-center p-4 text-muted">
+                                                    <i class="fas fa-inbox fa-2x mb-2"></i>
+                                                    <p class="mb-0">Nenhum capítulo cadastrado neste volume.</p>
+                                                    {% if user.is_staff %}
+                                                    <a href="{% url 'mangas:capitulo_create' manga.slug %}?volume={{ volume.id }}" class="btn btn-sm btn-outline-primary mt-2">
+                                                        <i class="fas fa-plus me-1"></i> Adicionar Capítulo
+                                                    </a>
+                                                    {% endif %}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        {% if user.is_staff and volume.capitulos.exists %}
+                                        <div class="text-center p-2 bg-light border-top">
+                                            <a href="{% url 'mangas:capitulo_create' manga.slug %}?volume={{ volume.id }}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-plus me-1"></i> Adicionar Capítulo
+                                            </a>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
                             {% endfor %}
-                        </ul>
+                        </div>
+                        
+                        <!-- Paginação -->
+                        {% if volumes.has_other_pages %}
+                        <nav aria-label="Navegação de volumes" class="mt-4">
+                            <ul class="pagination justify-content-center">
+                                {% if volumes.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ volumes.previous_page_number }}" aria-label="Anterior">
+                                            <span aria-hidden="true">&laquo;</span>
+                                        </a>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link">&laquo;</span>
+                                    </li>
+                                {% endif %}
+                                
+                                {% for i in volumes.paginator.page_range %}
+                                    {% if volumes.number == i %}
+                                        <li class="page-item active"><span class="page-link">{{ i }}</span></li>
+                                    {% else %}
+                                        <li class="page-item"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
+                                    {% endif %}
+                                {% endfor %}
+                                
+                                {% if volumes.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ volumes.next_page_number }}" aria-label="Próximo">
+                                            <span aria-hidden="true">&raquo;</span>
+                                        </a>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link">&raquo;</span>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                        {% endif %}
+                        
                     {% else %}
-                        <div class="alert alert-info">Nenhum capítulo cadastrado.</div>
+                        <div class="alert alert-info">
+                            <p class="mb-3">Nenhum volume cadastrado para este mangá.</p>
+                            <a href="{% url 'mangas:volume_create' manga.slug %}" class="btn btn-primary">
+                                <i class="fas fa-plus me-1"></i> Adicionar Primeiro Volume
+                            </a>
+                        </div>
                     {% endif %}
                 </div>
             </div>

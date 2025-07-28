@@ -213,7 +213,6 @@ TEMPLATES = [
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
             BASE_DIR / 'apps' / 'pages' / 'templates',  # Centraliza busca de templates globais
-            BASE_DIR / 'templates',
         ],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -391,7 +390,7 @@ def get_security_settings() -> Dict[str, Any]:
         # Headers de segurança
         'SECURE_BROWSER_XSS_FILTER': True,
         'SECURE_CONTENT_TYPE_NOSNIFF': True,
-        'X_FRAME_OPTIONS': 'DENY',
+        'X_FRAME_OPTIONS': 'SAMEORIGIN',
         'SECURE_REFERRER_POLICY': 'strict-origin-when-cross-origin',
         'SECURE_CROSS_ORIGIN_OPENER_POLICY': 'same-origin',
         
@@ -680,6 +679,10 @@ MAX_UPLOAD_SIZE = get_upload_size()
 FILE_UPLOAD_MAX_MEMORY_SIZE = MAX_UPLOAD_SIZE
 DATA_UPLOAD_MAX_MEMORY_SIZE = MAX_UPLOAD_SIZE
 FILE_UPLOAD_PERMISSIONS = 0o644
+
+# Configurações de upload de múltiplos arquivos
+DATA_UPLOAD_MAX_NUMBER_FILES = 1000  # Aumenta o limite padrão de 100 arquivos
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 1000  # Aumenta o limite de campos de formulário
 FILE_UPLOAD_DIRECTORY_PERMISSIONS = 0o755
 
 # Extensões permitidas (baseadas em variáveis de ambiente)

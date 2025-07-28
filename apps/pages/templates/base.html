@@ -4,6 +4,13 @@
 <head>
     {# Include global head (meta, favicon, etc) #}
     {% include 'includes/_head.html' %}
+    
+    {# Font Awesome para ícones #}
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    {# CSS do widget de upload de arquivos #}
+    <link href="{% static 'mangas/css/file_upload.css' %}" rel="stylesheet">
+    
     {# Bloco para CSS extra de páginas/apps #}
     {% block extra_css %}{% endblock %}
 </head>
@@ -44,6 +51,10 @@
     <script src="{% static 'js/animations.js' %}"></script>
     <script src="{% static 'js/performance.js' %}"></script>
     <script src="{% static 'js/main.js' %}"></script>
+    
+    {# JS do widget de upload de arquivos #}
+    <script src="{% static 'mangas/js/file_upload.js' %}"></script>
+    
     {# Bloco para JS extra de páginas/apps #}
     {% block extra_js %}{% endblock %}
 

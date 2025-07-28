@@ -46,7 +46,7 @@
             </div>
             {% if book.file %}
                 <div class="mb-4">
-                    {% if book.file.name|lower|endswith:'.epub' %}
+                    {% if is_epub %}
                         <div id="epub-reader" style="min-height: 600px; border: 1px solid #eee;"></div>
                         <script src="https://cdn.jsdelivr.net/npm/epubjs/dist/epub.min.js"></script>
                         <script src="{% static 'js/epub-viewer.js' %}"></script>
@@ -59,7 +59,7 @@
                                 );
                             });
                         </script>
-                    {% elif book.file.name|lower|endswith:'.pdf' %}
+                    {% elif is_pdf %}
                         <embed src="{{ book.file.url }}" type="application/pdf" width="100%" height="600px" style="border:1px solid #eee;">
                     {% else %}
                         <div class="alert alert-warning">Formato de arquivo não suportado para visualização online.</div>
@@ -105,4 +105,4 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 {% endif %}
-{% endblock %} 
+{% endblock %}

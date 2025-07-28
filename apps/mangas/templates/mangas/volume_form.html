@@ -1,0 +1,194 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if form.instance.pk %}Editar{% else %}Adicionar{% endif %} Volume - {{ manga.title }} - Project Nix{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <nav aria-label="breadcrumb" class="mb-4">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{% url 'mangas:manga_list' %}">Mangás</a></li>
+                            <li class="breadcrumb-item"><a href="{% url 'mangas:manga_detail' manga.slug %}">{{ manga.title|truncatechars:20 }}</a></li>
+                            <li class="breadcrumb-item active" aria-current="page">
+                                {% if form.instance.pk %}
+                                    Editar Volume
+                                {% else %}
+                                    Adicionar Volume
+                                {% endif %}
+                            </li>
+                        </ol>
+                    </nav>
+                    
+                    <h1 class="h4 mb-4">
+                        {% if form.instance.pk %}
+                            Editar Volume
+                        {% else %}
+                            Adicionar Novo Volume
+                        {% endif %}
+                        <small class="text-muted d-block mt-1">{{ manga.title }}</small>
+                    </h1>
+                    
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                    
+                    <form method="post" enctype="multipart/form-data" id="volumeForm" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.number.id_for_label }}" class="form-label">{{ form.number.label }}</label>
+                            <input type="number" 
+                                   name="{{ form.number.name }}" 
+                                   class="form-control {% if form.number.errors %}is-invalid{% endif %}" 
+                                   id="{{ form.number.id_for_label }}" 
+                                   value="{{ form.number.value|default:'' }}" 
+                                   min="1"
+                                   required>
+                            {% if form.number.help_text %}
+                                <div class="form-text">{{ form.number.help_text }}</div>
+                            {% endif %}
+                            {% if form.number.errors %}
+                                <div class="invalid-feedback">
+                                    {{ form.number.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.title.id_for_label }}" class="form-label">{{ form.title.label }}</label>
+                            <input type="text" 
+                                   name="{{ form.title.name }}" 
+                                   class="form-control {% if form.title.errors %}is-invalid{% endif %}" 
+                                   id="{{ form.title.id_for_label }}" 
+                                   value="{{ form.title.value|default:'' }}">
+                            {% if form.title.help_text %}
+                                <div class="form-text">{{ form.title.help_text }}</div>
+                            {% endif %}
+                            {% if form.title.errors %}
+                                <div class="invalid-feedback">
+                                    {{ form.title.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.cover_image.id_for_label }}" class="form-label">{{ form.cover_image.label }}</label>
+                            {% if form.instance.cover_image %}
+                                <div class="mb-2">
+                                    <img src="{{ form.instance.cover_image.url }}" alt="Capa do volume" class="img-thumbnail" style="max-height: 200px;">
+                                </div>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" name="cover_image-clear" id="cover_image-clear_id">
+                                    <label class="form-check-label" for="cover_image-clear_id">Remover capa atual</label>
+                                </div>
+                                <div class="form-text">Alterar capa:</div>
+                            {% endif %}
+                            <input type="file" 
+                                   name="{{ form.cover_image.name }}" 
+                                   class="form-control {% if form.cover_image.errors %}is-invalid{% endif %}" 
+                                   id="{{ form.cover_image.id_for_label }}" 
+                                   accept="image/*">
+                            {% if form.cover_image.help_text %}
+                                <div class="form-text">{{ form.cover_image.help_text }}</div>
+                            {% endif %}
+                            {% if form.cover_image.errors %}
+                                <div class="invalid-feedback">
+                                    {{ form.cover_image.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-4 form-check form-switch">
+                            <input type="checkbox" 
+                                   name="{{ form.is_published.name }}" 
+                                   class="form-check-input {% if form.is_published.errors %}is-invalid{% endif %}" 
+                                   id="{{ form.is_published.id_for_label }}"
+                                   {% if form.is_published.value %}checked{% endif %}>
+                            <label class="form-check-label" for="{{ form.is_published.id_for_label }}">
+                                {{ form.is_published.label }}
+                            </label>
+                            {% if form.is_published.help_text %}
+                                <div class="form-text">{{ form.is_published.help_text }}</div>
+                            {% endif %}
+                            {% if form.is_published.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.is_published.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="d-flex justify-content-end gap-2 mt-4">
+                            <a href="{% if request.META.HTTP_REFERER %}{{ request.META.HTTP_REFERER }}{% else %}{% url 'mangas:manga_detail' manga.slug %}{% endif %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-1"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i>
+                                {% if form.instance.pk %}
+                                    Salvar Alterações
+                                {% else %}
+                                    Adicionar Volume
+                                {% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Validação do formulário
+(function() {
+    'use strict';
+    
+    // Obtém o formulário
+    const form = document.getElementById('volumeForm');
+    
+    // Adiciona validação personalizada ao formulário
+    if (form) {
+        form.addEventListener('submit', function(event) {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            
+            form.classList.add('was-validated');
+        }, false);
+    }
+    
+    // Preview da imagem de capa
+    const coverImageInput = document.getElementById('{{ form.cover_image.id_for_label }}');
+    const coverPreview = document.getElementById('coverPreview');
+    
+    if (coverImageInput && coverPreview) {
+        coverImageInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    coverPreview.innerHTML = `
+                        <div class="mt-2">
+                            <img src="${e.target.result}" class="img-thumbnail" style="max-height: 200px;" alt="Prévia da capa">
+                        </div>
+                    `;
+                }
+                reader.readAsDataURL(file);
+            } else {
+                coverPreview.innerHTML = '';
+            }
+        });
+    }
+})();
+</script>
+{% endblock %}
