@@ -1,0 +1,267 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Gerenciar Cache - Project Nix{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h2 mb-0">
+                <i class="fas fa-database text-primary"></i>
+                Gerenciar Cache
+            </h1>
+            <p class="text-muted">Gerencie o cache do sistema de permissões</p>
+        </div>
+    </div>
+
+    <!-- Estatísticas do Cache -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle text-primary"></i>
+                        Informações do Sistema
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Django Version:</strong> {{ system_info.django_version }}</p>
+                            <p><strong>Python Version:</strong> {{ system_info.python_version }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Cache Backend:</strong> {{ system_info.cache_backend }}</p>
+                            <p><strong>TTL Padrão:</strong> {{ cache_stats.default_ttl|default:300 }}s</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-bar text-primary"></i>
+                        Estatísticas do Cache
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Prefixos:</strong> {{ cache_stats.prefixes|length }}</p>
+                            <p><strong>Backend:</strong> {{ cache_stats.backend|default:"Unknown" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Status:</strong> 
+                                {% if cache_stats.error %}
+                                    <span class="badge bg-danger">Erro</span>
+                                {% else %}
+                                    <span class="badge bg-success">OK</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ações de Cache -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-tools text-primary"></i>
+                        Ações de Cache
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Limpar Todo o Cache -->
+                        <div class="col-md-4 mb-3">
+                            <div class="card border-warning">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-trash-alt fa-2x text-warning mb-3"></i>
+                                    <h6>Limpar Todo o Cache</h6>
+                                    <p class="text-muted small">Remove todos os dados do cache de permissões</p>
+                                    <form method="post" style="display: inline;">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="clear_all">
+                                        <button type="submit" class="btn btn-warning btn-sm" 
+                                                onclick="return confirm('Tem certeza que deseja limpar todo o cache?')">
+                                            <i class="fas fa-trash"></i> Limpar Tudo
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Invalidar Cache de Usuário -->
+                        <div class="col-md-4 mb-3">
+                            <div class="card border-info">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-user-times fa-2x text-info mb-3"></i>
+                                    <h6>Invalidar Cache de Usuário</h6>
+                                    <p class="text-muted small">Remove cache de um usuário específico</p>
+                                    <form method="post" class="d-flex gap-2">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="invalidate_user">
+                                        <input type="number" name="user_id" class="form-control form-control-sm" 
+                                               placeholder="ID do usuário" required>
+                                        <button type="submit" class="btn btn-info btn-sm">
+                                            <i class="fas fa-user-times"></i> Invalidar
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Invalidar Cache de Objeto -->
+                        <div class="col-md-4 mb-3">
+                            <div class="card border-primary">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-cube fa-2x text-primary mb-3"></i>
+                                    <h6>Invalidar Cache de Objeto</h6>
+                                    <p class="text-muted small">Remove cache de um objeto específico</p>
+                                    <form method="post" class="d-flex gap-2">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="invalidate_object">
+                                        <input type="text" name="model_name" class="form-control form-control-sm" 
+                                               placeholder="Modelo (ex: manga)" required>
+                                        <input type="number" name="object_id" class="form-control form-control-sm" 
+                                               placeholder="ID do objeto" required>
+                                        <button type="submit" class="btn btn-primary btn-sm">
+                                            <i class="fas fa-cube"></i> Invalidar
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Informações Detalhadas -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list text-primary"></i>
+                        Detalhes do Cache
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if cache_stats.error %}
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <strong>Erro no Cache:</strong> {{ cache_stats.error }}
+                        </div>
+                    {% else %}
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Propriedade</th>
+                                        <th>Valor</th>
+                                        <th>Descrição</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><strong>Backend</strong></td>
+                                        <td><code>{{ cache_stats.backend|default:"Unknown" }}</code></td>
+                                        <td>Backend de cache configurado</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>TTL Padrão</strong></td>
+                                        <td><code>{{ cache_stats.default_ttl|default:300 }}s</code></td>
+                                        <td>Tempo de vida padrão das chaves</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Prefixos</strong></td>
+                                        <td><code>{{ cache_stats.prefixes|length }}</code></td>
+                                        <td>Número de prefixos de cache</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Status</strong></td>
+                                        <td>
+                                            {% if cache_stats.error %}
+                                                <span class="badge bg-danger">Erro</span>
+                                            {% else %}
+                                                <span class="badge bg-success">Funcionando</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>Status atual do cache</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {% if cache_stats.prefixes %}
+                        <div class="mt-4">
+                            <h6>Prefixos de Cache:</h6>
+                            <div class="row">
+                                {% for prefix in cache_stats.prefixes %}
+                                <div class="col-md-3 mb-2">
+                                    <span class="badge bg-secondary">{{ prefix }}</span>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmação -->
+<div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmModalLabel">Confirmar Ação</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Tem certeza que deseja executar esta ação?</p>
+                <p class="text-muted small">Esta ação pode afetar temporariamente a performance do sistema.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="confirmAction">Confirmar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Confirmação para ações perigosas
+document.addEventListener('DOMContentLoaded', function() {
+    const dangerousActions = document.querySelectorAll('button[onclick*="confirm"]');
+    
+    dangerousActions.forEach(button => {
+        button.addEventListener('click', function(e) {
+            if (!confirm('Esta ação é irreversível. Tem certeza que deseja continuar?')) {
+                e.preventDefault();
+            }
+        });
+    });
+});
+
+// Auto-refresh das estatísticas a cada 30 segundos
+setInterval(function() {
+    // Aqui você pode adicionar AJAX para atualizar as estatísticas
+    console.log('Atualizando estatísticas do cache...');
+}, 30000);
+</script>
+{% endblock %} 

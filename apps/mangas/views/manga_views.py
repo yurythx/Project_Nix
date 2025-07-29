@@ -28,6 +28,7 @@ class MangaListView(ListView):
     template_name = 'mangas/manga_list.html'
     context_object_name = 'mangas'
     paginate_by = 12
+    
     def get_queryset(self):
         queryset = super().get_queryset()
         q = self.request.GET.get('q')
@@ -37,66 +38,63 @@ class MangaListView(ListView):
 
 class MangaDetailView(DetailView):
     """
-    Exibe os detalhes de um mangá específico, incluindo uma lista paginada de capítulos.
+    Exibe os detalhes de um mangá específico - REFATORADA para usar Service Layer
     """
     model = Manga
     template_name = 'mangas/manga_detail.html'
     context_object_name = 'manga'
     slug_field = 'slug'
     slug_url_kwarg = 'slug'
-    paginate_by = 10  # Número de capítulos por página
-    
-    def get_queryset(self):
-        """Otimiza a consulta ao banco de dados usando select_related e prefetch_related."""
-        return Manga.objects.prefetch_related(
-            models.Prefetch(
-                'volumes',
-                queryset=Volume.objects.order_by('number').prefetch_related(
-                    models.Prefetch(
-                        'capitulos',
-                        queryset=Capitulo.objects.order_by('number').annotate(
-                            num_paginas=models.Count('paginas')
-                        ).select_related('volume')
-                    )
-                )
-            )
-        )
-    
+    paginate_by = 10  # Número de volumes por página
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        # Injeção de dependência do service
+        from ..services.manga_service_simple import SimpleMangaService
+        self.manga_service = SimpleMangaService()
+
+    def get_object(self, queryset=None):
+        """Usa service para obter o mangá com otimizações"""
+        slug = self.kwargs.get(self.slug_url_kwarg)
+        try:
+            return self.manga_service.get_manga_by_slug(slug)
+        except Exception as e:
+            logger.error(f"Erro ao buscar manga {slug}: {e}")
+            raise Http404("Mangá não encontrado")
+
     def get_context_data(self, **kwargs):
-        """Adiciona a lista de volumes e capítulos ao contexto."""
+        """Adiciona contexto usando Service Layer - REFATORADO"""
         context = super().get_context_data(**kwargs)
-        
-        # Obtém o mangá do contexto
-        manga = context['manga']
-        
-        # Conta o número total de capítulos e páginas
-        total_capitulos = Capitulo.objects.filter(volume__manga=manga).count()
-        total_paginas = Pagina.objects.filter(capitulo__volume__manga=manga).count()
-        
-        # Obtém os volumes já pré-carregados na consulta principal
-        volumes = list(manga.volumes.all())
-        
-        # Configura a paginação para volumes
+
+        # Usa service para obter contexto do mangá
+        manga_context = self.manga_service.get_manga_context(self.object)
+
+        # Configura paginação dos volumes
+        volumes = manga_context.get('volumes', [])
         paginator = Paginator(volumes, self.paginate_by)
         page = self.request.GET.get('page')
-        
+
         try:
             volumes_paginados = paginator.page(page)
         except PageNotAnInteger:
-            # Se a página não for um inteiro, exibe a primeira página
             volumes_paginados = paginator.page(1)
         except EmptyPage:
-            # Se a página estiver fora do alcance, exibe a última página
             volumes_paginados = paginator.page(paginator.num_pages)
-        
-        # Adiciona informações adicionais ao contexto
+
+        # Incrementa visualizações do mangá
+        try:
+            self.manga_service.increment_manga_views(self.object.id)
+        except Exception as e:
+            logger.warning(f"Erro ao incrementar views: {e}")
+
+        # Adiciona contexto do service
         context.update({
             'volumes': volumes_paginados,
-            'total_capitulos': total_capitulos,
-            'total_paginas': total_paginas,
-            'has_volumes': len(volumes) > 0,
+            'total_chapters': manga_context.get('total_chapters', 0),
+            'latest_chapter': manga_context.get('latest_chapter'),
+            'chapter_count': manga_context.get('chapter_count', 0),
         })
-        
+
         return context
 
 class MangaCreateView(LoginRequiredMixin, StaffOrSuperuserRequiredMixin, CreateView):
@@ -107,15 +105,12 @@ class MangaCreateView(LoginRequiredMixin, StaffOrSuperuserRequiredMixin, CreateV
     model = Manga
     form_class = MangaForm
     template_name = 'mangas/manga_form.html'
-    
-    def get_success_url(self):
-        """Redireciona para a lista de mangás após a criação."""
-        messages.success(self.request, 'Mangá criado com sucesso!')
-        return reverse_lazy('mangas:manga_list')
+    success_url = reverse_lazy('mangas:manga_list')
     
     def form_valid(self, form):
         """Define o usuário atual como criador do mangá."""
         form.instance.criado_por = self.request.user
+        messages.success(self.request, 'Mangá criado com sucesso!')
         return super().form_valid(form)
 
 class MangaUpdateView(LoginRequiredMixin, MangaOwnerOrStaffMixin, UpdateView):
@@ -128,15 +123,11 @@ class MangaUpdateView(LoginRequiredMixin, MangaOwnerOrStaffMixin, UpdateView):
     template_name = 'mangas/manga_form.html'
     slug_field = 'slug'
     slug_url_kwarg = 'slug'
-    
-    def get_success_url(self):
-        """Redireciona para a lista de mangás após a atualização."""
-        messages.success(self.request, 'Mangá atualizado com sucesso!')
-        return reverse_lazy('mangas:manga_list')
+    success_url = reverse_lazy('mangas:manga_list')
     
     def form_valid(self, form):
-        """Define o usuário atual como o último a modificar o mangá."""
-        form.instance.atualizado_por = self.request.user
+        """Exibe mensagem de sucesso ao atualizar o mangá."""
+        messages.success(self.request, 'Mangá atualizado com sucesso!')
         return super().form_valid(form)
 
 class MangaDeleteView(LoginRequiredMixin, MangaOwnerOrStaffMixin, DeleteView):
@@ -155,10 +146,9 @@ class MangaDeleteView(LoginRequiredMixin, MangaOwnerOrStaffMixin, DeleteView):
         messages.success(request, 'Mangá excluído com sucesso!')
         return super().delete(request, *args, **kwargs)
 
-# Capítulo
 class CapituloDetailView(DetailView):
     """
-    Exibe os detalhes de um capítulo, incluindo uma lista paginada de páginas.
+    Exibe os detalhes de um capítulo - REFATORADA para usar Service Layer
     """
     model = Capitulo
     template_name = 'mangas/capitulo_detail.html'
@@ -166,93 +156,63 @@ class CapituloDetailView(DetailView):
     slug_field = 'slug'
     slug_url_kwarg = 'capitulo_slug'
     paginate_by = 1  # Uma página por vez (leitor de mangá)
-    
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        # Injeção de dependência do service
+        from ..services.manga_service_simple import SimpleMangaService
+        self.manga_service = SimpleMangaService()
+
     def get_queryset(self):
-        """Otimiza a consulta ao banco de dados para incluir o volume e o mangá relacionados."""
-        manga_slug = self.kwargs.get('manga_slug')
-        return (
-            Capitulo.objects
-            .filter(manga__slug=manga_slug)
-            .select_related('volume', 'manga')
-            .prefetch_related('paginas')
-            .annotate(
-                num_paginas=models.Count('paginas'),
-                capitulo_anterior_id=models.Subquery(
-                    Capitulo.objects.filter(
-                        manga__slug=manga_slug,
-                        number__lt=models.OuterRef('number'),
-                        volume=models.OuterRef('volume')
-                    )
-                    .order_by('-number')
-                    .values('id')[:1]
-                ),
-                proximo_capitulo_id=models.Subquery(
-                    Capitulo.objects.filter(
-                        manga__slug=manga_slug,
-                        number__gt=models.OuterRef('number'),
-                        volume=models.OuterRef('volume')
-                    )
-                    .order_by('number')
-                    .values('id')[:1]
-                )
-            )
-        )
+        """Otimiza a consulta ao banco de dados."""
+        # Filtra capítulos publicados para usuários não autenticados ou sem permissões
+        if not self.request.user.is_authenticated or not self.request.user.is_staff:
+            return Capitulo.objects.filter(is_published=True).select_related('volume__manga').prefetch_related('paginas')
+        else:
+            return Capitulo.objects.select_related('volume__manga').prefetch_related('paginas')
     
     def get_context_data(self, **kwargs):
-        """Adiciona informações adicionais ao contexto, como páginas e navegação entre capítulos."""
+        """Adiciona contexto usando Service Layer - REFATORADO"""
         context = super().get_context_data(**kwargs)
-        capitulo = self.get_object()
-        
-        # Obtém todas as páginas ordenadas por número
-        paginas = list(capitulo.paginas.all().order_by('number'))
-        
-        # Configura a paginação
+
+        # Obtém o capítulo do contexto
+        capitulo = context['capitulo']
+
+        # Usa service para obter contexto de navegação
+        chapter_context = self.manga_service.get_chapter_context(capitulo)
+
+        # Configura paginação das páginas
+        paginas = chapter_context.get('pages', [])
         paginator = Paginator(paginas, self.paginate_by)
         page = self.request.GET.get('page')
-        
+
         try:
             paginas_paginadas = paginator.page(page)
         except PageNotAnInteger:
-            # Se a página não for um inteiro, exibe a primeira página
             paginas_paginadas = paginator.page(1)
         except EmptyPage:
-            # Se a página estiver fora do alcance (ex. 9999), exibe a última página
             paginas_paginadas = paginator.page(paginator.num_pages)
-            
-        # Obtém o índice da página atual para navegação
-        current_page_index = paginas_paginadas.number - 1
-        
-        # Calcula o progresso de leitura
-        total_paginas = len(paginas)
-        progresso = int((current_page_index + 1) / total_paginas * 100) if total_paginas > 0 else 0
-        
+
+        # Incrementa visualizações do capítulo
+        try:
+            self.manga_service.increment_manga_views(capitulo.volume.manga.id)
+        except Exception as e:
+            logger.warning(f"Erro ao incrementar views: {e}")
+
         # Adiciona informações ao contexto
         context.update({
             'paginas': paginas_paginadas,
-            'total_paginas': total_paginas,
-            'pagina_atual': current_page_index + 1,
-            'progresso': progresso,
-            'capitulo_anterior': Capitulo.objects.filter(id=capitulo.capitulo_anterior_id).first() if hasattr(capitulo, 'capitulo_anterior_id') else None,
-            'proximo_capitulo': Capitulo.objects.filter(id=capitulo.proximo_capitulo_id).first() if hasattr(capitulo, 'proximo_capitulo_id') else None,
-            'outros_capitulos_volume': list(
-                Capitulo.objects
-                .filter(volume=capitulo.volume)
-                .exclude(id=capitulo.id)
-                .order_by('number')
-                .values('id', 'number', 'title')
-            ) if capitulo.volume else [],
-            'volumes': list(
-                Volume.objects
-                .filter(manga=capitulo.manga)
-                .annotate(
-                    capitulo_count=models.Count('capitulos'),
-                    pagina_count=models.Count('capitulos__paginas')
-                )
-                .order_by('number')
-                .values('id', 'number', 'title', 'capitulo_count', 'pagina_count')
-            )
+            'total_paginas': chapter_context.get('total_pages', 0),
+            'current_page_number': paginas_paginadas.number,
+            'has_previous': paginas_paginadas.has_previous(),
+            'has_next': paginas_paginadas.has_next(),
+            'previous_page_number': paginas_paginadas.previous_page_number() if paginas_paginadas.has_previous() else None,
+            'next_page_number': paginas_paginadas.next_page_number() if paginas_paginadas.has_next() else None,
+            'capitulo_anterior': chapter_context.get('previous_chapter'),
+            'proximo_capitulo': chapter_context.get('next_chapter'),
+            'volumes': capitulo.volume.manga.volumes.all().order_by('number'),
         })
-        
+
         return context
 
 class CapituloCreateView(LoginRequiredMixin, StaffOrSuperuserRequiredMixin, CreateView):
@@ -262,46 +222,36 @@ class CapituloCreateView(LoginRequiredMixin, StaffOrSuperuserRequiredMixin, Crea
     """
     model = Capitulo
     form_class = CapituloForm
-    template_name = 'mangas/pagina_form.html'
+    template_name = 'mangas/capitulo_form.html'
     
     def get_initial(self):
-        """Define o mangá e o volume relacionados ao capítulo."""
-        self.manga = Manga.objects.get(slug=self.kwargs['manga_slug'])
-        initial = {'manga': self.manga}
-        
-        # Verifica se foi passado um volume_id na URL (ex: ?volume=1)
-        volume_id = self.request.GET.get('volume')
-        if volume_id:
-            try:
-                volume = Volume.objects.get(id=volume_id, manga=self.manga)
-                initial['volume'] = volume
-            except Volume.DoesNotExist:
-                pass
-                
-        return initial
+        """Define valores iniciais para o formulário."""
+        return {
+            'manga': self.kwargs.get('manga_slug')
+        }
     
     def form_valid(self, form):
-        """Define o mangá, volume e o criador do capítulo."""
-        form.instance.manga = self.manga
-        form.instance.criado_por = self.request.user
+        """Define o volume relacionado ao capítulo."""
+        volume_id = self.request.GET.get('volume')
+        if not volume_id:
+            messages.error(self.request, 'Volume não especificado.')
+            return self.form_invalid(form)
         
-        # Se não foi especificado um volume, atribui ao volume padrão (volume 0)
-        if not form.instance.volume:
-            form.instance.volume, _ = Volume.objects.get_or_create(
-                manga=self.manga,
-                number=0,
-                defaults={
-                    'title': 'Sem Volume',
-                    'criado_por': self.request.user
-                }
+        try:
+            volume = Volume.objects.get(
+                id=volume_id,
+                manga__slug=self.kwargs['manga_slug']
             )
-            
-        messages.success(self.request, 'Capítulo criado com sucesso!')
-        return super().form_valid(form)
+            form.instance.volume = volume
+            messages.success(self.request, 'Capítulo criado com sucesso!')
+            return super().form_valid(form)
+        except Volume.DoesNotExist:
+            messages.error(self.request, 'Volume não encontrado.')
+            return self.form_invalid(form)
     
     def get_success_url(self):
-        """Redireciona para a página do mangá após a criação do capítulo."""
-        return self.object.manga.get_absolute_url()
+        """Retorna a URL de sucesso."""
+        return reverse_lazy('mangas:manga_detail', kwargs={'slug': self.kwargs['manga_slug']})
 
 class CapituloUpdateView(LoginRequiredMixin, ChapterOwnerOrStaffMixin, UpdateView):
     """
@@ -310,14 +260,13 @@ class CapituloUpdateView(LoginRequiredMixin, ChapterOwnerOrStaffMixin, UpdateVie
     """
     model = Capitulo
     form_class = CapituloForm
-    template_name = 'mangas/pagina_form.html'
+    template_name = 'mangas/capitulo_form.html'
     slug_field = 'slug'
     slug_url_kwarg = 'capitulo_slug'
     
     def get_queryset(self):
-        """Filtra os capítulos pelo mangá relacionado."""
-        manga_slug = self.kwargs.get('manga_slug')
-        return Capitulo.objects.filter(manga__slug=manga_slug)
+        """Filtra o queryset para o mangá específico."""
+        return Capitulo.objects.filter(volume__manga__slug=self.kwargs['manga_slug'])
     
     def form_valid(self, form):
         """Exibe mensagem de sucesso ao atualizar o capítulo."""
@@ -325,8 +274,8 @@ class CapituloUpdateView(LoginRequiredMixin, ChapterOwnerOrStaffMixin, UpdateVie
         return super().form_valid(form)
     
     def get_success_url(self):
-        """Redireciona para a página do mangá após a atualização do capítulo."""
-        return self.object.manga.get_absolute_url()
+        """Retorna a URL de sucesso."""
+        return reverse_lazy('mangas:manga_detail', kwargs={'slug': self.kwargs['manga_slug']})
 
 class CapituloDeleteView(LoginRequiredMixin, ChapterOwnerOrStaffMixin, DeleteView):
     """
@@ -334,14 +283,13 @@ class CapituloDeleteView(LoginRequiredMixin, ChapterOwnerOrStaffMixin, DeleteVie
     Apenas o criador do mangá relacionado, membros da equipe ou superusuários podem acessar.
     """
     model = Capitulo
-    template_name = 'mangas/manga_confirm_delete.html'
+    template_name = 'mangas/capitulo_confirm_delete.html'
     slug_field = 'slug'
     slug_url_kwarg = 'capitulo_slug'
     
     def get_queryset(self):
-        """Filtra os capítulos pelo mangá relacionado."""
-        manga_slug = self.kwargs.get('manga_slug')
-        return Capitulo.objects.filter(manga__slug=manga_slug)
+        """Filtra o queryset para o mangá específico."""
+        return Capitulo.objects.filter(volume__manga__slug=self.kwargs['manga_slug'])
     
     def delete(self, request, *args, **kwargs):
         """Exibe mensagem de sucesso ao excluir o capítulo."""
@@ -349,34 +297,39 @@ class CapituloDeleteView(LoginRequiredMixin, ChapterOwnerOrStaffMixin, DeleteVie
         return super().delete(request, *args, **kwargs)
     
     def get_success_url(self):
-        """Redireciona para a página do mangá após a exclusão do capítulo."""
-        return self.object.manga.get_absolute_url()
+        """Retorna a URL de sucesso."""
+        return reverse_lazy('mangas:manga_detail', kwargs={'slug': self.kwargs['manga_slug']})
 
-# Página
-class PaginaCreateView(LoginRequiredMixin, PageOwnerOrStaffMixin, CreateView):
+class PaginaCreateView(LoginRequiredMixin, StaffOrSuperuserRequiredMixin, CreateView):
     """
     View para criar uma nova página.
-    Apenas o criador do mangá relacionado, membros da equipe ou superusuários podem acessar.
+    Apenas membros da equipe ou superusuários podem acessar.
     """
     model = Pagina
     form_class = PaginaForm
     template_name = 'mangas/pagina_form.html'
     
     def get_initial(self):
-        """Define o capítulo relacionado à página."""
-        self.capitulo = Capitulo.objects.get(slug=self.kwargs['capitulo_slug'])
-        return {'capitulo': self.capitulo}
+        """Define valores iniciais para o formulário."""
+        return {
+            'capitulo': self.kwargs.get('capitulo_slug')
+        }
     
     def form_valid(self, form):
-        """Define o capítulo e o criador da página."""
-        form.instance.capitulo = self.capitulo
-        form.instance.criado_por = self.request.user
-        messages.success(self.request, 'Página adicionada com sucesso!')
+        """Define o capítulo relacionado à página."""
+        form.instance.capitulo = Capitulo.objects.get(
+            volume__manga__slug=self.kwargs['manga_slug'],
+            slug=self.kwargs['capitulo_slug']
+        )
+        messages.success(self.request, 'Página criada com sucesso!')
         return super().form_valid(form)
     
     def get_success_url(self):
-        """Redireciona para a página do capítulo após a criação da página."""
-        return self.object.capitulo.get_absolute_url()
+        """Retorna a URL de sucesso."""
+        return reverse_lazy('mangas:capitulo_detail', kwargs={
+            'manga_slug': self.kwargs['manga_slug'],
+            'capitulo_slug': self.kwargs['capitulo_slug']
+        })
 
 class PaginaUpdateView(LoginRequiredMixin, PageOwnerOrStaffMixin, UpdateView):
     """
@@ -388,9 +341,11 @@ class PaginaUpdateView(LoginRequiredMixin, PageOwnerOrStaffMixin, UpdateView):
     template_name = 'mangas/pagina_form.html'
     
     def get_queryset(self):
-        """Filtra as páginas pelo capítulo relacionado."""
-        capitulo_slug = self.kwargs.get('capitulo_slug')
-        return Pagina.objects.filter(capitulo__slug=capitulo_slug)
+        """Filtra o queryset para o capítulo específico."""
+        return Pagina.objects.filter(
+            capitulo__volume__manga__slug=self.kwargs['manga_slug'],
+            capitulo__slug=self.kwargs['capitulo_slug']
+        )
     
     def form_valid(self, form):
         """Exibe mensagem de sucesso ao atualizar a página."""
@@ -398,8 +353,11 @@ class PaginaUpdateView(LoginRequiredMixin, PageOwnerOrStaffMixin, UpdateView):
         return super().form_valid(form)
     
     def get_success_url(self):
-        """Redireciona para a página do capítulo após a atualização da página."""
-        return self.object.capitulo.get_absolute_url()
+        """Retorna a URL de sucesso."""
+        return reverse_lazy('mangas:capitulo_detail', kwargs={
+            'manga_slug': self.kwargs['manga_slug'],
+            'capitulo_slug': self.kwargs['capitulo_slug']
+        })
 
 class PaginaDeleteView(LoginRequiredMixin, PageOwnerOrStaffMixin, DeleteView):
     """
@@ -407,12 +365,14 @@ class PaginaDeleteView(LoginRequiredMixin, PageOwnerOrStaffMixin, DeleteView):
     Apenas o criador do mangá relacionado, membros da equipe ou superusuários podem acessar.
     """
     model = Pagina
-    template_name = 'mangas/manga_confirm_delete.html'
+    template_name = 'mangas/pagina_confirm_delete.html'
     
     def get_queryset(self):
-        """Filtra as páginas pelo capítulo relacionado."""
-        capitulo_slug = self.kwargs.get('capitulo_slug')
-        return Pagina.objects.filter(capitulo__slug=capitulo_slug)
+        """Filtra o queryset para o capítulo específico."""
+        return Pagina.objects.filter(
+            capitulo__volume__manga__slug=self.kwargs['manga_slug'],
+            capitulo__slug=self.kwargs['capitulo_slug']
+        )
     
     def delete(self, request, *args, **kwargs):
         """Exibe mensagem de sucesso ao excluir a página."""
@@ -420,15 +380,17 @@ class PaginaDeleteView(LoginRequiredMixin, PageOwnerOrStaffMixin, DeleteView):
         return super().delete(request, *args, **kwargs)
     
     def get_success_url(self):
-        """Redireciona para a página do capítulo após a exclusão da página."""
-        return self.object.capitulo.get_absolute_url()
+        """Retorna a URL de sucesso."""
+        return reverse_lazy('mangas:capitulo_detail', kwargs={
+            'manga_slug': self.kwargs['manga_slug'],
+            'capitulo_slug': self.kwargs['capitulo_slug']
+        })
 
-# NOVA: View para criação de capítulo completo
-class CapituloCompleteCreateView(LoginRequiredMixin, ChapterOwnerOrStaffMixin, CreateView):
+class CapituloCompleteCreateView(LoginRequiredMixin, StaffOrSuperuserRequiredMixin, CreateView):
     """
     View para criação de capítulo completo com upload de arquivo compactado.
     
-    Permite o upload de um arquivo .zip, .rar, .cbz ou .cbr contendo as páginas
+    Permite o upload de um arquivo .zip, .rar, .cbz, .cbr ou .pdf contendo as páginas
     do capítulo, que serão extraídas e salvas automaticamente.
     """
     model = Capitulo
@@ -440,98 +402,62 @@ class CapituloCompleteCreateView(LoginRequiredMixin, ChapterOwnerOrStaffMixin, C
         self.file_processor = MangaFileProcessorService()
     
     def get_initial(self):
-        """Define os valores iniciais do formulário, incluindo o volume se especificado."""
-        try:
-            self.manga = Manga.objects.get(slug=self.kwargs['manga_slug'])
-            initial = {'manga': self.manga}
-            
-            # Verifica se foi passado um volume_id na URL (ex: ?volume=1)
-            volume_id = self.request.GET.get('volume')
-            if volume_id:
-                try:
-                    volume = Volume.objects.get(id=volume_id, manga=self.manga)
-                    initial['volume'] = volume
-                except Volume.DoesNotExist:
-                    pass
-                    
-            return initial
-        except Manga.DoesNotExist:
-            raise Http404("Mangá não encontrado")
+        """Define valores iniciais para o formulário."""
+        return {
+            'manga': self.kwargs.get('manga_slug')
+        }
+    
+    def get_context_data(self, **kwargs):
+        """Adiciona o mangá ao contexto."""
+        context = super().get_context_data(**kwargs)
+        context['manga'] = Manga.objects.get(slug=self.kwargs['manga_slug'])
+        return context
     
     def form_valid(self, form):
-        """
-        Processa o formulário quando os dados são válidos.
-        
-        Se arquivos forem fornecidos (como pasta ou arquivo compactado), 
-        processa-os para extrair as páginas do capítulo.
-        """
+        """Processa o upload do arquivo e cria o capítulo com páginas."""
         try:
-            # Define o mangá e o criador do capítulo
-            form.instance.manga = form.cleaned_data['manga']
-            form.instance.criado_por = self.request.user
+            # Obtém o volume do parâmetro da URL
+            volume_id = self.request.GET.get('volume')
+            if not volume_id:
+                messages.error(self.request, 'Volume não especificado.')
+                return self.form_invalid(form)
             
-            # Se não foi especificado um volume, atribui ao volume padrão (volume 0)
-            if not form.instance.volume:
-                form.instance.volume, _ = Volume.objects.get_or_create(
-                    manga=form.instance.manga,
-                    number=0,
-                    defaults={
-                        'title': 'Sem Volume',
-                        'criado_por': self.request.user
-                    }
+            try:
+                volume = Volume.objects.get(
+                    id=volume_id,
+                    manga__slug=self.kwargs['manga_slug']
                 )
+            except Volume.DoesNotExist:
+                messages.error(self.request, 'Volume não encontrado.')
+                return self.form_invalid(form)
             
-            # Salva a instância do capítulo
-            response = super().form_valid(form)
+            # Salva o capítulo primeiro
+            capitulo = form.save(commit=False)
+            capitulo.volume = volume
+            capitulo.save()
             
-            # Processar arquivo(s) se fornecido(s)
-            arquivos = form.cleaned_data.get('arquivo_capitulo')
-            if arquivos:
-                # Se for uma lista (pasta), processa como múltiplos arquivos
-                if isinstance(arquivos, list):
-                    import io
-                    import zipfile
-                    from django.core.files.base import ContentFile
-                    
-                    # Cria um arquivo ZIP em memória
-                    zip_buffer = io.BytesIO()
-                    with zipfile.ZipFile(zip_buffer, 'w') as zip_file:
-                        for arquivo in arquivos:
-                            # Adiciona cada arquivo ao ZIP com um nome que mantém a ordem
-                            zip_file.writestr(arquivo.name, arquivo.read())
-                    
-                    # Prepara o arquivo ZIP para processamento
-                    zip_buffer.seek(0)
-                    arquivo_zip = ContentFile(zip_buffer.read(), name='capitulo_temp.zip')
-                    
-                    # Processa o arquivo ZIP
-                    success, message = self.file_processor.process_chapter_file(self.object, arquivo_zip)
-                else:
-                    # Processa como um único arquivo compactado
-                    success, message = self.file_processor.process_chapter_file(self.object, arquivos)
-                
-                if success:
-                    messages.success(self.request, message)
-                else:
-                    messages.error(self.request, message)
-                    # Se houver erro ao processar o arquivo, mantém o capítulo mas informa o problema
-                    return self.render_to_response(self.get_context_data(form=form))
+            # Processa o arquivo se foi fornecido
+            arquivo = form.cleaned_data.get('arquivo_capitulo')
             
-            return response
+            if arquivo:
+                success, message = self.file_processor.process_chapter_file(capitulo, arquivo)
+                if not success:
+                    messages.error(self.request, f'Erro ao processar arquivo: {message}')
+                    capitulo.delete()  # Remove o capítulo se falhar
+                    return self.form_invalid(form)
+            else:
+                messages.error(self.request, 'Nenhum arquivo enviado. Verifique o tipo de codificação do formulário.')
+                capitulo.delete()  # Remove o capítulo se não há arquivo
+                return self.form_invalid(form)
+            
+            messages.success(self.request, 'Capítulo criado com sucesso!')
+            return super().form_valid(form)
             
         except Exception as e:
-            logger = logging.getLogger(__name__)
-            logger.error(f"Erro ao criar capítulo: {str(e)}", exc_info=True)
-            messages.error(
-                self.request, 
-                f"Ocorreu um erro ao processar o arquivo do capítulo: {str(e)}"
-            )
+            logger.error(f'Erro ao criar capítulo completo: {str(e)}', exc_info=True)
+            messages.error(self.request, f'Erro ao criar capítulo: {str(e)}')
             return self.form_invalid(form)
     
     def get_success_url(self):
-        """Redireciona para a página do mangá após a criação do capítulo."""
-        return self.object.manga.get_absolute_url()
-    
-    def test_func(self):
-        """Verifica se o usuário tem permissão para criar capítulos."""
-        return self.request.user.is_staff or self.request.user.is_superuser
+        """Retorna a URL de sucesso."""
+        return reverse_lazy('mangas:manga_detail', kwargs={'slug': self.kwargs['manga_slug']})

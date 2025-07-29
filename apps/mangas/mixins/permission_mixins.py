@@ -1,99 +1,105 @@
 """
-Módulo contendo mixins personalizados para controle de permissões nas views.
+Módulo contendo mixins personalizados para controle de permissões nas views de mangás.
 """
-from django.contrib.auth.mixins import UserPassesTestMixin
-from django.contrib import messages
-from django.shortcuts import redirect
-from django.urls import reverse_lazy
+from apps.common.mixins import (
+    BaseOwnerOrStaffMixin,
+    StaffOrSuperuserRequiredMixin,
+    ReadOnlyMixin,
+    CreatorRequiredMixin
+)
+from typing import Optional, Any
 
 
-class StaffOrSuperuserRequiredMixin(UserPassesTestMixin):
+class MangaOwnerOrStaffMixin(BaseOwnerOrStaffMixin):
     """
-    Mixin que verifica se o usuário é membro da equipe (staff) ou superusuário.
+    Mixin que verifica se o usuário é o proprietário do mangá ou tem permissão de staff.
     """
-    permission_denied_message = "Você não tem permissão para acessar esta página."
+    permission_denied_message = "🚫 Acesso negado! Você só pode editar ou excluir mangás que você criou."
     redirect_url = 'mangas:manga_list'
     
-    def test_func(self):
-        """Verifica se o usuário é staff ou superusuário."""
-        return self.request.user.is_staff or self.request.user.is_superuser
-    
-    def handle_no_permission(self):
-        """Redireciona o usuário com uma mensagem de erro se não tiver permissão."""
-        messages.error(self.request, self.permission_denied_message)
-        return redirect(self.redirect_url)
+    def _get_owner(self, obj):
+        """Obtém o criador do mangá."""
+        return getattr(obj, 'criado_por', None)
 
 
-class MangaOwnerOrStaffMixin(StaffOrSuperuserRequiredMixin):
-    """
-    Mixin que verifica se o usuário é o proprietário do mangá ou um membro da equipe.
-    """
-    permission_denied_message = "Você só pode editar ou excluir mangás que você criou."
-    
-    def test_func(self):
-        """Verifica se o usuário é o criador do mangá ou um membro da equipe/superusuário."""
-        if not self.request.user.is_authenticated:
-            return False
-            
-        # Se for staff ou superusuário, permite o acesso
-        if super().test_func():
-            return True
-            
-        # Para outros usuários, verifica se é o criador do mangá
-        try:
-            obj = self.get_object()
-            return obj.criado_por == self.request.user
-        except Exception:
-            return False
-
-
-class ChapterOwnerOrStaffMixin(StaffOrSuperuserRequiredMixin):
+class ChapterOwnerOrStaffMixin(BaseOwnerOrStaffMixin):
     """
     Mixin que verifica se o usuário é o proprietário do capítulo ou tem permissão de staff.
     """
-    permission_denied_message = "Você só pode editar ou excluir capítulos de mangás que você criou."
+    permission_denied_message = "🚫 Acesso negado! Você só pode editar ou excluir capítulos de mangás que você criou."
+    redirect_url = 'mangas:manga_list'
     
-    def test_func(self):
+    def _get_owner(self, obj):
         """
-        Verifica se o usuário é o criador do mangá relacionado ao capítulo 
-        ou um membro da equipe.
+        Obtém o criador do mangá relacionado ao capítulo.
+        Considera a estrutura hierárquica: Manga → Volume → Capitulo
         """
-        if not self.request.user.is_authenticated:
-            return False
-            
-        # Se for staff ou superusuário, permite o acesso
-        if super().test_func():
-            return True
-            
-        # Para outros usuários, verifica se é o criador do mangá relacionado
         try:
-            obj = self.get_object()
-            return obj.manga.criado_por == self.request.user
+            # Tenta acessar através da propriedade manga (para compatibilidade)
+            if hasattr(obj, 'manga'):
+                return getattr(obj.manga, 'criado_por', None)
+            
+            # Acessa através da estrutura hierárquica
+            if hasattr(obj, 'volume') and obj.volume:
+                return getattr(obj.volume.manga, 'criado_por', None)
+                
+            return None
         except Exception:
-            return False
+            return None
 
 
-class PageOwnerOrStaffMixin(StaffOrSuperuserRequiredMixin):
+class PageOwnerOrStaffMixin(BaseOwnerOrStaffMixin):
     """
     Mixin que verifica se o usuário é o proprietário da página ou tem permissão de staff.
     """
-    permission_denied_message = "Você só pode editar ou excluir páginas de capítulos que você criou."
+    permission_denied_message = "🚫 Acesso negado! Você só pode editar ou excluir páginas de capítulos que você criou."
+    redirect_url = 'mangas:manga_list'
     
-    def test_func(self):
+    def _get_owner(self, obj):
         """
-        Verifica se o usuário é o criador do mangá relacionado à página 
-        ou um membro da equipe.
+        Obtém o criador do mangá relacionado à página.
+        Considera a estrutura hierárquica: Manga → Volume → Capitulo → Pagina
         """
-        if not self.request.user.is_authenticated:
-            return False
-            
-        # Se for staff ou superusuário, permite o acesso
-        if super().test_func():
-            return True
-            
-        # Para outros usuários, verifica se é o criador do mangá relacionado
         try:
-            obj = self.get_object()
-            return obj.capitulo.manga.criado_por == self.request.user
+            if hasattr(obj, 'capitulo') and obj.capitulo:
+                # Usa o mixin de capítulo para reutilizar a lógica
+                chapter_mixin = ChapterOwnerOrStaffMixin()
+                chapter_mixin.request = self.request
+                return chapter_mixin._get_owner(obj.capitulo)
+            return None
         except Exception:
-            return False
+            return None
+
+
+class VolumeOwnerOrStaffMixin(BaseOwnerOrStaffMixin):
+    """
+    Mixin que verifica se o usuário é o proprietário do volume ou tem permissão de staff.
+    """
+    permission_denied_message = "🚫 Acesso negado! Você só pode editar ou excluir volumes de mangás que você criou."
+    redirect_url = 'mangas:manga_list'
+    
+    def _get_owner(self, obj):
+        """Obtém o criador do mangá relacionado ao volume."""
+        try:
+            if hasattr(obj, 'manga'):
+                return getattr(obj.manga, 'criado_por', None)
+            return None
+        except Exception:
+            return None
+
+
+# Mixins específicos para mangás
+class MangaCreatorRequiredMixin(CreatorRequiredMixin):
+    """
+    Mixin que requer que o usuário seja o criador do mangá.
+    Mais restritivo que MangaOwnerOrStaffMixin.
+    """
+    permission_denied_message = "🚫 Acesso negado! Apenas o criador do mangá pode realizar esta ação."
+    redirect_url = 'mangas:manga_list'
+
+
+class MangaReadOnlyMixin(ReadOnlyMixin):
+    """
+    Mixin para views de mangá somente leitura.
+    """
+    redirect_url = 'mangas:manga_list'

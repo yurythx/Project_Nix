@@ -1,0 +1,370 @@
+{% load static %}
+{% load manga_permissions %}
+
+<div class="comments-section mt-5" id="comments-section">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="fas fa-comments me-2"></i>
+                Comentários 
+                <span class="badge bg-primary ms-2" id="comments-count">{{ comment_stats.total_comments|default:0 }}</span>
+            </h5>
+            <div class="comment-actions">
+                <button class="btn btn-sm btn-outline-primary" id="refresh-comments" title="Atualizar comentários">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-secondary" id="toggle-comments" title="Mostrar/Ocultar comentários">
+                    <i class="fas fa-eye"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div class="card-body" id="comments-container">
+            {% if user.is_authenticated %}
+                <!-- Formulário de Novo Comentário -->
+                <div class="new-comment-form mb-4">
+                    <form id="comment-form" data-chapter-id="{{ capitulo.id }}">
+                        <div class="mb-3">
+                            <label for="comment-content" class="form-label">Seu comentário:</label>
+                            <textarea 
+                                class="form-control" 
+                                id="comment-content" 
+                                name="content" 
+                                rows="3" 
+                                maxlength="2000"
+                                placeholder="Compartilhe seus pensamentos sobre este capítulo..."
+                                required
+                            ></textarea>
+                            <div class="form-text">
+                                <span id="char-count">0</span>/2000 caracteres
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="comment-page" class="form-label">Página específica (opcional):</label>
+                                    <select class="form-select" id="comment-page" name="page_number">
+                                        <option value="">Comentário geral</option>
+                                        {% for pagina in capitulo.paginas.all %}
+                                            <option value="{{ pagina.number }}">Página {{ pagina.number }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6 d-flex align-items-end">
+                                <button type="submit" class="btn btn-primary" id="submit-comment">
+                                    <i class="fas fa-paper-plane me-1"></i>
+                                    Comentar
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <a href="{% url 'accounts:login' %}?next={{ request.path }}#comments-section">Faça login</a> 
+                    para deixar um comentário.
+                </div>
+            {% endif %}
+            
+            <!-- Filtros de Comentários -->
+            <div class="comment-filters mb-3">
+                <div class="btn-group" role="group">
+                    <input type="radio" class="btn-check" name="comment-filter" id="filter-all" value="all" checked>
+                    <label class="btn btn-outline-secondary btn-sm" for="filter-all">
+                        Todos
+                    </label>
+                    
+                    <input type="radio" class="btn-check" name="comment-filter" id="filter-pages" value="pages">
+                    <label class="btn btn-outline-secondary btn-sm" for="filter-pages">
+                        Por Página
+                    </label>
+                    
+                    <input type="radio" class="btn-check" name="comment-filter" id="filter-replies" value="replies">
+                    <label class="btn btn-outline-secondary btn-sm" for="filter-replies">
+                        Respostas
+                    </label>
+                </div>
+                
+                <div class="btn-group ms-2" role="group">
+                    <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-sort me-1"></i>Ordenar
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#" data-sort="newest">Mais Recentes</a></li>
+                        <li><a class="dropdown-item" href="#" data-sort="oldest">Mais Antigos</a></li>
+                        <li><a class="dropdown-item" href="#" data-sort="popular">Mais Populares</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Lista de Comentários -->
+            <div id="comments-list">
+                <div class="loading-spinner text-center py-4" id="comments-loading">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Carregando comentários...</span>
+                    </div>
+                </div>
+                
+                <div id="comments-content" style="display: none;">
+                    <!-- Comentários serão carregados aqui via JavaScript -->
+                </div>
+                
+                <div id="no-comments" class="text-center py-4" style="display: none;">
+                    <i class="fas fa-comments fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">Nenhum comentário ainda</h5>
+                    <p class="text-muted">Seja o primeiro a comentar neste capítulo!</p>
+                </div>
+            </div>
+            
+            <!-- Paginação -->
+            <nav aria-label="Paginação de comentários" id="comments-pagination" style="display: none;">
+                <ul class="pagination justify-content-center">
+                    <!-- Paginação será gerada via JavaScript -->
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Editar Comentário -->
+<div class="modal fade" id="edit-comment-modal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Editar Comentário</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="edit-comment-form">
+                    <input type="hidden" id="edit-comment-id">
+                    <div class="mb-3">
+                        <label for="edit-comment-content" class="form-label">Comentário:</label>
+                        <textarea 
+                            class="form-control" 
+                            id="edit-comment-content" 
+                            rows="4" 
+                            maxlength="2000"
+                            required
+                        ></textarea>
+                        <div class="form-text">
+                            <span id="edit-char-count">0</span>/2000 caracteres
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="save-edit-comment">Salvar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Reportar Comentário -->
+<div class="modal fade" id="report-comment-modal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Reportar Comentário</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="report-comment-form">
+                    <input type="hidden" id="report-comment-id">
+                    <div class="mb-3">
+                        <label for="report-reason" class="form-label">Motivo da denúncia:</label>
+                        <select class="form-select" id="report-reason" required>
+                            <option value="">Selecione um motivo...</option>
+                            <option value="spam">Spam</option>
+                            <option value="inappropriate">Conteúdo Inapropriado</option>
+                            <option value="harassment">Assédio</option>
+                            <option value="spoiler">Spoiler sem Aviso</option>
+                            <option value="other">Outro</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="report-description" class="form-label">Descrição (opcional):</label>
+                        <textarea 
+                            class="form-control" 
+                            id="report-description" 
+                            rows="3"
+                            placeholder="Descreva o problema..."
+                        ></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="submit-report">Reportar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Template para Comentário Individual -->
+<template id="comment-template">
+    <div class="comment-item" data-comment-id="">
+        <div class="comment-header d-flex justify-content-between align-items-start">
+            <div class="comment-author">
+                <img src="" alt="" class="comment-avatar rounded-circle me-2" width="32" height="32">
+                <span class="comment-username fw-bold"></span>
+                <span class="comment-date text-muted ms-2"></span>
+                <span class="comment-page-badge badge bg-info ms-2" style="display: none;"></span>
+                <span class="comment-edited-badge badge bg-secondary ms-2" style="display: none;">Editado</span>
+            </div>
+            <div class="comment-actions dropdown">
+                <button class="btn btn-sm btn-link text-muted" data-bs-toggle="dropdown">
+                    <i class="fas fa-ellipsis-v"></i>
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item edit-comment" href="#"><i class="fas fa-edit me-2"></i>Editar</a></li>
+                    <li><a class="dropdown-item delete-comment" href="#"><i class="fas fa-trash me-2"></i>Deletar</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item report-comment" href="#"><i class="fas fa-flag me-2"></i>Reportar</a></li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="comment-content mt-2">
+            <p class="comment-text mb-2"></p>
+        </div>
+        
+        <div class="comment-footer d-flex justify-content-between align-items-center">
+            <div class="comment-reactions">
+                <div class="btn-group btn-group-sm" role="group">
+                    <button type="button" class="btn btn-outline-primary reaction-btn" data-reaction="like">
+                        👍 <span class="reaction-count">0</span>
+                    </button>
+                    <button type="button" class="btn btn-outline-danger reaction-btn" data-reaction="dislike">
+                        👎 <span class="reaction-count">0</span>
+                    </button>
+                    <button type="button" class="btn btn-outline-warning reaction-btn" data-reaction="love">
+                        ❤️ <span class="reaction-count">0</span>
+                    </button>
+                    <button type="button" class="btn btn-outline-info reaction-btn" data-reaction="laugh">
+                        😂 <span class="reaction-count">0</span>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="comment-actions">
+                <button class="btn btn-sm btn-link reply-btn">
+                    <i class="fas fa-reply me-1"></i>Responder
+                </button>
+            </div>
+        </div>
+        
+        <!-- Formulário de Resposta -->
+        <div class="reply-form mt-3" style="display: none;">
+            <form class="reply-comment-form">
+                <div class="input-group">
+                    <textarea 
+                        class="form-control" 
+                        placeholder="Escreva uma resposta..."
+                        rows="2"
+                        maxlength="2000"
+                    ></textarea>
+                    <button class="btn btn-primary" type="submit">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+        
+        <!-- Lista de Respostas -->
+        <div class="replies-container mt-3">
+            <!-- Respostas serão carregadas aqui -->
+        </div>
+    </div>
+</template>
+
+<style>
+.comments-section {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.comment-item {
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    background: #fff;
+    transition: all 0.2s ease;
+}
+
+.comment-item:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.comment-avatar {
+    object-fit: cover;
+}
+
+.comment-username {
+    color: #495057;
+}
+
+.comment-date {
+    font-size: 0.875rem;
+}
+
+.comment-text {
+    line-height: 1.6;
+    color: #212529;
+}
+
+.reaction-btn {
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 0.875rem;
+}
+
+.reaction-btn.active {
+    background-color: var(--bs-primary);
+    border-color: var(--bs-primary);
+    color: white;
+}
+
+.reply-form {
+    border-left: 3px solid #007bff;
+    padding-left: 15px;
+    background: #f8f9fa;
+    border-radius: 0 8px 8px 0;
+}
+
+.replies-container {
+    margin-left: 20px;
+    border-left: 2px solid #e9ecef;
+    padding-left: 15px;
+}
+
+.comment-page-badge {
+    font-size: 0.75rem;
+}
+
+.comment-edited-badge {
+    font-size: 0.75rem;
+}
+
+.loading-spinner {
+    color: #6c757d;
+}
+
+@media (max-width: 768px) {
+    .comment-filters .btn-group {
+        flex-wrap: wrap;
+    }
+    
+    .comment-reactions .btn-group {
+        flex-wrap: wrap;
+    }
+    
+    .replies-container {
+        margin-left: 10px;
+    }
+}
+</style> 

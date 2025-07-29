@@ -70,15 +70,18 @@ class Pagina(TimestampMixin, models.Model):
             try:
                 from PIL import Image as PILImage
                 import os
-                
+                import mimetypes
                 # Abre a imagem para extrair dimensões
                 with PILImage.open(self.image) as img:
                     self.width, self.height = img.size
-                
                 # Obtém informações do arquivo
                 self.file_size = self.image.size
-                self.content_type = self.image.file.content_type
-                
+                # Corrige: obtém content_type de forma robusta
+                if hasattr(self.image.file, 'content_type'):
+                    self.content_type = self.image.file.content_type
+                else:
+                    mime, _ = mimetypes.guess_type(self.image.name)
+                    self.content_type = mime or ''
             except Exception as e:
                 # Se houver erro ao processar a imagem, apenas registra e continua
                 import logging

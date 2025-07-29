@@ -2,6 +2,12 @@
 
 # Image settings
 MAX_IMAGE_SIZE = 10 * 1024 * 1024  # 10MB
+MAX_IMAGE_WIDTH = 4096  # 4K width
+MAX_IMAGE_HEIGHT = 4096  # 4K height
+ALLOWED_IMAGE_TYPES = [
+    'image/jpeg', 'image/jpg', 'image/png', 'image/webp', 
+    'image/gif', 'image/bmp', 'image/tiff', 'image/tif'
+]
 ALLOWED_IMAGE_EXTENSIONS = [
     '.jpg', '.jpeg',  # JPEG images
     '.png',           # Portable Network Graphics
@@ -27,8 +33,13 @@ ALLOWED_ARCHIVE_EXTENSIONS = [
     '.cbr',         # Comic Book RAR archive
     '.cb7',         # Comic Book 7Z archive
     '.cbt',         # Comic Book TAR archive
-    '.cba'          # Comic Book ACE archive (menos comum)
+    '.cba',         # Comic Book ACE archive (menos comum)
+    '.pdf'          # Portable Document Format
 ]
+
+# Chapter settings
+MAX_CHAPTER_NUMBER = 9999
+MAX_PAGES_PER_CHAPTER = 200
 
 # Pagination
 ITEMS_PER_PAGE = 20

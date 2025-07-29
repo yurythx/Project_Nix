@@ -39,10 +39,11 @@ urlpatterns = [
     path('audiolivros/', include('apps.audiobooks.urls')),
     path('tinymce/', include('tinymce.urls')),
 
-    # Health checks
-    path('health/', health_check, name='health_check'),
-    path('health/ready/', readiness_check, name='readiness_check'),
-    path('health/live/', liveness_check, name='liveness_check'),
+    # API REST
+    path('api/', include('apps.mangas.api.urls')),
+
+    # Health checks (simples)
+    path('', include('apps.mangas.health_urls')),
 
     # Pages como app principal (DEVE SER O ÚLTIMO devido ao catch-all)
     path('pages/', include('apps.pages.urls')),

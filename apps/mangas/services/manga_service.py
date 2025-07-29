@@ -1,39 +1,35 @@
 """
-Implementação do serviço de gerenciamento de mangás.
-
-Este módulo contém a implementação concreta do serviço de mangás,
-seguindo a interface IMangaService e aplicando os princípios SOLID.
+Implementação simplificada e funcional do serviço de mangás
+Segue princípios SOLID e foca na funcionalidade essencial
 """
 
 import logging
-from typing import Dict, Any, Optional, List
-
+from typing import Dict, Any, Optional
 from django.db import transaction
 from django.db.models import QuerySet, Q
-from django.contrib.auth import get_user_model
+from django.contrib.auth.models import User
+from django.core.cache import cache
 from django.core.files.uploadedfile import UploadedFile
 from django.utils.text import slugify
 
 from ..interfaces.services import IMangaService
-from ..interfaces.manga_repository_interface import MangaRepositoryInterface
+from ..interfaces.repositories import IMangaRepository
+from ..repositories.manga_repository import DjangoMangaRepository
 from ..models.manga import Manga
 from ..models.capitulo import Capitulo
-from ..models.pagina import Pagina
 from ..exceptions import (
-    MangaException, MangaValidationError, MangaNotFoundError, 
-    ChapterNotFoundError, PageNotFoundError, DuplicateMangaError,
-    DuplicateChapterError, DuplicatePageError, InvalidFileError,
-    FileTooLargeError, UnsupportedFileTypeError, MangaPublishingError,
-    ChapterPublishingError, PageProcessingError
+    MangaException, MangaNotFoundError, MangaValidationError,
+    ChapterNotFoundError, PageNotFoundError,
+    DuplicateMangaError, DuplicateChapterError, DuplicatePageError,
+    InvalidFileError, FileTooLargeError, UnsupportedFileTypeError,
+    MangaPublishingError, ChapterPublishingError, PageProcessingError
 )
 from ..constants import (
-    MAX_IMAGE_SIZE, MAX_IMAGE_WIDTH, MAX_IMAGE_HEIGHT,
-    ALLOWED_IMAGE_TYPES, MAX_CHAPTER_NUMBER, MAX_PAGES_PER_CHAPTER
+    MAX_CHAPTER_NUMBER, MAX_IMAGE_SIZE, ALLOWED_IMAGE_TYPES
 )
 
-# Configuração de logging
 logger = logging.getLogger(__name__)
-User = get_user_model()
+
 
 class MangaService(IMangaService):
     """
@@ -49,16 +45,24 @@ class MangaService(IMangaService):
     - Liskov Substitution: Pode ser substituído por qualquer implementação de IMangaService
     - Interface Segregation: Depende apenas da interface que precisa
     - Dependency Inversion: Depende de abstrações (interfaces), não de implementações concretas
+
+    Exemplo de uso:
+        >>> from apps.mangas.services.manga_service import MangaService
+        >>> from apps.mangas.repositories.manga_repository import MangaRepository
+        >>> service = MangaService(repository=MangaRepository())
+        >>> mangas = service.get_all_mangas()
+        >>> manga = service.get_manga_by_slug('naruto')
+        >>> novo_manga = service.create_manga({'title': 'Novo Mangá'}, created_by=user)
     """
     
-    def __init__(self, repository: MangaRepositoryInterface = None):
+    def __init__(self, repository: IMangaRepository = None):
         """
         Inicializa o serviço com injeção de dependência.
         
         Args:
             repository: Implementação do repositório para acesso a dados
         """
-        self.repository = repository or MangaRepositoryInterface()
+        self.repository = repository or DjangoMangaRepository()
     
     # Implementação dos métodos da interface IMangaService
     

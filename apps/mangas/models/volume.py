@@ -24,6 +24,7 @@ class Volume(SlugMixin, TimestampMixin, models.Model):
         blank=True,
         help_text=_('Título opcional do volume')
     )
+    slug = models.SlugField(_('Slug'), unique=True, blank=True, max_length=255)
     cover_image = models.ImageField(
         _('Capa'), 
         upload_to='mangas/volumes/covers/%Y/%m/%d/', 
@@ -69,3 +70,17 @@ class Volume(SlugMixin, TimestampMixin, models.Model):
             'manga_slug': self.manga.slug,
             'volume_slug': self.slug
         })
+    
+    def get_previous_volume(self):
+        """Retorna o volume anterior, se existir."""
+        return Volume.objects.filter(
+            manga=self.manga,
+            number__lt=self.number
+        ).order_by('-number').first()
+    
+    def get_next_volume(self):
+        """Retorna o próximo volume, se existir."""
+        return Volume.objects.filter(
+            manga=self.manga,
+            number__gt=self.number
+        ).order_by('number').first()

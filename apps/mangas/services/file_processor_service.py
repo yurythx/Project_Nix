@@ -7,9 +7,24 @@ que extrai páginas de imagens de vários formatos de arquivo compactado.
 from io import BytesIO
 import os
 import zipfile
-import rarfile
-import tarfile
-import py7zr
+try:
+    import rarfile
+except ImportError:
+    rarfile = None
+try:
+    import tarfile
+except ImportError:
+    tarfile = None
+try:
+    import py7zr
+except ImportError:
+    py7zr = None
+try:
+    import PyPDF2
+    import fitz  # PyMuPDF
+except ImportError:
+    PyPDF2 = None
+    fitz = None
 import tempfile
 import shutil
 from pathlib import Path
@@ -20,7 +35,9 @@ from django.db import transaction
 from PIL import Image, UnidentifiedImageError, ImageFile
 import logging
 
-from ..constants import ALLOWED_IMAGE_EXTENSIONS, ALLOWED_ARCHIVE_EXTENSIONS
+from ..constants import (
+    ALLOWED_IMAGE_EXTENSIONS, ALLOWED_ARCHIVE_EXTENSIONS, MAX_IMAGE_SIZE, MAX_ARCHIVE_SIZE, MAX_PAGES_PER_CHAPTER, MESSAGES
+)
 from ..interfaces.file_processor_interface import IFileProcessorService
 from ..models.capitulo import Capitulo
 from ..models.pagina import Pagina
@@ -42,7 +59,7 @@ class MangaFileProcessorService(IFileProcessorService):
     SUPPORTED_FORMATS = [
         '.zip', '.rar', '.cbz', '.cbr', '.7z', '.tar', 
         '.tar.gz', '.tgz', '.tar.bz2', '.tbz2', '.tar.xz', 
-        '.txz', '.cb7', '.cbt', '.cba'
+        '.txz', '.cb7', '.cbt', '.cba', '.pdf'
     ]
     
     # Extensões de imagem suportadas
@@ -103,67 +120,67 @@ class MangaFileProcessorService(IFileProcessorService):
                     )
         
         try:
-            # Cria um diretório temporário para extração
-            self._create_temp_dir()
-            
-            # Extrai as imagens do arquivo
-            image_files = self._extract_images(file, file_extension if not is_temp_zip else '.zip')
-            
-            if not image_files:
-                return False, "Nenhuma imagem válida encontrada no arquivo ou pasta"
+            with tempfile.TemporaryDirectory() as temp_dir:
+                self.temp_dir = temp_dir
+                logger.info(f"Iniciando processamento do arquivo: {file.name if hasattr(file, 'name') else 'arquivo sem nome'}")
                 
-            # Cria as páginas no banco de dados
-            self._create_pages(chapter, image_files)
-            return True, f"Capítulo processado com sucesso. {len(image_files)} páginas criadas a partir do {'arquivo' if not is_temp_zip else 'conteúdo da pasta'}."
-            
+                image_files, filter_errors = self._extract_images(file, file_extension if not is_temp_zip else '.zip', collect_errors=True)
+                logger.info(f"Imagens extraídas: {len(image_files)} arquivos encontrados")
+                
+                # Validação do limite de páginas
+                if len(image_files) > MAX_PAGES_PER_CHAPTER:
+                    return False, f"O capítulo excede o limite de {MAX_PAGES_PER_CHAPTER} páginas. Foram encontradas {len(image_files)} imagens válidas. Reduza a quantidade e tente novamente."
+                if not image_files:
+                    logger.error(f"Nenhuma imagem encontrada. Erros: {filter_errors}")
+                    return False, "Nenhuma imagem válida encontrada no arquivo ou pasta.\n" + ("\n".join(filter_errors) if filter_errors else "")
+                
+                logger.info(f"Criando {len(image_files)} páginas para o capítulo {chapter.id}")
+                create_errors = self._create_pages(chapter, image_files, collect_errors=True)
+                total_criadas = len(image_files) - len(create_errors)
+                
+                if total_criadas == 0:
+                    logger.error(f"Nenhuma página criada. Erros: {create_errors}")
+                    chapter.delete()
+                    return False, "Nenhuma página foi criada com sucesso. O capítulo foi removido.\n" + ("\n".join(filter_errors + create_errors) if (filter_errors or create_errors) else "")
+                
+                msg = f"Capítulo processado com sucesso. {total_criadas} páginas criadas a partir do {'arquivo' if not is_temp_zip else 'conteúdo da pasta'}."
+                if filter_errors or create_errors:
+                    msg += "\n\nAvisos/erros:\n" + "\n".join(filter_errors + create_errors)
+                
+                logger.info(f"Upload de capítulo processado com sucesso: {total_criadas} páginas criadas.")
+                return True, msg
         except Exception as e:
             logger.error(f"Erro ao processar arquivo do capítulo: {str(e)}", exc_info=True)
             return False, f"Erro ao processar arquivo: {str(e)}"
-            
         finally:
-            # Garante que o diretório temporário seja limpo em caso de erro
-            self._cleanup_temp_dir()
+            self.temp_dir = None
     
     def _extract_file(self, file: BinaryIO, file_extension: str) -> str:
         """
         Extrai o conteúdo de um arquivo compactado para um diretório temporário.
-        
-        Args:
-            file: Arquivo compactado
-            file_extension: Extensão do arquivo (.zip, .rar, .7z, .tar, etc.)
-            
-        Returns:
-            Caminho para o diretório temporário com os arquivos extraídos
-            
-        Raises:
-            ValueError: Se o formato do arquivo não for suportado
-            RuntimeError: Se ocorrer um erro ao extrair o arquivo
         """
         try:
-            # Salva o arquivo temporariamente
             temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=file_extension)
+            file.seek(0)  # Garante leitura do início
             for chunk in file.chunks():
                 temp_file.write(chunk)
             temp_file.close()
-            
-            # Cria um diretório temporário para extração
             extract_dir = os.path.join(tempfile.gettempdir(), f'manga_extract_{os.urandom(8).hex()}')
             os.makedirs(extract_dir, exist_ok=True)
-            
-            # Extrai o arquivo baseado na extensão
             try:
+                # ZIP e CBZ
                 if file_extension in ['.zip', '.cbz']:
                     with zipfile.ZipFile(temp_file.name, 'r') as zip_ref:
                         zip_ref.extractall(extract_dir)
-                
-                elif file_extension in ['.rar', '.cbr']:
+                # RAR e CBR
+                elif file_extension in ['.rar', '.cbr'] and rarfile:
                     with rarfile.RarFile(temp_file.name, 'r') as rar_ref:
                         rar_ref.extractall(extract_dir)
-                        
-                elif file_extension in ['.7z', '.cb7']:
+                # 7Z e CB7
+                elif file_extension in ['.7z', '.cb7'] and py7zr:
                     with py7zr.SevenZipFile(temp_file.name, mode='r') as sz_ref:
-                        sz_ref.extractall(ext_dir=extract_dir)
-                        
+                        sz_ref.extractall(extract_dir)
+                # TAR e derivados
                 elif file_extension in ['.tar', '.cbt', '.cba'] or file_extension.startswith('.tar.'):
                     mode = 'r'
                     if file_extension.endswith('.gz') or file_extension.endswith('.tgz'):
@@ -172,37 +189,13 @@ class MangaFileProcessorService(IFileProcessorService):
                         mode += ':bz2'
                     elif file_extension.endswith('.xz') or file_extension.endswith('.txz'):
                         mode += ':xz'
-                        
                     with tarfile.open(temp_file.name, mode) as tar_ref:
                         tar_ref.extractall(extract_dir)
-                
-                elif file_extension in ['.7z', '.cb7']:
-                    with py7zr.SevenZipFile(temp_file.name, mode='r') as sz_ref:
-                        sz_ref.extractall(extract_dir)
-                
-                elif file_extension in ['.tar', '.cbt']:
-                    with tarfile.open(temp_file.name, 'r') as tar_ref:
-                        tar_ref.extractall(extract_dir)
-                
-                elif file_extension in ['.tar.gz', '.tgz']:
-                    with tarfile.open(temp_file.name, 'r:gz') as tar_ref:
-                        tar_ref.extractall(extract_dir)
-                
-                elif file_extension in ['.tar.bz2', '.tbz2']:
-                    with tarfile.open(temp_file.name, 'r:bz2') as tar_ref:
-                        tar_ref.extractall(extract_dir)
-                
-                elif file_extension in ['.tar.xz', '.txz']:
-                    with tarfile.open(temp_file.name, 'r:xz') as tar_ref:
-                        tar_ref.extractall(extract_dir)
-                
                 else:
                     raise ValueError(f"Formato de arquivo não suportado: {file_extension}")
-                
+                logger.info(f"Arquivo compactado extraído com sucesso: {file_extension}")
                 return extract_dir
-                
             except Exception as extract_error:
-                # Se a extração falhar, tenta identificar o erro específico
                 if 'password required' in str(extract_error).lower():
                     raise RuntimeError("Arquivo protegido por senha não é suportado")
                 elif 'not a zip file' in str(extract_error).lower():
@@ -211,38 +204,107 @@ class MangaFileProcessorService(IFileProcessorService):
                     raise RuntimeError("Formato de arquivo inválido ou corrompido")
                 else:
                     raise extract_error
-            
         except Exception as e:
-            # Log detalhado do erro
             logger.error(f"Erro ao extrair arquivo {file_extension}: {str(e)}", exc_info=True)
-            
-            # Limpa o diretório temporário em caso de erro
             if 'extract_dir' in locals() and os.path.exists(extract_dir):
                 shutil.rmtree(extract_dir, ignore_errors=True)
-            
-            # Mensagens de erro mais amigáveis
             if 'No such file or directory' in str(e):
                 raise RuntimeError("Arquivo não encontrado ou inacessível")
             elif 'Invalid data' in str(e):
                 raise RuntimeError("Dados inválidos no arquivo")
             else:
                 raise RuntimeError(f"Erro ao processar o arquivo: {str(e)}")
-            
         finally:
-            # Remove o arquivo temporário
             if 'temp_file' in locals() and os.path.exists(temp_file.name):
                 try:
                     os.unlink(temp_file.name)
                 except Exception as e:
                     logger.warning(f"Não foi possível remover arquivo temporário {temp_file.name}: {str(e)}")
-    
-    def _extract_images(self, file: BinaryIO, file_extension: str) -> List[str]:
+
+    def _extract_pdf_pages(self, file: BinaryIO) -> List[str]:
         """
-        Extrai imagens de um arquivo compactado.
+        Extrai páginas de um arquivo PDF e as converte em imagens.
         
         Args:
-            file: Arquivo compactado contendo as imagens
-            file_extension: Extensão do arquivo (.zip, .rar, .7z, .tar, etc.)
+            file: Arquivo PDF
+            
+        Returns:
+            Lista de caminhos para as imagens das páginas extraídas
+            
+        Raises:
+            ValueError: Se o PDF não puder ser processado
+        """
+        if not PyPDF2 or not fitz:
+            raise ValueError("Bibliotecas PyPDF2 e PyMuPDF são necessárias para processar PDFs")
+        
+        try:
+            # Salva o PDF temporariamente
+            temp_pdf = tempfile.NamedTemporaryFile(delete=False, suffix='.pdf')
+            file.seek(0)
+            for chunk in file.chunks():
+                temp_pdf.write(chunk)
+            temp_pdf.close()
+            
+            # Cria diretório temporário para as imagens
+            extract_dir = os.path.join(tempfile.gettempdir(), f'pdf_extract_{os.urandom(8).hex()}')
+            os.makedirs(extract_dir, exist_ok=True)
+            
+            try:
+                # Abre o PDF com PyMuPDF
+                pdf_document = fitz.open(temp_pdf.name)
+                
+                # Lista para armazenar os caminhos das imagens
+                image_files = []
+                
+                # Converte cada página para imagem
+                for page_num in range(len(pdf_document)):
+                    page = pdf_document.load_page(page_num)
+                    
+                    # Define a matriz de transformação para DPI 150
+                    mat = fitz.Matrix(150/72, 150/72)  # 72 DPI é o padrão do PDF
+                    
+                    # Renderiza a página como imagem
+                    pix = page.get_pixmap(matrix=mat)
+                    
+                    # Salva a imagem
+                    image_path = os.path.join(extract_dir, f'page_{page_num+1:03d}.png')
+                    pix.save(image_path)
+                    
+                    image_files.append(image_path)
+                
+                # Fecha o documento
+                pdf_document.close()
+                
+                logger.info(f"PDF processado com sucesso: {len(image_files)} páginas extraídas")
+                return image_files
+                
+            except Exception as e:
+                if 'extract_dir' in locals() and os.path.exists(extract_dir):
+                    shutil.rmtree(extract_dir, ignore_errors=True)
+                raise e
+                
+        except Exception as e:
+            logger.error(f"Erro ao processar PDF: {str(e)}", exc_info=True)
+            if 'password required' in str(e).lower():
+                raise ValueError("PDF protegido por senha não é suportado")
+            elif 'not a pdf' in str(e).lower():
+                raise ValueError("Arquivo não é um PDF válido")
+            else:
+                raise ValueError(f"Erro ao processar PDF: {str(e)}")
+        finally:
+            if 'temp_pdf' in locals() and os.path.exists(temp_pdf.name):
+                try:
+                    os.unlink(temp_pdf.name)
+                except Exception as e:
+                    logger.warning(f"Não foi possível remover PDF temporário {temp_pdf.name}: {str(e)}")
+
+    def _extract_images(self, file: BinaryIO, file_extension: str, collect_errors=False) -> Union[List[str], Tuple[List[str], list]]:
+        """
+        Extrai imagens de um arquivo compactado ou PDF.
+        
+        Args:
+            file: Arquivo compactado contendo as imagens ou PDF
+            file_extension: Extensão do arquivo (.zip, .rar, .7z, .tar, .pdf, etc.)
             
         Returns:
             Lista de caminhos para as imagens extraídas
@@ -251,7 +313,12 @@ class MangaFileProcessorService(IFileProcessorService):
             ValueError: Se nenhuma imagem válida for encontrada
         """
         try:
-            # Extrai os arquivos para um diretório temporário
+            # Se for PDF, usa método específico
+            if file_extension == '.pdf':
+                image_files = self._extract_pdf_pages(file)
+                return (image_files, []) if collect_errors else image_files
+            
+            # Para outros formatos, extrai os arquivos para um diretório temporário
             extract_dir = self._extract_file(file, file_extension)
             
             # Lista todos os arquivos no diretório de extração
@@ -262,18 +329,18 @@ class MangaFileProcessorService(IFileProcessorService):
                     all_files.append(file_path)
             
             # Filtra apenas arquivos de imagem
-            image_files = self._filter_images(all_files)
+            image_files, errors = self._filter_images(all_files, collect_errors=collect_errors)
             
             if not image_files:
                 raise ValueError("Nenhuma imagem válida encontrada no arquivo")
                 
-            return image_files
+            return (image_files, errors) if collect_errors else image_files
             
         except Exception as e:
             logger.error(f"Erro ao extrair imagens: {str(e)}", exc_info=True)
             raise ValueError(f"Falha ao extrair imagens: {str(e)}")
     
-    def _filter_images(self, file_paths: List[str]) -> List[str]:
+    def _filter_images(self, file_paths: List[str], collect_errors=False) -> Union[List[str], Tuple[List[str], list]]:
         """
         Filtra apenas arquivos de imagem válidos com base na extensão e conteúdo.
         
@@ -283,11 +350,17 @@ class MangaFileProcessorService(IFileProcessorService):
         Returns:
             Lista de caminhos para arquivos de imagem válidos
         """
-        from ..constants import ALLOWED_IMAGE_EXTENSIONS, MESSAGES, MAX_IMAGE_SIZE
         
         image_files = []
+        errors = []
         
         for file_path in file_paths:
+            fname = os.path.basename(file_path)
+            # Ignorar arquivos ocultos ou não suportados
+            if fname.startswith('.') or not any(fname.lower().endswith(ext) for ext in ALLOWED_IMAGE_EXTENSIONS):
+                if collect_errors:
+                    errors.append(f"Ignorado: {fname} (não suportado ou oculto)")
+                continue
             try:
                 # Verifica se o arquivo existe e tem tamanho maior que zero
                 if not os.path.isfile(file_path):
@@ -302,6 +375,8 @@ class MangaFileProcessorService(IFileProcessorService):
                 # Verifica o tamanho do arquivo
                 if file_size > MAX_IMAGE_SIZE:
                     logger.warning(f"Arquivo muito grande: {file_path} ({file_size / (1024 * 1024):.2f}MB)")
+                    if collect_errors:
+                        errors.append(f"{fname}: Tamanho excede o limite de {MAX_IMAGE_SIZE//(1024*1024)}MB")
                     continue
                 
                 # Obtém a extensão do arquivo em minúsculas
@@ -321,14 +396,7 @@ class MangaFileProcessorService(IFileProcessorService):
                 try:
                     with Image.open(file_path) as img:
                         # Para alguns formatos, precisamos carregar a imagem para verificar
-                        img.verify()  # Verifica se é uma imagem válida
-                        
-                        # Para formatos que não suportam verify(), tentamos carregar a imagem
-                        try:
-                            img.load()
-                        except (IOError, OSError):
-                            # Se não conseguir carregar, ignora o arquivo
-                            continue
+                        img.load()
                         
                         # Verifica dimensões mínimas (opcional)
                         if img.width < 10 or img.height < 10:
@@ -344,13 +412,14 @@ class MangaFileProcessorService(IFileProcessorService):
             except Exception as e:
                 # Loga o erro mas continua processando outros arquivos
                 logger.debug(f"Erro ao processar arquivo {file_path}: {str(e)}")
+                if collect_errors:
+                    errors.append(f"{fname}: {str(e)}")
                 continue
                 
         # Ordena as imagens por nome (ordem natural)
-        if image_files:
-            image_files.sort(key=lambda x: self._natural_sort_key(os.path.basename(x)))
+        image_files.sort(key=lambda x: self._natural_sort_key(os.path.basename(x)))
                 
-        return image_files
+        return (image_files, errors) if collect_errors else image_files
     
     def _natural_sort_key(self, filename: str) -> list:
         """
@@ -371,7 +440,7 @@ class MangaFileProcessorService(IFileProcessorService):
             for text in re.split('([0-9]+)', str(Path(filename).stem))
         ]
     
-    def _create_pages(self, chapter: Capitulo, image_files: List[str]) -> None:
+    def _create_pages(self, chapter: Capitulo, image_files: List[str], collect_errors=False) -> list:
         """
         Cria as páginas do capítulo a partir dos arquivos de imagem.
         
@@ -385,8 +454,12 @@ class MangaFileProcessorService(IFileProcessorService):
         Raises:
             ValueError: Se a lista de imagens estiver vazia ou se houver erro ao processar a primeira imagem
         """
+        errors = []
         if not image_files:
-            raise ValueError("Nenhuma imagem fornecida para criar as páginas do capítulo")
+            if collect_errors:
+                errors.append("Nenhuma imagem fornecida para criar as páginas do capítulo")
+            else:
+                raise ValueError("Nenhuma imagem fornecida para criar as páginas do capítulo")
         
         # Ordena as imagens numericamente
         image_files.sort(key=lambda x: self._natural_sort_key(os.path.basename(x)))
@@ -427,15 +500,16 @@ class MangaFileProcessorService(IFileProcessorService):
                 # Salva a página no banco de dados
                 pagina.save()
                 
-                logger.debug(f"Página {i} criada com sucesso a partir de {os.path.basename(image_path)}")
-                
             except Exception as e:
-                logger.error(f"Erro ao processar imagem {image_path}: {str(e)}", exc_info=True)
+                logger.error(f"Erro ao processar imagem {image_path}: {str(e)}")
+                if collect_errors:
+                    errors.append(f"{os.path.basename(image_path)}: {str(e)}")
                 # Se for a primeira imagem e falhar, levanta a exceção
                 if i == 1:
                     raise ValueError(f"Falha ao processar a primeira imagem: {str(e)}")
                 # Para outras falhas, apenas registra e continua
                 continue
+        return errors
 
     def _optimize_image(self, image_path: str) -> BytesIO:
         """
@@ -537,29 +611,9 @@ class MangaFileProcessorService(IFileProcessorService):
             raise ValueError(f"Falha ao processar a imagem: {str(e)}")
 
     def _create_temp_dir(self) -> str:
-        """
-        Cria um diretório temporário para extração de arquivos.
-        
-        Returns:
-            Caminho para o diretório temporário criado
-        """
-        if not self.temp_dir or not os.path.exists(self.temp_dir):
-            self.temp_dir = tempfile.mkdtemp(prefix='manga_processor_')
-            logger.debug(f"Diretório temporário criado: {self.temp_dir}")
-        return self.temp_dir
-        
+        # Depreciado: não é mais necessário
+        return None
+
     def _cleanup_temp_dir(self):
-        """
-        Remove o diretório temporário e seu conteúdo, se existir.
-        
-        Este método é seguro para ser chamado múltiplas vezes e mesmo se o diretório
-        não existir mais.
-        """
-        if self.temp_dir and os.path.exists(self.temp_dir):
-            try:
-                shutil.rmtree(self.temp_dir)
-                logger.debug(f"Diretório temporário removido: {self.temp_dir}")
-            except Exception as e:
-                logger.warning(f"Falha ao remover diretório temporário {self.temp_dir}: {str(e)}")
-            finally:
-                self.temp_dir = None
+        # Depreciado: não é mais necessário
+        pass

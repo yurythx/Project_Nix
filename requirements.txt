@@ -54,6 +54,10 @@ djangorestframework==3.16.0
     # via
     #   -r requirements.in
     #   drf-yasg
+django-filter==24.3
+    # via -r requirements.in
+drf-nested-routers==0.94.1
+    # via -r requirements.in
 drf-yasg==1.21.10
     # via -r requirements.in
 factory-boy==3.3.3

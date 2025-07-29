@@ -1,0 +1,298 @@
+{% load static %}
+{% load manga_permissions %}
+
+<div class="download-section mt-4" id="download-section">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="fas fa-download me-2"></i>
+                Download Offline
+            </h5>
+            <div class="download-actions">
+                <button class="btn btn-sm btn-outline-primary" id="refresh-downloads" title="Atualizar downloads">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-secondary" id="download-settings" title="Configurações">
+                    <i class="fas fa-cog"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div class="card-body">
+            {% if user.is_authenticated %}
+                <!-- Status do Download -->
+                <div class="download-status mb-3" id="download-status" style="display: none;">
+                    <div class="alert alert-info">
+                        <div class="d-flex align-items-center">
+                            <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                            <div class="flex-grow-1">
+                                <strong>Baixando capítulo...</strong>
+                                <div class="progress mt-2" style="height: 6px;">
+                                    <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                                </div>
+                                <small class="text-muted">Progresso: <span id="download-progress">0%</span></small>
+                            </div>
+                            <button class="btn btn-sm btn-outline-danger ms-2" id="cancel-download">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Botão de Download -->
+                <div class="download-actions mb-3">
+                    <button class="btn btn-primary" id="download-chapter" data-chapter-id="{{ capitulo.id }}">
+                        <i class="fas fa-download me-2"></i>
+                        Baixar Capítulo
+                    </button>
+                    
+                    <div class="btn-group ms-2" role="group">
+                        <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                            <i class="fas fa-cog me-1"></i>Qualidade
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#" data-quality="original">Original (Alta Qualidade)</a></li>
+                            <li><a class="dropdown-item" href="#" data-quality="compressed">Comprimido (Médio)</a></li>
+                            <li><a class="dropdown-item" href="#" data-quality="web_optimized">Web (Menor Tamanho)</a></li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- Informações do Download -->
+                <div class="download-info mb-3">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Páginas: {{ capitulo.paginas.count }}
+                            </small>
+                        </div>
+                        <div class="col-md-6">
+                            <small class="text-muted">
+                                <i class="fas fa-clock me-1"></i>
+                                Expira em: 7 dias
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Downloads Existentes -->
+                <div class="existing-downloads" id="existing-downloads">
+                    <!-- Downloads serão carregados aqui via JavaScript -->
+                </div>
+                
+                <!-- Estatísticas de Storage -->
+                <div class="storage-stats mt-3">
+                    <div class="card bg-light">
+                        <div class="card-body py-2">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">Armazenamento usado:</small>
+                                <small class="text-muted" id="storage-used">0 MB / 1024 MB</small>
+                            </div>
+                            <div class="progress mt-1" style="height: 4px;">
+                                <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+            {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <a href="{% url 'accounts:login' %}?next={{ request.path }}#download-section">Faça login</a> 
+                    para baixar capítulos offline.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Configurações de Download -->
+<div class="modal fade" id="download-settings-modal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Configurações de Download</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="download-settings-form">
+                    <div class="mb-3">
+                        <label for="download-quality" class="form-label">Qualidade padrão:</label>
+                        <select class="form-select" id="download-quality" name="download_quality">
+                            <option value="original">Original (Alta Qualidade)</option>
+                            <option value="compressed">Comprimido (Médio)</option>
+                            <option value="web_optimized">Web (Menor Tamanho)</option>
+                        </select>
+                        <div class="form-text">
+                            Qualidade padrão para novos downloads
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="max-storage" class="form-label">Limite de armazenamento (MB):</label>
+                        <input type="number" class="form-control" id="max-storage" name="max_storage_size" 
+                               min="100" max="10000" value="1024">
+                        <div class="form-text">
+                            Tamanho máximo em MB para downloads offline
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="keep-days" class="form-label">Manter downloads por (dias):</label>
+                        <input type="number" class="form-control" id="keep-days" name="keep_downloads_for_days" 
+                               min="1" max="365" value="30">
+                        <div class="form-text">
+                            Downloads serão automaticamente removidos após este período
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="auto-download" name="auto_download_new_chapters">
+                            <label class="form-check-label" for="auto-download">
+                                Download automático de novos capítulos
+                            </label>
+                        </div>
+                        <div class="form-text">
+                            Baixar automaticamente novos capítulos de mangás favoritos
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="notify-completion" name="notify_on_completion" checked>
+                            <label class="form-check-label" for="notify-completion">
+                                Notificar ao concluir download
+                            </label>
+                        </div>
+                        <div class="form-text">
+                            Receber notificação quando download for concluído
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="save-download-settings">Salvar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Template para Download Individual -->
+<template id="download-item-template">
+    <div class="download-item" data-download-id="">
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="download-info">
+                <div class="download-title fw-bold"></div>
+                <div class="download-meta text-muted small">
+                    <span class="download-size"></span> • 
+                    <span class="download-date"></span> • 
+                    <span class="download-status-badge"></span>
+                </div>
+            </div>
+            <div class="download-actions">
+                <button class="btn btn-sm btn-success download-btn" style="display: none;">
+                    <i class="fas fa-download me-1"></i>Baixar
+                </button>
+                <button class="btn btn-sm btn-outline-danger delete-download-btn">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</template>
+
+<style>
+.download-section {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.download-status .alert {
+    border-left: 4px solid #007bff;
+}
+
+.download-actions .btn-group {
+    flex-wrap: wrap;
+}
+
+.download-item {
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 10px;
+    background: #fff;
+    transition: all 0.2s ease;
+}
+
+.download-item:hover {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.download-title {
+    color: #495057;
+    font-size: 0.95rem;
+}
+
+.download-meta {
+    font-size: 0.8rem;
+}
+
+.download-status-badge {
+    padding: 2px 6px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.download-status-badge.completed {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.download-status-badge.pending {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.download-status-badge.downloading {
+    background-color: #cce7ff;
+    color: #004085;
+}
+
+.download-status-badge.failed {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.storage-stats .progress {
+    background-color: #e9ecef;
+}
+
+.storage-stats .progress-bar {
+    background-color: #007bff;
+}
+
+@media (max-width: 768px) {
+    .download-actions {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .download-actions .btn-group {
+        width: 100%;
+    }
+    
+    .download-item {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .download-actions {
+        align-self: stretch;
+        justify-content: space-between;
+    }
+}
+</style> 

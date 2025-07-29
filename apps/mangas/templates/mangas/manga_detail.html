@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load manga_permissions %}
 
 {% block title %}{{ manga.title }} - Mangás - Project Nix{% endblock %}
 
@@ -22,7 +23,7 @@
                             {% endif %}
                             <p class="card-text">{{ manga.description }}</p>
                             <div class="mt-4 d-flex gap-2">
-                                {% if user.is_authenticated and user.is_staff %}
+                                {% if user|can_edit_manga:manga %}
                                 <a href="{% url 'mangas:manga_edit' manga.slug %}" class="btn btn-outline-secondary btn-sm">
                                     <i class="fas fa-edit"></i> Editar
                                 </a>
@@ -33,12 +34,14 @@
                                 <a href="{% url 'mangas:manga_list' %}" class="btn btn-outline-primary btn-sm">
                                     <i class="fas fa-arrow-left"></i> Voltar
                                 </a>
+                                {% if user|has_manga_permission %}
                                 <a href="{% url 'mangas:capitulo_create' manga.slug %}" class="btn btn-primary btn-sm">
                                     <i class="fas fa-plus"></i> Novo Capítulo
                                 </a>
                                 <a href="{% url 'mangas:capitulo_complete_create' manga.slug %}" class="btn btn-success btn-sm">
                                     <i class="fas fa-file-archive"></i> Upload Completo
                                 </a>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
@@ -50,10 +53,10 @@
                         <i class="fas fa-book me-2"></i>Volumes
                     </h5>
                     <div class="btn-group">
+                        {% if user|has_manga_permission %}
                         <a href="{% url 'mangas:volume_create' manga.slug %}" class="btn btn-primary btn-sm">
                             <i class="fas fa-plus me-1"></i> Adicionar Volume
                         </a>
-                        {% if user.is_staff %}
                         <a href="{% url 'mangas:capitulo_create' manga.slug %}" class="btn btn-outline-primary btn-sm">
                             <i class="fas fa-plus-circle me-1"></i> Adicionar Capítulo
                         </a>
@@ -66,7 +69,7 @@
                             {% for volume in volumes %}
                             <div class="accordion-item">
                                 <h2 class="accordion-header" id="heading{{ volume.number }}">
-                                    <button class="accordion-button {% if not forloop.first %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ volume.number }}" aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}" aria-controls="collapse{{ volume.number }}">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ volume.number }}" aria-expanded="false" aria-controls="collapse{{ volume.number }}">
                                         <div class="d-flex align-items-center w-100">
                                             <div class="me-auto">
                                                 <span class="fw-bold">Volume {{ volume.number }}</span>
@@ -92,9 +95,9 @@
                                         </div>
                                     </button>
                                 </h2>
-                                <div id="collapse{{ volume.number }}" class="accordion-collapse collapse {% if forloop.first %}show{% endif %}" aria-labelledby="heading{{ volume.number }}" data-bs-parent="#volumesAccordion">
+                                <div id="collapse{{ volume.number }}" class="accordion-collapse collapse" aria-labelledby="heading{{ volume.number }}" data-bs-parent="#volumesAccordion">
                                     <div class="accordion-body p-0">
-                                        {% if user.is_staff %}
+                                        {% if user|has_manga_permission %}
                                         <div class="d-flex justify-content-end p-2 bg-light border-bottom">
                                             <a href="{% url 'mangas:volume_edit' manga.slug volume.slug %}" class="btn btn-sm btn-outline-secondary me-1">
                                                 <i class="fas fa-edit me-1"></i> Editar Volume
@@ -114,8 +117,15 @@
                                                             <a href="{% url 'mangas:capitulo_detail' manga_slug=manga.slug capitulo_slug=capitulo.slug %}" class="text-decoration-none d-flex align-items-center">
                                                                 <i class="fas fa-file-alt me-2"></i>
                                                                 <div>
-                                                                    <div class="fw-medium">Capítulo {{ capitulo.number }}{% if capitulo.title %}: {{ capitulo.title }}{% endif %}</div>
-                                                                    <small class="text-muted">{{ capitulo.num_paginas|default:0 }} página{{ capitulo.num_paginas|default:0|pluralize }}</small>
+                                                                                                                    <div class="fw-medium">
+                                                    Capítulo {{ capitulo.number }}{% if capitulo.title %}: {{ capitulo.title }}{% endif %}
+                                                    {% if not capitulo.is_published and user|has_manga_permission %}
+                                                    <span class="badge bg-warning text-dark ms-1" title="Rascunho">
+                                                        <i class="fas fa-eye-slash"></i>
+                                                    </span>
+                                                    {% endif %}
+                                                </div>
+                                                <small class="text-muted">{{ capitulo.num_paginas|default:0 }} página{{ capitulo.num_paginas|default:0|pluralize }}</small>
                                                                 </div>
                                                             </a>
                                                         </div>
@@ -123,7 +133,7 @@
                                                             <a href="{% url 'mangas:capitulo_detail' manga_slug=manga.slug capitulo_slug=capitulo.slug %}" class="btn btn-sm btn-outline-primary" title="Ler capítulo">
                                                                 <i class="fas fa-book-reader"></i> Ler
                                                             </a>
-                                                            {% if user.is_staff %}
+                                                            {% if user|has_manga_permission %}
                                                             <a href="{% url 'mangas:capitulo_edit' manga_slug=manga.slug capitulo_slug=capitulo.slug %}" class="btn btn-sm btn-outline-secondary" title="Editar capítulo">
                                                                 <i class="fas fa-edit"></i>
                                                             </a>
@@ -139,19 +149,27 @@
                                                 <div class="text-center p-4 text-muted">
                                                     <i class="fas fa-inbox fa-2x mb-2"></i>
                                                     <p class="mb-0">Nenhum capítulo cadastrado neste volume.</p>
-                                                    {% if user.is_staff %}
-                                                    <a href="{% url 'mangas:capitulo_create' manga.slug %}?volume={{ volume.id }}" class="btn btn-sm btn-outline-primary mt-2">
-                                                        <i class="fas fa-plus me-1"></i> Adicionar Capítulo
-                                                    </a>
+                                                    {% if user|has_manga_permission %}
+                                                    <div class="mt-2">
+                                                        <a href="{% url 'mangas:capitulo_create' manga.slug %}?volume={{ volume.id }}" class="btn btn-sm btn-outline-primary me-1">
+                                                            <i class="fas fa-plus me-1"></i> Adicionar Capítulo
+                                                        </a>
+                                                        <a href="{% url 'mangas:capitulo_complete_create' manga.slug %}?volume={{ volume.id }}" class="btn btn-sm btn-outline-success">
+                                                            <i class="fas fa-file-archive me-1"></i> Upload Completo
+                                                        </a>
+                                                    </div>
                                                     {% endif %}
                                                 </div>
                                             {% endif %}
                                         </div>
                                         
-                                        {% if user.is_staff and volume.capitulos.exists %}
+                                        {% if user|has_manga_permission and volume.capitulos.exists %}
                                         <div class="text-center p-2 bg-light border-top">
-                                            <a href="{% url 'mangas:capitulo_create' manga.slug %}?volume={{ volume.id }}" class="btn btn-sm btn-outline-primary">
+                                            <a href="{% url 'mangas:capitulo_create' manga.slug %}?volume={{ volume.id }}" class="btn btn-sm btn-outline-primary me-1">
                                                 <i class="fas fa-plus me-1"></i> Adicionar Capítulo
+                                            </a>
+                                            <a href="{% url 'mangas:capitulo_complete_create' manga.slug %}?volume={{ volume.id }}" class="btn btn-sm btn-outline-success">
+                                                <i class="fas fa-file-archive me-1"></i> Upload Completo
                                             </a>
                                         </div>
                                         {% endif %}
@@ -213,4 +231,21 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Garante que todos os acordeões iniciem fechados
+    const accordionButtons = document.querySelectorAll('.accordion-button');
+    const accordionCollapses = document.querySelectorAll('.accordion-collapse');
+    
+    accordionButtons.forEach(button => {
+        button.classList.add('collapsed');
+        button.setAttribute('aria-expanded', 'false');
+    });
+    
+    accordionCollapses.forEach(collapse => {
+        collapse.classList.remove('show');
+    });
+});
+</script>
 {% endblock %} 

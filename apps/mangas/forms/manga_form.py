@@ -1,12 +1,12 @@
 from django import forms
-from django.core.validators import FileExtensionValidator
-from django.core.files.uploadedfile import UploadedFile
 from apps.mangas.models.manga import Manga
 from apps.mangas.models.capitulo import Capitulo
 from apps.mangas.models.pagina import Pagina
-from apps.mangas.widgets import MultipleFileInput
 import zipfile
-import rarfile
+try:
+    import rarfile
+except ImportError:
+    rarfile = None
 import os
 from typing import List, Union, Optional
 
@@ -24,25 +24,19 @@ class CapituloCompleteForm(forms.ModelForm):
     """
     Formulário para upload de capítulo completo.
     Suporta:
-    - Um único arquivo compactado (.zip, .rar, .cbz, .cbr)
+    - Um único arquivo compactado (.zip, .rar, .cbz, .cbr, .pdf)
     - Múltiplos arquivos de imagem (upload direto de pasta)
     """
     # Extensões permitidas para arquivos compactados
-    ALLOWED_ARCHIVE_EXTENSIONS = ['zip', 'rar', 'cbz', 'cbr', '7z', 'tar', 'tar.gz', 'tar.bz2', 'tar.xz', 'cb7', 'cbt', 'cba']
+    ALLOWED_ARCHIVE_EXTENSIONS = ['zip', 'rar', 'cbz', 'cbr', '7z', 'tar', 'tar.gz', 'tar.bz2', 'tar.xz', 'cb7', 'cbt', 'cba', 'pdf']
     
     # Tamanho máximo do arquivo (100MB)
     MAX_FILE_SIZE = 100 * 1024 * 1024  # 100MB
     
     arquivo_capitulo = forms.FileField(
         label='Arquivo do Capítulo',
-        help_text='Envie um arquivo compactado (.zip, .rar, .cbz, .cbr, etc.) ou selecione uma pasta com imagens. Você pode selecionar múltiplos arquivos ou uma pasta inteira.',
-        required=False,
-        widget=MultipleFileInput(),
-        validators=[
-            FileExtensionValidator(
-                allowed_extensions=ALLOWED_ARCHIVE_EXTENSIONS + ['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp', 'tiff', 'tif']
-            )
-        ]
+        help_text='Envie um arquivo compactado (.zip, .rar, .cbz, .cbr, .pdf, etc.) ou uma imagem.',
+        required=False
     )
     
     class Meta:
@@ -53,49 +47,45 @@ class CapituloCompleteForm(forms.ModelForm):
         """
         Valida os arquivos enviados, seja um único arquivo compactado ou múltiplas imagens.
         """
-        arquivos = self.files.getlist('arquivo_capitulo') if 'arquivo_capitulo' in self.files else []
+        # Tenta obter o arquivo de diferentes formas
+        arquivo = None
         
-        # Se não há arquivos, retorna None
-        if not arquivos:
+        # Primeiro, tenta obter como arquivo único
+        if 'arquivo_capitulo' in self.files:
+            arquivo = self.files['arquivo_capitulo']
+        
+        # Se não encontrou, tenta obter da lista
+        if not arquivo and 'arquivo_capitulo' in self.files:
+            arquivos = self.files.getlist('arquivo_capitulo')
+            if arquivos:
+                arquivo = arquivos[0]
+        
+        # Se não há arquivo, retorna None
+        if not arquivo:
             return None
         
-        # Se for um único arquivo, verifica se é um arquivo compactado
-        if len(arquivos) == 1:
-            arquivo = arquivos[0]
-            nome_arquivo = getattr(arquivo, 'name', '')
-            ext = os.path.splitext(nome_arquivo)[1].lower().lstrip('.')
-            
-            # Se for um arquivo compactado, valida o tamanho máximo
-            if ext in self.ALLOWED_ARCHIVE_EXTENSIONS:
-                if arquivo.size > self.MAX_FILE_SIZE:
-                    raise forms.ValidationError(f'Arquivo muito grande. Tamanho máximo permitido: {self.MAX_FILE_SIZE/1024/1024:.0f}MB')
-                return arquivo
-            
-            # Se for uma imagem, continua para validar como múltiplos arquivos
-            return arquivos
+        # Valida o arquivo
+        nome_arquivo = getattr(arquivo, 'name', '')
+        ext = os.path.splitext(nome_arquivo)[1].lower().lstrip('.')
         
-        # Se são múltiplos arquivos, valida cada um
-        for arquivo in arquivos:
-            # Obtém o nome e extensão do arquivo
-            nome_arquivo = getattr(arquivo, 'name', '')
-            ext = os.path.splitext(nome_arquivo)[1].lower().lstrip('.')
-            
-            # Verifica se é uma imagem
-            if ext not in ['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp', 'tiff', 'tif']:
-                raise forms.ValidationError(
-                    f'Formato de arquivo não suportado: {nome_arquivo}. ' \
-                    'Use apenas imagens (JPG, PNG, WebP, GIF, BMP, TIFF).'
-                )
-            
-            # Verifica o tamanho do arquivo (máx 10MB por imagem)
+        # Verifica se a extensão é suportada
+        if ext not in self.ALLOWED_ARCHIVE_EXTENSIONS + ['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp', 'tiff', 'tif']:
+            raise forms.ValidationError(
+                f'Formato de arquivo não suportado: {nome_arquivo}. ' \
+                f'Formatos suportados: {", ".join(self.ALLOWED_ARCHIVE_EXTENSIONS + ["jpg", "jpeg", "png", "webp", "gif", "bmp", "tiff", "tif"])}'
+            )
+        
+        # Verifica o tamanho do arquivo
+        if ext in self.ALLOWED_ARCHIVE_EXTENSIONS:
+            # Para arquivos compactados, usa o limite maior
+            if arquivo.size > self.MAX_FILE_SIZE:
+                raise forms.ValidationError(f'Arquivo muito grande. Tamanho máximo permitido: {self.MAX_FILE_SIZE/1024/1024:.0f}MB')
+        else:
+            # Para imagens, usa o limite menor
             if arquivo.size > 10 * 1024 * 1024:  # 10MB
-                raise forms.ValidationError(
-                    f'Arquivo muito grande: {nome_arquivo} ' \
-                    f'({arquivo.size/1024/1024:.1f}MB). ' \
-                    'Tamanho máximo permitido: 10MB por arquivo.'
-                )
+                raise forms.ValidationError(f'Arquivo muito grande. Tamanho máximo permitido: 10MB')
         
-        return arquivos
+        return arquivo
 
 class PaginaForm(forms.ModelForm):
     class Meta:

@@ -6,7 +6,6 @@
 {% block extra_css %}
 {{ block.super }}
 <style>
-    /* Estilos específicos para o formulário de upload */
     .file-upload-instructions {
         background-color: #f8f9fa;
         border-left: 4px solid #4a90e2;
@@ -34,37 +33,6 @@
         margin-right: 0.5rem;
     }
     
-    /* Ajustes para o formulário */
-    #div_id_arquivo_capitulo {
-        margin-bottom: 1.5rem;
-    }
-    
-    /* Estilo para o botão de submit */
-    .btn-submit {
-        background-color: #4a90e2;
-        color: white;
-        padding: 0.5rem 2rem;
-        font-weight: 500;
-        border: none;
-        border-radius: 4px;
-        transition: background-color 0.3s;
-    }
-    
-    .btn-submit:hover {
-        background-color: #357abd;
-        color: white;
-    }
-    
-    /* Ajustes para mensagens de erro */
-    .errorlist {
-        color: #dc3545;
-        padding-left: 0;
-        list-style: none;
-        margin-top: 0.25rem;
-        font-size: 0.875em;
-    }
-    
-    /* Estilo para o container do formulário */
     .form-container {
         background-color: white;
         border-radius: 8px;
@@ -73,14 +41,12 @@
         margin-bottom: 2rem;
     }
     
-    /* Ajustes para o título da página */
     .page-title {
         color: #2c3e50;
         margin-bottom: 1.5rem;
         font-weight: 600;
     }
     
-    /* Estilo para o link de voltar */
     .back-link {
         display: inline-flex;
         align-items: center;
@@ -96,6 +62,157 @@
     
     .back-link i {
         margin-right: 0.5rem;
+    }
+    
+    .btn-submit {
+        background-color: #4a90e2;
+        color: white;
+        padding: 0.5rem 2rem;
+        font-weight: 500;
+        border: none;
+        border-radius: 4px;
+        transition: background-color 0.3s;
+    }
+    
+    .btn-submit:hover {
+        background-color: #357abd;
+        color: white;
+    }
+    
+    /* Estilos para upload de arquivos */
+    .file-upload-area {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+        border: 2px dashed #ccc;
+        border-radius: 8px;
+        background-color: #f9f9f9;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-align: center;
+        min-height: 150px;
+    }
+    
+    .file-upload-area:hover, .file-upload-area.dragover {
+        border-color: #4a90e2;
+        background-color: #f0f7ff;
+    }
+    
+    .file-upload-icon {
+        font-size: 2.5rem;
+        color: #4a90e2;
+        margin-bottom: 1rem;
+    }
+    
+    .file-upload-main {
+        font-size: 1.1rem;
+        font-weight: 500;
+        color: #333;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+    
+    .file-upload-sub {
+        font-size: 0.9rem;
+        color: #666;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+    
+    /* Estilo para a lista de arquivos */
+    .file-list {
+        border: 1px solid #e0e0e0;
+        border-radius: 4px;
+        max-height: 200px;
+        overflow-y: auto;
+    }
+    
+    .file-item {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid #f0f0f0;
+        background-color: #fff;
+        transition: background-color 0.2s;
+    }
+    
+    .file-item:last-child {
+        border-bottom: none;
+    }
+    
+    .file-item:hover {
+        background-color: #f9f9f9;
+    }
+    
+    .file-name {
+        flex: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        color: #333;
+    }
+    
+    .file-size {
+        font-size: 0.8rem;
+        color: #666;
+        margin: 0 1rem;
+        white-space: nowrap;
+    }
+    
+    .remove-file {
+        background: none;
+        border: none;
+        color: #dc3545;
+        cursor: pointer;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        transition: background-color 0.2s;
+    }
+    
+    .remove-file:hover {
+        background-color: #f8d7da;
+    }
+    
+    /* Estilos para a barra de progresso */
+    .progress {
+        height: 25px;
+        border-radius: 8px;
+        background-color: #e9ecef;
+        overflow: hidden;
+    }
+    
+    .progress-bar {
+        background: linear-gradient(45deg, #4a90e2, #357abd);
+        transition: width 0.3s ease;
+        font-size: 0.875rem;
+        font-weight: 500;
+        line-height: 25px;
+    }
+    
+    .progress-bar-striped {
+        background-image: linear-gradient(45deg, rgba(255,255,255,.15) 25%, transparent 25%, transparent 50%, rgba(255,255,255,.15) 50%, rgba(255,255,255,.15) 75%, transparent 75%, transparent);
+        background-size: 1rem 1rem;
+    }
+    
+    .progress-bar-animated {
+        animation: progress-bar-stripes 1s linear infinite;
+    }
+    
+    @keyframes progress-bar-stripes {
+        0% { background-position: 1rem 0; }
+        100% { background-position: 0 0; }
+    }
+    
+    /* Estilos para o estado de upload */
+    .uploading {
+        opacity: 0.7;
+        pointer-events: none;
+    }
+    
+    .uploading .btn-submit {
+        background-color: #6c757d;
     }
 </style>
 {% endblock %}
@@ -130,14 +247,14 @@
             <h5><i class="fas fa-info-circle"></i> Instruções de Upload</h5>
             <p>Você pode enviar:</p>
             <ul>
-                <li>Um único arquivo compactado (.zip, .rar, .cbz, .cbr, .7z, .tar, etc.)</li>
+                <li>Um único arquivo compactado (.zip, .rar, .cbz, .cbr, .7z, .tar, .pdf, etc.)</li>
                 <li>Vários arquivos de imagem selecionados individualmente</li>
                 <li>Uma pasta inteira com imagens (arraste e solte ou use o botão de seleção de pasta)</li>
             </ul>
             <p class="mb-0">Formatos de imagem suportados: JPG, PNG, WebP, GIF, BMP, TIFF</p>
         </div>
         
-        <form method="post" enctype="multipart/form-data" id="capitulo-form" class="needs-validation" novalidate>
+        <form method="post" enctype="multipart/form-data" id="capitulo-form">
             {% csrf_token %}
             
             {% if form.non_field_errors %}
@@ -186,13 +303,13 @@
             
             <div class="mb-4">
                 <label for="{{ form.arquivo_capitulo.id_for_label }}" class="form-label">Arquivo do Capítulo</label>
-                <div class="file-upload-container {% if form.arquivo_capitulo.errors %}border-danger{% endif }}" id="dropZone">
+                <div class="file-upload-area" id="dropZone">
                     <div class="file-upload-icon">
                         <i class="fas fa-cloud-upload-alt"></i>
                     </div>
-                    <p>Arraste e solte arquivos aqui ou clique para selecionar</p>
-                    <p class="text-muted small">
-                        Suporta arquivos .zip, .rar, .cbz, .cbr, .7z, .tar, .tar.gz, .tar.bz2, .tar.xz, .cb7, .cbt, .cba ou pastas com imagens
+                    <p class="file-upload-main">Arraste e solte arquivos aqui ou clique para selecionar</p>
+                    <p class="file-upload-sub">
+                        Suporta arquivos .zip, .rar, .cbz, .cbr, .7z, .tar, .tar.gz, .tar.bz2, .tar.xz, .cb7, .cbt, .cba, .pdf ou pastas com imagens
                     </p>
                     <input type="file" 
                            name="{{ form.arquivo_capitulo.name }}" 
@@ -200,9 +317,8 @@
                            {% if not form.instance.pk %}required{% endif %}
                            style="display: none;"
                            multiple>
-                    <div class="file-info" id="fileInfo">Nenhum arquivo selecionado</div>
-                    <div class="file-preview" id="filePreview"></div>
                 </div>
+                <div class="file-list" id="fileList" style="display: none; margin-top: 1rem;"></div>
                 {% if form.arquivo_capitulo.help_text %}
                     <div class="form-text">{{ form.arquivo_capitulo.help_text }}</div>
                 {% endif %}
@@ -213,8 +329,28 @@
                 {% endif %}
             </div>
             
+            <!-- Barra de Progresso -->
+            <div id="uploadProgress" class="mb-3" style="display: none;">
+                <div class="progress mb-2">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                         role="progressbar" 
+                         style="width: 0%" 
+                         id="progressBar">0%</div>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <small class="text-muted" id="progressText">Preparando upload...</small>
+                    <small class="text-muted" id="progressDetails">0 KB / 0 KB</small>
+                </div>
+                <div class="mt-2">
+                    <small class="text-info" id="processingInfo" style="display: none;">
+                        <i class="fas fa-cog fa-spin me-1"></i>
+                        <span id="processingText">Processando arquivos...</span>
+                    </small>
+                </div>
+            </div>
+            
             <div class="d-flex justify-content-between align-items-center">
-                <button type="submit" class="btn btn-submit">
+                <button type="submit" class="btn btn-submit" id="submitBtn">
                     <i class="fas fa-save me-2"></i>
                     {% if form.instance.pk %}Atualizar{% else %}Criar{% endif %} Capítulo
                 </button>
@@ -233,34 +369,220 @@
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Adiciona classe ao formulário para estilização
-        const form = document.getElementById('capitulo-form');
-        if (form) {
-            form.classList.add('needs-validation');
-            
-            // Validação personalizada do formulário
-            form.addEventListener('submit', function(event) {
-                if (!form.checkValidity()) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                }
-                
-                form.classList.add('was-validated');
-            }, false);
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('{{ form.arquivo_capitulo.id_for_label }}');
+        const fileList = document.getElementById('fileList');
+        const submitBtn = document.getElementById('submitBtn');
+        
+        // Permite clicar na área de upload para selecionar arquivos
+        dropZone.addEventListener('click', function() {
+            fileInput.click();
+        });
+        
+        // Atualiza a lista de arquivos quando arquivos são selecionados
+        fileInput.addEventListener('change', function() {
+            updateFileList();
+        });
+        
+        // Suporte para arrastar e soltar
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, preventDefaults, false);
+        });
+        
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, highlight, false);
+        });
+        
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, unhighlight, false);
+        });
+        
+        dropZone.addEventListener('drop', handleDrop, false);
+        
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
         }
         
-        // Feedback visual durante o upload
-        const fileInput = document.querySelector('input[type="file"]');
-        if (fileInput) {
-            fileInput.addEventListener('change', function() {
-                const submitButton = document.querySelector('button[type="submit"]');
-                if (submitButton && this.files.length > 0) {
-                    submitButton.disabled = true;
-                    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Enviando...';
-                    form.submit();
+        function highlight() {
+            this.classList.add('dragover');
+        }
+        
+        function unhighlight() {
+            this.classList.remove('dragover');
+        }
+        
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            fileInput.files = files;
+            updateFileList();
+        }
+        
+        function updateFileList() {
+            fileList.innerHTML = '';
+            
+            if (!fileInput.files || fileInput.files.length === 0) {
+                fileList.style.display = 'none';
+                return;
+            }
+            
+            Array.from(fileInput.files).forEach(file => {
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item';
+                fileItem.innerHTML = `
+                    <span class="file-name">${escapeHtml(file.name)}</span>
+                    <span class="file-size">(${formatFileSize(file.size)})</span>
+                    <button type="button" class="remove-file" onclick="removeFile('${escapeHtml(file.name)}')" aria-label="Remover arquivo">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+                fileList.appendChild(fileItem);
+            });
+            
+            fileList.style.display = 'block';
+        }
+        
+        function removeFile(fileName) {
+            const files = Array.from(fileInput.files);
+            const filteredFiles = files.filter(file => file.name !== fileName);
+            
+            const dataTransfer = new DataTransfer();
+            filteredFiles.forEach(file => dataTransfer.items.add(file));
+            fileInput.files = dataTransfer.files;
+            
+            updateFileList();
+        }
+        
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        function escapeHtml(unsafe) {
+            return unsafe
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+        
+        // Torna a função removeFile global para o onclick
+        window.removeFile = removeFile;
+        
+        // Funcionalidade de upload com barra de progresso
+        const form = document.getElementById('capitulo-form');
+        const uploadProgress = document.getElementById('uploadProgress');
+        const progressBar = document.getElementById('progressBar');
+        const progressText = document.getElementById('progressText');
+        const progressDetails = document.getElementById('progressDetails');
+        const processingInfo = document.getElementById('processingInfo');
+        const processingText = document.getElementById('processingText');
+        
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Verifica se há arquivos selecionados
+            if (!fileInput.files || fileInput.files.length === 0) {
+                alert('Por favor, selecione pelo menos um arquivo.');
+                return;
+            }
+            
+            // Mostra a barra de progresso
+            uploadProgress.style.display = 'block';
+            form.classList.add('uploading');
+            
+            // Desabilita o botão de submit
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Enviando...';
+            
+            // Calcula o tamanho total dos arquivos
+            let totalSize = 0;
+            Array.from(fileInput.files).forEach(file => {
+                totalSize += file.size;
+            });
+            
+            // Cria FormData
+            const formData = new FormData(form);
+            
+            // Configura o XMLHttpRequest para upload com progresso
+            const xhr = new XMLHttpRequest();
+            
+            // Evento de progresso
+            xhr.upload.addEventListener('progress', function(e) {
+                if (e.lengthComputable) {
+                    const percentComplete = Math.round((e.loaded / e.total) * 100);
+                    progressBar.style.width = percentComplete + '%';
+                    progressBar.textContent = percentComplete + '%';
+                    
+                    // Atualiza os detalhes
+                    const loadedMB = (e.loaded / (1024 * 1024)).toFixed(2);
+                    const totalMB = (e.total / (1024 * 1024)).toFixed(2);
+                    progressDetails.textContent = `${loadedMB} MB / ${totalMB} MB`;
+                    
+                    // Atualiza o texto de status
+                    if (percentComplete < 100) {
+                        progressText.textContent = 'Enviando arquivos...';
+                        processingInfo.style.display = 'none';
+                    } else {
+                        progressText.textContent = 'Upload concluído!';
+                        processingInfo.style.display = 'block';
+                        processingText.textContent = 'Processando arquivos no servidor...';
+                    }
                 }
             });
-        }
+            
+            // Evento de conclusão
+            xhr.addEventListener('load', function() {
+                if (xhr.status === 200) {
+                    // Sucesso - mostra mensagem de conclusão
+                    progressText.textContent = 'Upload concluído com sucesso!';
+                    progressBar.style.width = '100%';
+                    progressBar.textContent = '100%';
+                    processingInfo.style.display = 'block';
+                    processingText.innerHTML = '<i class="fas fa-check-circle me-1"></i>Capítulo criado com sucesso! Redirecionando...';
+                    
+                    // Aguarda um pouco antes de redirecionar
+                    setTimeout(() => {
+                        window.location.href = '{{ manga.get_absolute_url }}';
+                    }, 2000);
+                } else {
+                    // Erro
+                    progressText.textContent = 'Erro no upload. Tente novamente.';
+                    progressBar.classList.remove('progress-bar-animated');
+                    progressBar.style.background = '#dc3545';
+                    processingInfo.style.display = 'block';
+                    processingText.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i>Erro: ' + xhr.statusText;
+                    
+                    // Reabilita o formulário
+                    form.classList.remove('uploading');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-save me-2"></i>{% if form.instance.pk %}Atualizar{% else %}Criar{% endif %} Capítulo';
+                }
+            });
+            
+            // Evento de erro
+            xhr.addEventListener('error', function() {
+                progressText.textContent = 'Erro de conexão. Verifique sua internet.';
+                progressBar.classList.remove('progress-bar-animated');
+                progressBar.style.background = '#dc3545';
+                processingInfo.style.display = 'block';
+                processingText.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i>Erro de conexão. Verifique sua internet.';
+                
+                // Reabilita o formulário
+                form.classList.remove('uploading');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-save me-2"></i>{% if form.instance.pk %}Atualizar{% else %}Criar{% endif %} Capítulo';
+            });
+            
+            // Configura e envia a requisição
+            xhr.open('POST', form.action);
+            xhr.send(formData);
+        });
     });
 </script>
 {% endblock %}

@@ -32,9 +32,19 @@ class VolumeCreateView(LoginRequiredMixin, StaffOrSuperuserRequiredMixin, Create
             initial['manga'] = get_object_or_404(Manga, slug=manga_slug)
         return initial
     
+    def get_context_data(self, **kwargs):
+        """Adiciona o mangá ao contexto."""
+        context = super().get_context_data(**kwargs)
+        manga_slug = self.kwargs.get('manga_slug')
+        if manga_slug:
+            context['manga'] = get_object_or_404(Manga, slug=manga_slug)
+        return context
+    
     def form_valid(self, form):
         """Define o mangá e o criador do volume."""
-        form.instance.created_by = self.request.user
+        manga_slug = self.kwargs.get('manga_slug')
+        manga = get_object_or_404(Manga, slug=manga_slug)
+        form.instance.manga = manga
         response = super().form_valid(form)
         messages.success(self.request, f'Volume {self.object.number} criado com sucesso!')
         return response
@@ -57,7 +67,15 @@ class VolumeUpdateView(LoginRequiredMixin, StaffOrSuperuserRequiredMixin, Update
     
     def get_queryset(self):
         """Filtra os volumes pelo mangá relacionado."""
-        return Volume.objects.filter(manga__slug=self.kwargs['manga_slug'])
+        return Volume.objects.filter(manga__slug=self.kwargs['manga_slug']).select_related('manga')
+    
+    def get_context_data(self, **kwargs):
+        """Adiciona o mangá ao contexto."""
+        context = super().get_context_data(**kwargs)
+        manga_slug = self.kwargs.get('manga_slug')
+        if manga_slug:
+            context['manga'] = get_object_or_404(Manga, slug=manga_slug)
+        return context
     
     def form_valid(self, form):
         """Exibe mensagem de sucesso ao atualizar o volume."""
@@ -82,7 +100,7 @@ class VolumeDeleteView(LoginRequiredMixin, StaffOrSuperuserRequiredMixin, Delete
     
     def get_queryset(self):
         """Filtra os volumes pelo mangá relacionado."""
-        return Volume.objects.filter(manga__slug=self.kwargs['manga_slug'])
+        return Volume.objects.filter(manga__slug=self.kwargs['manga_slug']).select_related('manga')
     
     def delete(self, request, *args, **kwargs):
         """Exibe mensagem de sucesso ao excluir o volume."""
@@ -108,6 +126,12 @@ class VolumeDetailView(DetailView):
     
     def get_queryset(self):
         """Otimiza a consulta ao banco de dados para incluir o mangá relacionado e os capítulos."""
+        # Filtra capítulos publicados para usuários não autenticados ou sem permissões
+        if not self.request.user.is_authenticated or not self.request.user.is_staff:
+            capitulos_queryset = Capitulo.objects.filter(is_published=True).order_by('number').annotate(num_paginas=models.Count('paginas'))
+        else:
+            capitulos_queryset = Capitulo.objects.order_by('number').annotate(num_paginas=models.Count('paginas'))
+            
         return (
             Volume.objects
             .filter(manga__slug=self.kwargs['manga_slug'])
@@ -115,9 +139,7 @@ class VolumeDetailView(DetailView):
             .prefetch_related(
                 models.Prefetch(
                     'capitulos',
-                    queryset=Capitulo.objects
-                        .order_by('number')
-                        .annotate(num_paginas=models.Count('paginas'))
+                    queryset=capitulos_queryset
                 )
             )
         )
@@ -161,7 +183,6 @@ class VolumeDetailView(DetailView):
                     pagina_count=models.Count('capitulos__paginas')
                 )
                 .order_by('number')
-                .values('id', 'number', 'title', 'capitulo_count', 'pagina_count')
             )
         })
         

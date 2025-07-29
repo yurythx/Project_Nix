@@ -1,0 +1,398 @@
+{% load static %}
+{% load manga_permissions %}
+
+<div class="batch-download-section mt-4" id="batch-download-section">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="fas fa-download me-2"></i>
+                Download em Lote
+            </h5>
+            <div class="batch-actions">
+                <button class="btn btn-sm btn-outline-primary" id="refresh-batch-downloads" title="Atualizar downloads">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-secondary" id="batch-templates" title="Templates">
+                    <i class="fas fa-layer-group"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div class="card-body">
+            {% if user.is_authenticated %}
+                <!-- Formulário de Download em Lote -->
+                <div class="batch-download-form mb-4">
+                    <form id="batch-download-form" data-manga-id="{{ manga.id }}">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="batch-name" class="form-label">Nome do Lote:</label>
+                                    <input type="text" class="form-control" id="batch-name" name="name" 
+                                           placeholder="Ex: Volumes 1-5" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="batch-quality" class="form-label">Qualidade:</label>
+                                    <select class="form-select" id="batch-quality" name="quality">
+                                        <option value="original">Original (Alta Qualidade)</option>
+                                        <option value="compressed">Comprimido (Médio)</option>
+                                        <option value="web_optimized">Web (Menor Tamanho)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="start-chapter" class="form-label">Capítulo Inicial:</label>
+                                    <input type="number" class="form-control" id="start-chapter" name="start_chapter" 
+                                           min="1" placeholder="Opcional">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="end-chapter" class="form-label">Capítulo Final:</label>
+                                    <input type="number" class="form-control" id="end-chapter" name="end_chapter" 
+                                           min="1" placeholder="Opcional">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="volume-filter" class="form-label">Filtro de Volume:</label>
+                                    <input type="text" class="form-control" id="volume-filter" name="volume_filter" 
+                                           placeholder="Ex: 1-5 ou 1,3,5">
+                                    <div class="form-text">Deixe vazio para todos os volumes</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="batch-info">
+                                <small class="text-muted">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    <span id="estimated-chapters">Capítulos estimados: --</span>
+                                </small>
+                            </div>
+                            <button type="submit" class="btn btn-primary" id="create-batch-download">
+                                <i class="fas fa-download me-2"></i>
+                                Criar Download em Lote
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- Downloads em Lote Ativos -->
+                <div class="active-batch-downloads mb-4">
+                    <h6 class="mb-3">
+                        <i class="fas fa-clock me-2"></i>
+                        Downloads Ativos
+                    </h6>
+                    <div id="active-batch-downloads-list">
+                        <!-- Downloads serão carregados aqui via JavaScript -->
+                    </div>
+                </div>
+                
+                <!-- Downloads em Lote Concluídos -->
+                <div class="completed-batch-downloads">
+                    <h6 class="mb-3">
+                        <i class="fas fa-check-circle me-2"></i>
+                        Downloads Concluídos
+                    </h6>
+                    <div id="completed-batch-downloads-list">
+                        <!-- Downloads serão carregados aqui via JavaScript -->
+                    </div>
+                </div>
+                
+            {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <a href="{% url 'accounts:login' %}?next={{ request.path }}#batch-download-section">Faça login</a> 
+                    para usar downloads em lote.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Templates -->
+<div class="modal fade" id="batch-templates-modal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Templates de Download</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Meus Templates</h6>
+                        <div id="user-templates-list">
+                            <!-- Templates do usuário serão carregados aqui -->
+                        </div>
+                        <button class="btn btn-sm btn-outline-primary mt-2" id="create-template-btn">
+                            <i class="fas fa-plus me-1"></i>Criar Template
+                        </button>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Templates Públicos</h6>
+                        <div id="public-templates-list">
+                            <!-- Templates públicos serão carregados aqui -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Criar Template -->
+<div class="modal fade" id="create-template-modal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Criar Template</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="create-template-form">
+                    <div class="mb-3">
+                        <label for="template-name" class="form-label">Nome do Template:</label>
+                        <input type="text" class="form-control" id="template-name" name="name" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="template-description" class="form-label">Descrição:</label>
+                        <textarea class="form-control" id="template-description" name="description" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="template-quality" class="form-label">Qualidade:</label>
+                                <select class="form-select" id="template-quality" name="quality">
+                                    <option value="original">Original</option>
+                                    <option value="compressed">Comprimido</option>
+                                    <option value="web_optimized">Web</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="template-concurrent" class="form-label">Downloads Simultâneos:</label>
+                                <input type="number" class="form-control" id="template-concurrent" name="max_concurrent_downloads" 
+                                       min="1" max="10" value="3">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="template-volume-filter" class="form-label">Filtro de Volume Padrão:</label>
+                        <input type="text" class="form-control" id="template-volume-filter" name="default_volume_filter" 
+                               placeholder="Ex: 1-5">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="template-retry" name="retry_failed" checked>
+                            <label class="form-check-label" for="template-retry">
+                                Tentar novamente falhas
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="template-public" name="is_public">
+                            <label class="form-check-label" for="template-public">
+                                Template público
+                            </label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="save-template">Salvar Template</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Template para Download em Lote -->
+<template id="batch-download-template">
+    <div class="batch-download-item" data-batch-id="">
+        <div class="batch-header d-flex justify-content-between align-items-start">
+            <div class="batch-info">
+                <h6 class="batch-name mb-1"></h6>
+                <div class="batch-meta text-muted small">
+                    <span class="batch-progress"></span> • 
+                    <span class="batch-size"></span> • 
+                    <span class="batch-status-badge"></span>
+                </div>
+            </div>
+            <div class="batch-actions">
+                <button class="btn btn-sm btn-success download-btn" style="display: none;">
+                    <i class="fas fa-download me-1"></i>Baixar
+                </button>
+                <button class="btn btn-sm btn-warning pause-btn" style="display: none;">
+                    <i class="fas fa-pause me-1"></i>Pausar
+                </button>
+                <button class="btn btn-sm btn-info resume-btn" style="display: none;">
+                    <i class="fas fa-play me-1"></i>Retomar
+                </button>
+                <button class="btn btn-sm btn-danger cancel-btn" style="display: none;">
+                    <i class="fas fa-times me-1"></i>Cancelar
+                </button>
+                <button class="btn btn-sm btn-outline-danger delete-btn">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div class="batch-progress-bar mt-2">
+            <div class="progress" style="height: 8px;">
+                <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+            </div>
+            <small class="text-muted mt-1 d-block">
+                <span class="progress-text">0%</span> • 
+                <span class="chapters-text">0/0 capítulos</span>
+            </small>
+        </div>
+    </div>
+</template>
+
+<!-- Template para Template -->
+<template id="template-item-template">
+    <div class="template-item" data-template-id="">
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="template-info">
+                <h6 class="template-name mb-1"></h6>
+                <small class="text-muted template-description"></small>
+            </div>
+            <div class="template-actions">
+                <button class="btn btn-sm btn-primary use-template-btn">
+                    <i class="fas fa-download me-1"></i>Usar
+                </button>
+                <button class="btn btn-sm btn-outline-danger delete-template-btn" style="display: none;">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</template>
+
+<style>
+.batch-download-section {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.batch-download-form {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 20px;
+}
+
+.batch-download-item {
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    background: #fff;
+    transition: all 0.2s ease;
+}
+
+.batch-download-item:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.batch-name {
+    color: #495057;
+    font-weight: 600;
+}
+
+.batch-meta {
+    font-size: 0.8rem;
+}
+
+.batch-status-badge {
+    padding: 2px 6px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.batch-status-badge.pending {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.batch-status-badge.processing {
+    background-color: #cce7ff;
+    color: #004085;
+}
+
+.batch-status-badge.completed {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.batch-status-badge.failed {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.batch-status-badge.cancelled {
+    background-color: #e2e3e5;
+    color: #383d41;
+}
+
+.batch-status-badge.paused {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.batch-progress-bar .progress {
+    background-color: #e9ecef;
+}
+
+.batch-progress-bar .progress-bar {
+    background-color: #007bff;
+    transition: width 0.3s ease;
+}
+
+.template-item {
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 10px;
+    background: #fff;
+}
+
+.template-name {
+    color: #495057;
+    font-weight: 600;
+}
+
+.template-description {
+    font-size: 0.8rem;
+}
+
+@media (max-width: 768px) {
+    .batch-download-form .row {
+        flex-direction: column;
+    }
+    
+    .batch-header {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .batch-actions {
+        align-self: stretch;
+        justify-content: space-between;
+    }
+}
+</style> 

@@ -55,6 +55,10 @@ from apps.config.views.backup_views import (
     BackupDatabaseView, BackupMediaView, download_backup,
     DeleteBackupView, RestoreDatabaseView, RestoreMediaView
 )
+from apps.config.views.permission_dashboard_views import (
+    PermissionDashboardView, UserPermissionsView, GroupPermissionsView,
+    CacheManagementView, PermissionAnalyticsView, PermissionAPIView
+)
 
 
 app_name = 'config'
@@ -119,9 +123,17 @@ urlpatterns = [
     path('banco-dados/', DatabaseInfoView.as_view(), name='database_info'),
     path('ajax/test-database-connection/', DatabaseConnectionTestAjaxView.as_view(), name='database_connection_test'),
 
+    # Dashboard de Permissões
+    path('permissions/dashboard/', PermissionDashboardView.as_view(), name='permission_dashboard'),
+    path('permissions/users/', UserPermissionsView.as_view(), name='user_permissions'),
+    path('permissions/groups/', GroupPermissionsView.as_view(), name='group_permissions'),
+    path('permissions/cache/', CacheManagementView.as_view(), name='cache_management'),
+    path('permissions/analytics/', PermissionAnalyticsView.as_view(), name='permission_analytics'),
+    path('permissions/api/', PermissionAPIView.as_view(), name='permission_api'),
+    
     # Backup & Manutenção (TODO)
     path('backup/', SystemConfigView.as_view(), name='backup_config'),
-    path('cache/', SystemConfigView.as_view(), name='cache_management'),
+    path('cache/', SystemConfigView.as_view(), name='cache_management_old'),
     path('logs/', SystemConfigView.as_view(), name='system_logs'),
     
     # Logs de Auditoria (TODO)

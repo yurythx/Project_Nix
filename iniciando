@@ -1,2 +1,39 @@
+python -m venv meu_ambiente_virtual
+
+
+
 .\env\Scripts\activate
 
+
+pip install -r requirements.txt
+
+Ambiente Virtual
+
+        Criando ambiente virtual
+
+            -- python -m venv meu_ambiente_virtual
+
+        ativando ambiente virtual
+
+        No Windows:
+
+            .\env\Scripts\activate
+
+            -- env\Scripts\activate
+			
+			-- pip install -r requirements.txt
+
+            pip freeze > requirements.txt
+
+
+        caso de erro no windows
+
+            -- PS C:> Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+            
+        No macOS e Linux:
+
+            -- source meu_ambiente_virtual/bin/activate
+
+        Como Desativar um Ambiente Virtual
+
+            -- deactivate

@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load manga_permissions %}
 
 {% block title %}{{ capitulo.manga.title }} - {% if capitulo.volume %}Volume {{ capitulo.volume.number }} - {% endif %}Capítulo {{ capitulo.number }}{% if capitulo.title %}: {{ capitulo.title }}{% endif %} - Mangás - Project Nix{% endblock %}
 
@@ -70,10 +71,10 @@
         margin: 0 auto;
         padding: 60px 20px 20px;
         min-height: calc(100vh - 80px);
-        display: flex;
         flex-direction: column;
         justify-content: center;
         align-items: center;
+        position: relative;
     }
     
     .fullscreen-page.active {
@@ -86,6 +87,8 @@
         margin: 0 auto;
         display: block;
         object-fit: contain;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.3);
     }
     
     .fullscreen-page .page-number {
@@ -94,6 +97,17 @@
         margin-top: 10px;
         font-size: 0.9rem;
         opacity: 0.8;
+        background-color: rgba(0,0,0,0.5);
+        padding: 4px 8px;
+        border-radius: 4px;
+    }
+    
+    #fs-lazy-pages-container {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
     }
     
     .fullscreen-toggle {
@@ -153,17 +167,40 @@
             </div>
             {% if capitulo.paginas.all %}
             <div id="manga-reader" class="mb-4">
-                {% for pagina in capitulo.paginas.all %}
-                <div class="manga-page mb-4 text-center" data-page="{{ forloop.counter0 }}" style="display: {% if forloop.first %}block{% else %}none{% endif %};">
-                    <img src="{{ pagina.image.url }}" class="img-fluid rounded shadow" alt="Página {{ pagina.number }}" style="max-height: 80vh;">
-                    <div class="small text-muted mt-2">Página {{ pagina.number }}</div>
+                <div id="lazy-pages-container"></div>
+                <div class="text-center my-3 d-none" id="lazy-loading-spinner">
+                    <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Carregando...</span></div>
                 </div>
-                {% endfor %}
             </div>
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <button id="prev-page" class="btn btn-outline-primary" disabled><i class="fas fa-arrow-left"></i> Anterior</button>
                 <span id="page-indicator">1 / {{ capitulo.paginas.count }}</span>
                 <button id="next-page" class="btn btn-outline-primary">Próxima <i class="fas fa-arrow-right"></i></button>
+            </div>
+            
+            <!-- Navegação entre capítulos -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                {% if capitulo_anterior %}
+                <a href="{% url 'mangas:capitulo_detail' manga_slug=capitulo.manga.slug capitulo_slug=capitulo_anterior.slug %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-chevron-left"></i> Capítulo Anterior
+                </a>
+                {% else %}
+                <div></div>
+                {% endif %}
+                
+                <div class="text-center">
+                    <small class="text-muted">
+                        <i class="fas fa-keyboard"></i> Use as setas do teclado para navegar
+                    </small>
+                </div>
+                
+                {% if proximo_capitulo %}
+                <a href="{% url 'mangas:capitulo_detail' manga_slug=capitulo.manga.slug capitulo_slug=proximo_capitulo.slug %}" class="btn btn-outline-secondary">
+                    Próximo Capítulo <i class="fas fa-chevron-right"></i>
+                </a>
+                {% else %}
+                <div></div>
+                {% endif %}
             </div>
             {% else %}
             <div class="alert alert-info">Nenhuma página cadastrada para este capítulo.</div>
@@ -193,7 +230,7 @@
                     {% endif %}
                 </div>
                 
-                {% if user.is_authenticated and user.is_staff %}
+                {% if user|has_manga_permission %}
                 <div class="d-flex gap-2 ms-auto">
                     <a href="{% url 'mangas:capitulo_edit' manga_slug=capitulo.manga.slug capitulo_slug=capitulo.slug %}" class="btn btn-outline-warning btn-sm">
                         <i class="fas fa-edit"></i> Editar
@@ -256,218 +293,433 @@
             <i class="fas fa-times"></i>
         </button>
     </div>
-    
     <div id="fullscreen-reader">
-        {% for pagina in capitulo.paginas.all %}
-        <div class="fullscreen-page" data-page="{{ forloop.counter0 }}">
-            <img src="{{ pagina.image.url }}" alt="Página {{ pagina.number }}">
-            <div class="page-number">Página {{ pagina.number }}</div>
+        <div id="fs-lazy-pages-container"></div>
+        <div class="text-center my-3 d-none" id="fs-lazy-loading-spinner">
+            <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Carregando...</span></div>
         </div>
-        {% endfor %}
     </div>
 </div>
 
 {% if capitulo.paginas.count > 0 %}
-<script src="{% static 'js/manga-viewer.js' %}"></script>
-<script src="{% static 'js/manga-fullscreen.js' %}"></script>
 <script>
-// Inicializa quando o DOM estiver pronto
-document.addEventListener('DOMContentLoaded', function() {
-    // Inicializa o visualizador normal
-    if (window.initMangaViewer) {
-        window.initMangaViewer({
-            total: {{ capitulo.paginas.count }}
-        });
-    }
+const mangaSlug = "{{ capitulo.manga.slug }}";
+const capituloSlug = "{{ capitulo.slug }}";
+const totalPages = {{ capitulo.paginas.count }};
+const perPage = 10;
+let currentPage = 1;
+let loadedPages = [];
+let currentIndex = 0;
 
-    // Inicializa o visualizador em tela cheia
-    if (typeof MangaFullscreenViewer !== 'undefined') {
-        const fullscreenViewer = new MangaFullscreenViewer({
-            totalPages: {{ capitulo.paginas.count }},
-            startPage: 0
+// URLs de navegação
+{% if capitulo_anterior %}
+const capituloAnteriorUrl = "{% url 'mangas:capitulo_detail' manga_slug=capitulo.manga.slug capitulo_slug=capitulo_anterior.slug %}";
+{% else %}
+const capituloAnteriorUrl = null;
+{% endif %}
+{% if proximo_capitulo %}
+const proximoCapituloUrl = "{% url 'mangas:capitulo_detail' manga_slug=capitulo.manga.slug capitulo_slug=proximo_capitulo.slug %}";
+{% else %}
+const proximoCapituloUrl = null;
+{% endif %}
+
+function renderPages(pages) {
+    const container = document.getElementById('lazy-pages-container');
+    container.innerHTML = '';
+    pages.forEach((p, idx) => {
+        const div = document.createElement('div');
+        div.className = 'manga-page mb-4 text-center';
+        div.setAttribute('data-page', idx);
+        div.style.display = idx === currentIndex ? 'block' : 'none';
+        div.innerHTML = `<img src="${p.url}" class="img-fluid rounded shadow" alt="Página ${p.number}" style="max-height: 80vh;">
+            <div class="small text-muted mt-2">Página ${p.number}</div>`;
+        container.appendChild(div);
+    });
+}
+
+function updatePageIndicator() {
+    document.getElementById('page-indicator').textContent = (currentIndex+1) + ' / ' + totalPages;
+}
+
+function showSpinner(show) {
+    document.getElementById('lazy-loading-spinner').classList.toggle('d-none', !show);
+}
+
+function loadPages(pageNum, cb) {
+    showSpinner(true);
+    fetch(`/mangas/${mangaSlug}/capitulo/${capituloSlug}/paginas-lazy/?page=${pageNum}&per_page=${perPage}`)
+        .then(r => r.json())
+        .then(data => {
+            loadedPages = data.pages;
+            currentIndex = 0;
+            renderPages(loadedPages);
+            updatePageIndicator();
+            showSpinner(false);
+            if (cb) cb(data);
         });
-        
-        // Expõe o visualizador para acesso global (opcional)
-        window.mangaFullscreenViewer = fullscreenViewer;
-        
-        // Configura o botão de alternar tela cheia
-        const fsToggle = document.getElementById('fullscreen-toggle');
-        if (fsToggle) {
-            fsToggle.addEventListener('click', function(e) {
-                e.preventDefault();
-                fullscreenViewer.open();
+}
+
+// Navegação com teclado
+function handleKeyDown(e) {
+    // Só processa se não estiver em um campo de input
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+        return;
+    }
+    
+    switch (e.key) {
+        case 'ArrowLeft':
+            e.preventDefault();
+            navigateToPreviousPage();
+            break;
+        case 'ArrowRight':
+        case ' ':
+            e.preventDefault();
+            navigateToNextPage();
+            break;
+        case 'ArrowUp':
+        case 'PageUp':
+            e.preventDefault();
+            navigateToPreviousPage();
+            break;
+        case 'ArrowDown':
+        case 'PageDown':
+        case 'Enter':
+            e.preventDefault();
+            navigateToNextPage();
+            break;
+        case 'Home':
+            e.preventDefault();
+            goToFirstPage();
+            break;
+        case 'End':
+            e.preventDefault();
+            goToLastPage();
+            break;
+        case 'f':
+        case 'F':
+            e.preventDefault();
+            toggleFullscreen();
+            break;
+    }
+}
+
+function navigateToPreviousPage() {
+    const prevBtn = document.getElementById('prev-page');
+    if (!prevBtn.disabled) {
+        prevBtn.click();
+    } else if (capituloAnteriorUrl) {
+        // Se não há página anterior, vai para o capítulo anterior
+        window.location.href = capituloAnteriorUrl;
+    }
+}
+
+function navigateToNextPage() {
+    const nextBtn = document.getElementById('next-page');
+    if (!nextBtn.disabled) {
+        nextBtn.click();
+    } else if (proximoCapituloUrl) {
+        // Se não há próxima página, vai para o próximo capítulo
+        window.location.href = proximoCapituloUrl;
+    }
+}
+
+function goToFirstPage() {
+    if (currentIndex > 0) {
+        currentIndex = 0;
+        renderPages(loadedPages);
+        updatePageIndicator();
+        updateNavigationButtons();
+    }
+}
+
+function goToLastPage() {
+    if (currentIndex < loadedPages.length - 1) {
+        currentIndex = loadedPages.length - 1;
+        renderPages(loadedPages);
+        updatePageIndicator();
+        updateNavigationButtons();
+    }
+}
+
+function updateNavigationButtons() {
+    const prevBtn = document.getElementById('prev-page');
+    const nextBtn = document.getElementById('next-page');
+    
+    prevBtn.disabled = currentIndex === 0 && currentPage === 1;
+    nextBtn.disabled = currentIndex === loadedPages.length - 1 && !hasMorePages();
+}
+
+function hasMorePages() {
+    return currentPage * perPage < totalPages;
+}
+
+function toggleFullscreen() {
+    const fullscreenToggle = document.getElementById('fullscreen-toggle');
+    if (fullscreenToggle) {
+        fullscreenToggle.click();
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadPages(currentPage);
+    
+    // Adiciona listener para teclado
+    document.addEventListener('keydown', handleKeyDown);
+    
+    document.getElementById('prev-page').addEventListener('click', function() {
+        if (currentIndex > 0) {
+            document.querySelectorAll('.manga-page')[currentIndex].style.display = 'none';
+            currentIndex--;
+            document.querySelectorAll('.manga-page')[currentIndex].style.display = 'block';
+            updatePageIndicator();
+            updateNavigationButtons();
+        } else if (currentPage > 1) {
+            currentPage--;
+            loadPages(currentPage, function() {
+                updateNavigationButtons();
             });
         }
+    });
+    
+    document.getElementById('next-page').addEventListener('click', function() {
+        if (currentIndex < loadedPages.length - 1) {
+            document.querySelectorAll('.manga-page')[currentIndex].style.display = 'none';
+            currentIndex++;
+            document.querySelectorAll('.manga-page')[currentIndex].style.display = 'block';
+            updatePageIndicator();
+            updateNavigationButtons();
+        } else {
+            // Carregar próximo lote se houver
+            fetch(`/mangas/${mangaSlug}/capitulo/${capituloSlug}/paginas-lazy/?page=${currentPage+1}&per_page=${perPage}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.pages.length > 0) {
+                        currentPage++;
+                        loadedPages = data.pages;
+                        currentIndex = 0;
+                        renderPages(loadedPages);
+                        updatePageIndicator();
+                        updateNavigationButtons();
+                    } else {
+                        // Se não há mais páginas, vai para o próximo capítulo
+                        if (proximoCapituloUrl) {
+                            window.location.href = proximoCapituloUrl;
+                        }
+                    }
+                });
+        }
+    });
+    
+    // Adiciona tooltip com atalhos de teclado
+    const reader = document.getElementById('manga-reader');
+    if (reader) {
+        reader.title = 'Use as setas do teclado para navegar. F para tela cheia.';
     }
 });
-</script>
+
+// Implementação do modo tela cheia
+let fullscreenActive = false;
+let hideControlsTimeout = null;
+
+function renderFullscreenPages(pages) {
+    const container = document.getElementById('fs-lazy-pages-container');
+    if (!container) return;
     
-    // Mostra os controles do modo tela cheia
-    function showFsControls() {
-        if (fsControls) {
-            fsControls.style.display = 'flex';
-            // Esconde os controles após 3 segundos de inatividade
-            clearTimeout(hideControlsTimeout);
-            hideControlsTimeout = setTimeout(hideFsControls, 3000);
-        }
-    }
+    container.innerHTML = '';
+    pages.forEach((p, idx) => {
+        const div = document.createElement('div');
+        div.className = 'fullscreen-page';
+        div.setAttribute('data-page', idx);
+        div.style.display = idx === currentIndex ? 'flex' : 'none';
+        div.innerHTML = `
+            <img src="${p.url}" alt="Página ${p.number}" style="max-width: 100%; max-height: 100vh; object-fit: contain;">
+            <div class="page-number">Página ${p.number}</div>
+        `;
+        container.appendChild(div);
+    });
+}
+
+function initFullscreen() {
+    const fsContainer = document.getElementById('fullscreen-container');
+    const fsToggle = document.getElementById('fullscreen-toggle');
+    const fsClose = document.getElementById('fs-close');
+    const fsPrev = document.getElementById('fs-prev-page');
+    const fsNext = document.getElementById('fs-next-page');
+    const fsPageIndicator = document.getElementById('fs-page-indicator');
     
-    // Esconde os controles do modo tela cheia
-    function hideFsControls() {
-        if (fsControls) {
-            fsControls.style.display = 'none';
-        }
-    }
+    if (!fsContainer || !fsToggle) return;
     
-    // Atualiza a página atual no modo tela cheia
-    function updateFsPage(index) {
-        if (index >= 0 && index < totalPages) {
-            currentFsPage = index;
-            fsPages.forEach((page, i) => {
-                if (i === index) {
-                    page.classList.add('active');
-                } else {
-                    page.classList.remove('active');
-                }
-            });
-            
-            // Atualiza o indicador de página
-            fsPageIndicator.textContent = (index + 1) + ' / ' + totalPages;
-            
-            // Atualiza o estado dos botões de navegação
-            fsPrevBtn.disabled = index === 0;
-            fsNextBtn.disabled = index === totalPages - 1;
-            
-            // Rola para a página atual
-            fsPages[index].scrollIntoView({ behavior: 'smooth', block: 'center' });
-            
-            // Mostra os controles ao mudar de página
-            showFsControls();
-        }
-    }
+    // Abrir modo tela cheia
+    fsToggle.addEventListener('click', function() {
+        openFullscreen();
+    });
     
-    // Navega para a página anterior no modo tela cheia
-    function prevFsPage() {
-        if (currentFsPage > 0) {
-            updateFsPage(currentFsPage - 1);
-        }
-    }
-    
-    // Navega para a próxima página no modo tela cheia
-    function nextFsPage() {
-        if (currentFsPage < totalPages - 1) {
-            updateFsPage(currentFsPage + 1);
-        }
-    }
-    
-    // Inicializa o modo tela cheia
-    if (fsToggle && fsContainer && fsReader) {
-        // Evento para abrir o modo tela cheia
-        fsToggle.addEventListener('click', function() {
-            // Ativa o container de tela cheia
-            fsContainer.style.display = 'block';
-            document.body.style.overflow = 'hidden';
-            
-            // Sincroniza com a página atual do visualizador normal
-            const currentPage = document.querySelector('.manga-page[style*="display: block"]');
-            if (currentPage) {
-                const pageIndex = parseInt(currentPage.getAttribute('data-page'));
-                updateFsPage(pageIndex);
-            } else {
-                updateFsPage(0);
-            }
-            
-            // Mostra os controles
-            showFsControls();
-            
-            // Adiciona evento para fechar com a tecla ESC
-            document.addEventListener('keydown', handleKeyDown);
+    // Fechar modo tela cheia
+    if (fsClose) {
+        fsClose.addEventListener('click', function() {
+            closeFullscreen();
         });
+    }
+    
+    // Navegação no modo tela cheia
+    if (fsPrev) {
+        fsPrev.addEventListener('click', function() {
+            if (fullscreenActive) {
+                navigateToPreviousPage();
+            }
+        });
+    }
+    
+    if (fsNext) {
+        fsNext.addEventListener('click', function() {
+            if (fullscreenActive) {
+                navigateToNextPage();
+            }
+        });
+    }
+    
+    function openFullscreen() {
+        fsContainer.style.display = 'block';
+        document.body.style.overflow = 'hidden';
+        fullscreenActive = true;
         
-        // Fecha o modo tela cheia
-        function closeFullscreen() {
-            fsContainer.style.display = 'none';
-            document.body.style.overflow = '';
-            document.removeEventListener('keydown', handleKeyDown);
+        // Renderiza as páginas no modo tela cheia
+        if (loadedPages.length > 0) {
+            renderFullscreenPages(loadedPages);
+        }
+        
+        // Sincroniza com a página atual
+        updateFullscreenPage();
+        showFullscreenControls();
+        
+        // Adiciona listener específico para tela cheia
+        document.addEventListener('keydown', handleFullscreenKeyDown);
+    }
+    
+    function closeFullscreen() {
+        fsContainer.style.display = 'none';
+        document.body.style.overflow = '';
+        fullscreenActive = false;
+        
+        if (hideControlsTimeout) {
             clearTimeout(hideControlsTimeout);
         }
         
-        // Manipulador de teclado para o modo tela cheia
-        function handleKeyDown(e) {
-            if (e.key === 'Escape') {
+        document.removeEventListener('keydown', handleFullscreenKeyDown);
+    }
+    
+    function handleFullscreenKeyDown(e) {
+        if (!fullscreenActive) return;
+        
+        switch (e.key) {
+            case 'Escape':
                 closeFullscreen();
-            } else if (e.key === 'ArrowLeft') {
-                prevFsPage();
-            } else if (e.key === 'ArrowRight') {
-                nextFsPage();
-            }
+                break;
+            case 'ArrowLeft':
+                e.preventDefault();
+                navigateToPreviousPage();
+                break;
+            case 'ArrowRight':
+            case ' ':
+                e.preventDefault();
+                navigateToNextPage();
+                break;
+        }
+    }
+    
+    function updateFullscreenPage() {
+        if (fsPageIndicator) {
+            fsPageIndicator.textContent = (currentIndex + 1) + ' / ' + totalPages;
         }
         
-        // Eventos de clique nos controles
-        if (fsPrevBtn) fsPrevBtn.addEventListener('click', prevFsPage);
-        if (fsNextBtn) fsNextBtn.addEventListener('click', nextFsPage);
-        if (fsCloseBtn) fsCloseBtn.addEventListener('click', closeFullscreen);
-        
-        // Eventos de toque/arrastar para navegação
-        let touchStartX = 0;
-        let touchEndX = 0;
-        
-        fsReader.addEventListener('touchstart', function(e) {
-            touchStartX = e.changedTouches[0].screenX;
-            showFsControls();
-        }, false);
-        
-        fsReader.addEventListener('touchend', function(e) {
-            touchEndX = e.changedTouches[0].screenX;
-            handleSwipe();
-        }, false);
-        
-        function handleSwipe() {
-            const diff = touchStartX - touchEndX;
-            const swipeThreshold = 50; // Mínimo de pixels para considerar um swipe
-            
-            if (diff > swipeThreshold) {
-                // Swipe para a esquerda - próxima página
-                nextFsPage();
-            } else if (diff < -swipeThreshold) {
-                // Swipe para a direita - página anterior
-                prevFsPage();
-            }
+        // Atualiza os botões
+        if (fsPrev) {
+            fsPrev.disabled = currentIndex === 0 && currentPage === 1;
+        }
+        if (fsNext) {
+            fsNext.disabled = currentIndex === loadedPages.length - 1 && !hasMorePages();
         }
         
-        // Mostra/oculta controles ao mover o mouse
-        fsContainer.addEventListener('mousemove', function() {
-            showFsControls();
-        });
-        
-        // Esconde controles após um tempo sem movimento do mouse
-        fsContainer.addEventListener('mousemove', function(e) {
-            clearTimeout(hideControlsTimeout);
-            showFsControls();
-        });
-        
-        // Clique na página para navegar
-        fsReader.addEventListener('click', function(e) {
-            const rect = fsReader.getBoundingClientRect();
-            const clickX = e.clientX - rect.left;
-            const third = rect.width / 3;
+        // Atualiza a exibição das páginas no modo tela cheia
+        if (fullscreenActive && loadedPages.length > 0) {
+            const fsPages = document.querySelectorAll('.fullscreen-page');
+            fsPages.forEach((page, idx) => {
+                page.style.display = idx === currentIndex ? 'flex' : 'none';
+            });
+        }
+    }
+    
+    function showFullscreenControls() {
+        const controls = document.querySelector('.fullscreen-controls');
+        if (controls) {
+            controls.style.display = 'flex';
             
-            if (clickX < third) {
-                // Clique no terço esquerdo - página anterior
-                prevFsPage();
-            } else if (clickX > third * 2) {
-                // Clique no terço direito - próxima página
-                nextFsPage();
-            } else {
-                // Clique no meio - mostra/oculta controles
-                if (fsControls.style.display === 'flex') {
-                    hideFsControls();
+            if (hideControlsTimeout) {
+                clearTimeout(hideControlsTimeout);
+            }
+            
+            hideControlsTimeout = setTimeout(() => {
+                if (controls && fullscreenActive) {
+                    controls.style.display = 'none';
+                }
+            }, 3000);
+        }
+    }
+    
+    // Mostra controles ao mover o mouse
+    fsContainer.addEventListener('mousemove', function() {
+        if (fullscreenActive) {
+            showFullscreenControls();
+        }
+    });
+    
+    // Clique na área para navegar
+    fsContainer.addEventListener('click', function(e) {
+        if (!fullscreenActive) return;
+        
+        const rect = fsContainer.getBoundingClientRect();
+        const clickX = e.clientX - rect.left;
+        const third = rect.width / 3;
+        
+        if (clickX < third) {
+            navigateToPreviousPage();
+        } else if (clickX > third * 2) {
+            navigateToNextPage();
+        } else {
+            // Clique no meio - mostra/oculta controles
+            const controls = document.querySelector('.fullscreen-controls');
+            if (controls) {
+                if (controls.style.display === 'flex') {
+                    controls.style.display = 'none';
                 } else {
-                    showFsControls();
+                    showFullscreenControls();
                 }
             }
-        });
-    }
+        }
+    });
+    
+    // Atualiza a função para sincronizar com o modo tela cheia
+    const originalUpdatePageIndicator = updatePageIndicator;
+    updatePageIndicator = function() {
+        originalUpdatePageIndicator();
+        if (fullscreenActive) {
+            updateFullscreenPage();
+        }
+    };
+    
+    // Atualiza a função renderPages para também renderizar no modo tela cheia
+    const originalRenderPages = renderPages;
+    renderPages = function(pages) {
+        originalRenderPages(pages);
+        if (fullscreenActive) {
+            renderFullscreenPages(pages);
+        }
+    };
+}
+
+// Inicializa o modo tela cheia
+document.addEventListener('DOMContentLoaded', function() {
+    initFullscreen();
 });
 </script>
 {% endif %}

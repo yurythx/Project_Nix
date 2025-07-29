@@ -42,7 +42,7 @@ try:
 except ImportError:
     AudiobookService = None
 try:
-    from apps.mangas.services.manga_service import MangaService
+    from apps.mangas.services.manga_service_simple import SimpleMangaService as MangaService
 except ImportError:
     MangaService = None
 

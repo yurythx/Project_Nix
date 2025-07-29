@@ -1,1 +1,1 @@
-# Pacote de testes do app mangas 
+# Testes para o app mangas 

@@ -1,0 +1,318 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Gerenciar Usuários - Project Nix{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h2 mb-0">
+                <i class="fas fa-users text-primary"></i>
+                Gerenciar Usuários
+            </h1>
+            <p class="text-muted">Visualize e gerencie permissões de usuários</p>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-4">
+                            <input type="text" name="search" class="form-control" 
+                                   placeholder="Buscar por nome, email..." 
+                                   value="{{ request.GET.search }}">
+                        </div>
+                        <div class="col-md-3">
+                            <select name="status" class="form-select">
+                                <option value="">Todos os status</option>
+                                <option value="active" {% if request.GET.status == 'active' %}selected{% endif %}>Ativos</option>
+                                <option value="inactive" {% if request.GET.status == 'inactive' %}selected{% endif %}>Inativos</option>
+                                <option value="staff" {% if request.GET.status == 'staff' %}selected{% endif %}>Staff</option>
+                                <option value="superuser" {% if request.GET.status == 'superuser' %}selected{% endif %}>Superusuários</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <select name="order_by" class="form-select">
+                                <option value="-date_joined" {% if request.GET.order_by == '-date_joined' %}selected{% endif %}>Mais recentes</option>
+                                <option value="date_joined" {% if request.GET.order_by == 'date_joined' %}selected{% endif %}>Mais antigos</option>
+                                <option value="username" {% if request.GET.order_by == 'username' %}selected{% endif %}>Nome de usuário</option>
+                                <option value="email" {% if request.GET.order_by == 'email' %}selected{% endif %}>Email</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-search"></i> Filtrar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estatísticas -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">{{ total_users }}</h4>
+                            <small>Total de Usuários</small>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-users fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">{{ active_users }}</h4>
+                            <small>Usuários Ativos</small>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-user-check fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">{{ staff_users }}</h4>
+                            <small>Staff</small>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-user-shield fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">{{ superusers }}</h4>
+                            <small>Superusuários</small>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-crown fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de Usuários -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Lista de Usuários</h5>
+                </div>
+                <div class="card-body">
+                    {% if users %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Usuário</th>
+                                        <th>Email</th>
+                                        <th>Status</th>
+                                        <th>Grupos</th>
+                                        <th>Data de Registro</th>
+                                        <th>Último Login</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for user in users %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                {% if user.avatar %}
+                                                    <img src="{{ user.avatar.url }}" class="rounded-circle me-2" width="32" height="32">
+                                                {% else %}
+                                                    <div class="bg-secondary rounded-circle me-2 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                                        <i class="fas fa-user text-white"></i>
+                                                    </div>
+                                                {% endif %}
+                                                <div>
+                                                    <strong>{{ user.username }}</strong>
+                                                    {% if user.is_superuser %}
+                                                        <span class="badge bg-danger ms-1">Super</span>
+                                                    {% elif user.is_staff %}
+                                                        <span class="badge bg-warning ms-1">Staff</span>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>{{ user.email }}</td>
+                                        <td>
+                                            {% if user.is_active %}
+                                                <span class="badge bg-success">Ativo</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">Inativo</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% for group in user.groups.all %}
+                                                <span class="badge bg-info me-1">{{ group.name }}</span>
+                                            {% empty %}
+                                                <span class="text-muted">Nenhum grupo</span>
+                                            {% endfor %}
+                                        </td>
+                                        <td>{{ user.date_joined|date:"d/m/Y H:i" }}</td>
+                                        <td>
+                                            {% if user.last_login %}
+                                                {{ user.last_login|date:"d/m/Y H:i" }}
+                                            {% else %}
+                                                <span class="text-muted">Nunca</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <button type="button" class="btn btn-sm btn-outline-primary" 
+                                                        data-bs-toggle="modal" data-bs-target="#userModal{{ user.id }}">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                                <a href="{% url 'config:user_update' user.slug %}" 
+                                                   class="btn btn-sm btn-outline-warning">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Paginação -->
+                        {% if is_paginated %}
+                        <nav aria-label="Paginação de usuários">
+                            <ul class="pagination justify-content-center">
+                                {% if page_obj.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page=1{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.order_by %}&order_by={{ request.GET.order_by }}{% endif %}">
+                                            <i class="fas fa-angle-double-left"></i>
+                                        </a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.order_by %}&order_by={{ request.GET.order_by }}{% endif %}">
+                                            <i class="fas fa-angle-left"></i>
+                                        </a>
+                                    </li>
+                                {% endif %}
+
+                                <li class="page-item active">
+                                    <span class="page-link">
+                                        Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+                                    </span>
+                                </li>
+
+                                {% if page_obj.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.order_by %}&order_by={{ request.GET.order_by }}{% endif %}">
+                                            <i class="fas fa-angle-right"></i>
+                                        </a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.order_by %}&order_by={{ request.GET.order_by }}{% endif %}">
+                                            <i class="fas fa-angle-double-right"></i>
+                                        </a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">Nenhum usuário encontrado</h5>
+                            <p class="text-muted">Tente ajustar os filtros de busca.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modais para detalhes dos usuários -->
+{% for user in users %}
+<div class="modal fade" id="userModal{{ user.id }}" tabindex="-1" aria-labelledby="userModalLabel{{ user.id }}" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="userModalLabel{{ user.id }}">
+                    Detalhes do Usuário: {{ user.username }}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Informações Básicas</h6>
+                        <ul class="list-unstyled">
+                            <li><strong>Nome:</strong> {{ user.get_full_name|default:"Não informado" }}</li>
+                            <li><strong>Email:</strong> {{ user.email }}</li>
+                            <li><strong>Data de Registro:</strong> {{ user.date_joined|date:"d/m/Y H:i" }}</li>
+                            <li><strong>Último Login:</strong> 
+                                {% if user.last_login %}
+                                    {{ user.last_login|date:"d/m/Y H:i" }}
+                                {% else %}
+                                    Nunca
+                                {% endif %}
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Permissões</h6>
+                        <ul class="list-unstyled">
+                            <li><strong>Superusuário:</strong> 
+                                {% if user.is_superuser %}Sim{% else %}Não{% endif %}
+                            </li>
+                            <li><strong>Staff:</strong> 
+                                {% if user.is_staff %}Sim{% else %}Não{% endif %}
+                            </li>
+                            <li><strong>Ativo:</strong> 
+                                {% if user.is_active %}Sim{% else %}Não{% endif %}
+                            </li>
+                            <li><strong>Grupos:</strong>
+                                {% for group in user.groups.all %}
+                                    <span class="badge bg-info me-1">{{ group.name }}</span>
+                                {% empty %}
+                                    <span class="text-muted">Nenhum grupo</span>
+                                {% endfor %}
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                <a href="{% url 'config:user_update' user.slug %}" class="btn btn-primary">
+                    <i class="fas fa-edit"></i> Editar Usuário
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endblock %} 

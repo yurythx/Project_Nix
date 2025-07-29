@@ -5,6 +5,7 @@ from apps.mangas.views.manga_views import (
     PaginaCreateView, PaginaUpdateView, PaginaDeleteView
 )
 from apps.mangas.views.volume_views import VolumeCreateView, VolumeUpdateView, VolumeDeleteView, VolumeDetailView
+from apps.mangas.views.capitulo_views import capitulo_paginas_lazy
 
 app_name = 'mangas'
 
@@ -15,6 +16,12 @@ urlpatterns = [
     path('<slug:slug>/', MangaDetailView.as_view(), name='manga_detail'),
     path('<slug:slug>/editar/', MangaUpdateView.as_view(), name='manga_edit'),
     path('<slug:slug>/deletar/', MangaDeleteView.as_view(), name='manga_delete'),
+
+    # Volume
+    path('<slug:manga_slug>/volume/novo/', VolumeCreateView.as_view(), name='volume_create'),
+    path('<slug:manga_slug>/volume/<slug:volume_slug>/', VolumeDetailView.as_view(), name='volume_detail'),
+    path('<slug:manga_slug>/volume/<slug:volume_slug>/editar/', VolumeUpdateView.as_view(), name='volume_edit'),
+    path('<slug:manga_slug>/volume/<slug:volume_slug>/deletar/', VolumeDeleteView.as_view(), name='volume_delete'),
 
     # Capítulo
     path('<slug:manga_slug>/capitulo/novo/', CapituloCreateView.as_view(), name='capitulo_create'),
@@ -27,10 +34,5 @@ urlpatterns = [
     path('<slug:manga_slug>/capitulo/<slug:capitulo_slug>/pagina/novo/', PaginaCreateView.as_view(), name='pagina_create'),
     path('<slug:manga_slug>/capitulo/<slug:capitulo_slug>/pagina/<int:pk>/editar/', PaginaUpdateView.as_view(), name='pagina_edit'),
     path('<slug:manga_slug>/capitulo/<slug:capitulo_slug>/pagina/<int:pk>/deletar/', PaginaDeleteView.as_view(), name='pagina_delete'),
-    
-    # Volume
-    path('<slug:manga_slug>/volume/novo/', VolumeCreateView.as_view(), name='volume_create'),
-    path('<slug:manga_slug>/volume/<slug:volume_slug>/', VolumeDetailView.as_view(), name='volume_detail'),
-    path('<slug:manga_slug>/volume/<slug:volume_slug>/editar/', VolumeUpdateView.as_view(), name='volume_edit'),
-    path('<slug:manga_slug>/volume/<slug:volume_slug>/deletar/', VolumeDeleteView.as_view(), name='volume_delete'),
+    path('<slug:manga_slug>/capitulo/<slug:capitulo_slug>/paginas-lazy/', capitulo_paginas_lazy, name='capitulo_paginas_lazy'),
 ]

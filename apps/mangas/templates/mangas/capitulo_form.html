@@ -135,6 +135,12 @@
                                        multiple>
                                 <div class="file-info" id="fileInfo">Nenhum arquivo selecionado</div>
                                 <div class="file-preview" id="filePreview"></div>
+                                <!-- Barra de progresso -->
+                                <div class="progress mt-3" style="height: 22px; display: none;" id="uploadProgressBarContainer">
+                                    <div class="progress-bar progress-bar-striped progress-bar-animated" id="uploadProgressBar" role="progressbar" style="width: 0%">0%</div>
+                                </div>
+                                <div class="alert alert-danger mt-2 d-none" id="uploadError"></div>
+                                <div class="alert alert-warning mt-2 d-none" id="uploadWarning"></div>
                                 {% if form.arquivo_capitulo.help_text %}
                                     <div class="form-text">{{ form.arquivo_capitulo.help_text }}</div>
                                 {% endif %}
@@ -169,7 +175,15 @@
         const fileInput = document.querySelector('input[type="file"]');
         const fileInfo = document.getElementById('fileInfo');
         const filePreview = document.getElementById('filePreview');
-        
+        const form = document.getElementById('chapterForm');
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const progressBarContainer = document.getElementById('uploadProgressBarContainer');
+        const progressBar = document.getElementById('uploadProgressBar');
+        const uploadError = document.getElementById('uploadError');
+        const uploadWarning = document.getElementById('uploadWarning');
+        const MAX_PAGES = {{ MAX_PAGES_PER_CHAPTER|default:200 }};
+        const ALLOWED_EXTS = ['.zip','.rar','.cbz','.cbr','.7z','.tar','.tar.gz','.tar.bz2','.tar.xz','.cb7','.cbt','.cba','.jpg','.jpeg','.png','.webp','.gif','.bmp','.tiff','.tif'];
+
         // Estilizar o input de arquivo para ficar invisível
         fileInput.style.display = 'none';
         
@@ -221,16 +235,27 @@
         
         // Processar os arquivos selecionados
         function handleFiles(files) {
+            uploadError.classList.add('d-none');
+            uploadWarning.classList.add('d-none');
             // Atualizar o input de arquivo para refletir os arquivos selecionados
             const dataTransfer = new DataTransfer();
-            
             // Limpar a visualização anterior
             filePreview.innerHTML = '';
-            
+            let invalid = Array.from(files).filter(f => !ALLOWED_EXTS.some(ext => f.name.toLowerCase().endsWith(ext)));
+            if (invalid.length > 0) {
+                uploadError.textContent = 'Alguns arquivos possuem extensão não permitida: ' + invalid.map(f => f.name).join(', ');
+                uploadError.classList.remove('d-none');
+                fileInput.value = '';
+                fileInfo.textContent = 'Nenhum arquivo selecionado';
+                return;
+            }
+            if (files.length > MAX_PAGES) {
+                uploadWarning.textContent = `Você selecionou ${files.length} arquivos. O limite por capítulo é ${MAX_PAGES}. Apenas os primeiros ${MAX_PAGES} serão enviados.`;
+                uploadWarning.classList.remove('d-none');
+            }
             // Adicionar cada arquivo ao DataTransfer e à visualização
             Array.from(files).forEach(file => {
                 dataTransfer.items.add(file);
-                
                 // Adicionar à visualização
                 const fileItem = document.createElement('div');
                 fileItem.className = 'file-item';
@@ -240,10 +265,8 @@
                 `;
                 filePreview.appendChild(fileItem);
             });
-            
             // Atualizar o input de arquivo
             fileInput.files = dataTransfer.files;
-            
             // Atualizar informações do arquivo
             if (files.length > 0) {
                 fileInfo.textContent = `${files.length} arquivo(s) selecionado(s)`;
@@ -251,7 +274,6 @@
                 fileInfo.textContent = 'Nenhum arquivo selecionado';
             }
         }
-        
         // Função auxiliar para formatar o tamanho do arquivo
         function formatFileSize(bytes) {
             if (bytes === 0) return '0 Bytes';
@@ -260,6 +282,47 @@
             const i = Math.floor(Math.log(bytes) / Math.log(k));
             return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
         }
+        // Barra de progresso real no submit
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            uploadError.classList.add('d-none');
+            progressBarContainer.style.display = 'block';
+            progressBar.style.width = '0%';
+            progressBar.textContent = '0%';
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Enviando...';
+            let formData = new FormData(form);
+            let xhr = new XMLHttpRequest();
+            xhr.open('POST', window.location.href, true);
+            xhr.upload.onprogress = function(e) {
+                if (e.lengthComputable) {
+                    let percent = Math.round((e.loaded / e.total) * 100);
+                    progressBar.style.width = percent + '%';
+                    progressBar.textContent = percent + '%';
+                }
+            };
+            xhr.onload = function() {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    progressBar.style.width = '100%';
+                    progressBar.textContent = '100%';
+                    window.location.reload();
+                } else {
+                    uploadError.textContent = 'Erro ao enviar arquivo: ' + xhr.statusText;
+                    uploadError.classList.remove('d-none');
+                    progressBarContainer.style.display = 'none';
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-save me-1"></i> Salvar Capítulo';
+                }
+            };
+            xhr.onerror = function() {
+                uploadError.textContent = 'Erro de conexão durante o upload.';
+                uploadError.classList.remove('d-none');
+                progressBarContainer.style.display = 'none';
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-save me-1"></i> Salvar Capítulo';
+            };
+            xhr.send(formData);
+        });
     });
 </script>
 {% endblock %}
