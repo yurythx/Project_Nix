@@ -38,7 +38,7 @@ class DjangoMangaRepository(IMangaRepository):
             Manga encontrado ou None
         """
         try:
-            return Manga.objects.select_related('created_by').get(
+            return Manga.objects.select_related('criado_por').get(
                 slug=slug,
                 is_published=True
             )
@@ -56,7 +56,7 @@ class DjangoMangaRepository(IMangaRepository):
         return Manga.objects.filter(
             is_published=True,
             status='published'
-        ).select_related('created_by').prefetch_related(
+        ).select_related('criado_por').prefetch_related(
             'volumes'
         ).order_by('-created_at')
 
@@ -71,7 +71,7 @@ class DjangoMangaRepository(IMangaRepository):
             Manga com capítulos ou None
         """
         try:
-            return Manga.objects.select_related('created_by').prefetch_related(
+            return Manga.objects.select_related('criado_por').prefetch_related(
                 'volumes__capitulos'
             ).get(slug=slug)
         except Manga.DoesNotExist:
@@ -95,7 +95,7 @@ class DjangoMangaRepository(IMangaRepository):
                 queryset=Capitulo.objects.select_related('volume').prefetch_related('paginas')
             )
 
-            return Manga.objects.select_related('created_by').prefetch_related(
+            return Manga.objects.select_related('criado_por').prefetch_related(
                 'volumes',
                 capitulos_prefetch
             ).get(slug=slug)
@@ -147,7 +147,7 @@ class DjangoMangaRepository(IMangaRepository):
             MangaValidationError: Se dados inválidos
         """
         try:
-            manga_data['created_by'] = user
+            manga_data['criado_por'] = user
             manga = Manga.objects.create(**manga_data)
 
             logger.info(f"Manga criado: {manga.title} por {user.username}")

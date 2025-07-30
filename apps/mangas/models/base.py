@@ -8,6 +8,7 @@ class SlugMixin:
     def generate_unique_slug(self, text, max_length=50, field_name='slug'):
         """
         Gera um slug único baseado no texto fornecido.
+        Se já existir um slug igual, adiciona um número sequencial (001, 002, etc.)
         
         Args:
             text: Texto para gerar o slug
@@ -15,19 +16,19 @@ class SlugMixin:
             field_name: Nome do campo slug no modelo
             
         Returns:
-            str: Slug único
+            str: Slug único no formato 'texto' ou 'texto-001', 'texto-002', etc.
         """
         # Gera o slug base
-        slug = slugify(text)[:max_length].strip('-')
-        unique_slug = slug
+        base_slug = slugify(text)[:max_length].strip('-')
+        unique_slug = base_slug
         
         # Verifica se já existe um objeto com este slug
         model = self.__class__
         num = 1
         
-        while model.objects.filter(**{field_name: unique_slug}).exclude(pk=self.pk).exists():
-            # Adiciona um número ao final do slug para torná-lo único
-            unique_slug = f"{slug}-{num}"
+        while model.objects.filter(**{field_name: unique_slug}).exclude(pk=getattr(self, 'pk', None)).exists():
+            # Adiciona um número formatado com 3 dígitos (001, 002, etc.)
+            unique_slug = f"{base_slug}-{num:03d}"
             num += 1
             
         return unique_slug

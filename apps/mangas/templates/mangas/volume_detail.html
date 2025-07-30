@@ -80,12 +80,12 @@
                                 
                                 <div class="d-flex gap-2">
                                     {% if user|has_manga_permission %}
-                                    <a href="{% url 'mangas:capitulo_create' manga.slug %}?volume={{ volume.id }}" class="btn btn-primary">
+                                    <a href="{% url 'mangas:capitulo_create' manga_slug=manga.slug %}?volume={{ volume.id }}" class="btn btn-primary">
                                         <i class="fas fa-plus me-1"></i> Adicionar Capítulo
                                     </a>
                                     {% endif %}
                                     {% if volume.capitulos.exists %}
-                                    <a href="{% url 'mangas:capitulo_detail' manga_slug=volume.manga.slug capitulo_slug=volume.capitulos.first.slug %}" class="btn btn-success">
+                                    <a href="{% url 'mangas:capitulo_detail' manga_slug=manga.slug capitulo_slug=volume.capitulos.first.slug %}" class="btn btn-success">
                                         <i class="fas fa-play me-1"></i> Iniciar Leitura
                                     </a>
                                     {% endif %}

@@ -44,6 +44,37 @@ class Manga(SlugMixin, TimestampMixin, models.Model):
             models.Index(fields=['is_published'], name='manga_published_idx'),
             models.Index(fields=['criado_por'], name='manga_criado_por_idx'),
         ]
+        
+    def save(self, *args, **kwargs):
+        """
+        Sobrescreve o método save para garantir que o slug seja gerado automaticamente
+        se não estiver definido ou se o título for alterado.
+        """
+        # Se o slug não existe ou o título foi alterado
+        if not self.slug or (self.pk and 'title' in self.get_dirty_fields()):
+            # Gera o slug a partir do título
+            self.slug = self.generate_unique_slug(self.title)
+            
+        super().save(*args, **kwargs)
+        
+    def get_dirty_fields(self):
+        """
+        Retorna um dicionário com os campos que foram alterados no modelo.
+        Útil para verificar se o título foi alterado.
+        """
+        if not self.pk:
+            return {}
+            
+        # Obtém o estado atual do banco de dados
+        current_state = self.__class__.objects.get(pk=self.pk)
+        
+        # Compara os campos
+        dirty_fields = {}
+        for field in self._meta.fields:
+            if getattr(self, field.name) != getattr(current_state, field.name):
+                dirty_fields[field.name] = getattr(current_state, field.name)
+                
+        return dirty_fields
 
     def clean(self):
         if not self.title or not self.title.strip():
