@@ -1,0 +1,25 @@
+{# Redireciona a lista de audiobooks para a lista de vídeos #}
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_head %}
+    <meta http-equiv="refresh" content="0; url={% url 'audiobooks:video_list' %}">
+    <script>
+        window.location.href = "{% url 'audiobooks:video_list' %}";
+    </script>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 text-center">
+            <div class="alert alert-info" role="alert">
+                <h4 class="alert-heading">Redirecionando...</h4>
+                <p>Você está sendo redirecionado para a nova lista de vídeos.</p>
+                <hr>
+                <p class="mb-0">Se o redirecionamento não funcionar, <a href="{% url 'audiobooks:video_list' %}">clique aqui</a>.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

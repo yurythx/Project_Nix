@@ -1,0 +1,352 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load config_extras %}
+
+{% block title %}{% if current_category %}{{ current_category|title }} - {% endif %}Vídeos - Project Nix{% endblock %}
+
+{% block extra_css %}
+<style>
+    .video-card {
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        border: none;
+        border-radius: 12px;
+        overflow: hidden;
+        height: 100%;
+    }
+    
+    .video-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    
+    .video-thumbnail {
+        position: relative;
+        width: 100%;
+        padding-top: 56.25%; /* 16:9 Aspect Ratio */
+        background-color: #f8f9fa;
+        overflow: hidden;
+    }
+    
+    .video-thumbnail img {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .duration-badge {
+        position: absolute;
+        bottom: 8px;
+        right: 8px;
+        background-color: rgba(0, 0, 0, 0.7);
+        color: white;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 0.8rem;
+    }
+    
+    .category-badge {
+        position: absolute;
+        top: 8px;
+        left: 8px;
+        background-color: rgba(13, 110, 253, 0.9);
+        color: white;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+    }
+    
+    .video-info {
+        padding: 1rem;
+    }
+    
+    .video-title {
+        font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        height: 3em;
+    }
+    
+    .video-meta {
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+    
+    .filter-badge {
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .filter-badge:hover {
+        opacity: 0.8;
+    }
+    
+    .sort-dropdown .dropdown-toggle::after {
+        display: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Cabeçalho e Filtros -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4">
+                <h1 class="h2 mb-3 mb-md-0">
+                    <i class="fas fa-play-circle me-2"></i>
+                    {% if current_category %}
+                        {{ categories|get_item:current_category|default:current_category }}
+                    {% else %}
+                        Todos os Vídeos
+                    {% endif %}
+                </h1>
+                
+                {% if user.is_staff %}
+                <a href="{% url 'audiobooks:video_create' %}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>Adicionar Vídeo
+                </a>
+                {% endif %}
+            </div>
+            
+            <!-- Barra de Pesquisa e Filtros -->
+            <div class="card mb-4 shadow-sm">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-6">
+                            <div class="input-group">
+                                <span class="input-group-text bg-white">
+                                    <i class="fas fa-search text-muted"></i>
+                                </span>
+                                <input type="search" name="q" class="form-control" 
+                                       placeholder="Buscar vídeos..." value="{{ search_query|default:'' }}">
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <select name="category" class="form-select">
+                                <option value="">Todas as categorias</option>
+                                {% for value, label in categories.items %}
+                                    <option value="{{ value }}" {% if current_category == value %}selected{% endif %}>
+                                        {{ label }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <div class="input-group">
+                                <select name="sort_by" class="form-select">
+                                    <option value="-created_at" {% if sort_by == '-created_at' %}selected{% endif %}>
+                                        Mais recentes
+                                    </option>
+                                    <option value="created_at" {% if sort_by == 'created_at' %}selected{% endif %}>
+                                        Mais antigos
+                                    </option>
+                                    <option value="title" {% if sort_by == 'title' %}selected{% endif %}>
+                                        Título (A-Z)
+                                    </option>
+                                    <option value="-title" {% if sort_by == '-title' %}selected{% endif %}>
+                                        Título (Z-A)
+                                    </option>
+                                </select>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-filter"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Categorias Rápidas -->
+            <div class="d-flex flex-wrap gap-2 mb-4">
+                <a href="?" class="btn btn-sm {% if not current_category %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+                    Todos
+                </a>
+                {% for value, label in categories.items %}
+                    <a href="?category={{ value }}" 
+                       class="btn btn-sm {% if current_category == value %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+                        {{ label }}
+                    </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Lista de Vídeos -->
+    {% if videos %}
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4 mb-4">
+        {% for video in videos %}
+        <div class="col">
+            <a href="{% url 'audiobooks:video_detail' slug=video.slug %}" class="text-decoration-none text-dark">
+                <div class="card video-card h-100 shadow-sm">
+                    <!-- Thumbnail -->
+                    <div class="video-thumbnail">
+                        {% if video.thumbnail %}
+                            <img src="{{ video.thumbnail.url }}" alt="{{ video.title }}" class="img-fluid">
+                        {% else %}
+                            <div class="w-100 h-100 d-flex align-items-center justify-content-center bg-light">
+                                <i class="fas fa-play-circle fa-3x text-muted"></i>
+                            </div>
+                        {% endif %}
+                        
+                        {% if video.duration %}
+                            <span class="duration-badge">
+                                <i class="far fa-clock me-1"></i>{{ video.get_duration_display }}
+                            </span>
+                        {% endif %}
+                        
+                        <span class="category-badge">
+                            {{ video.get_category_display }}
+                        </span>
+                    </div>
+                    
+                    <!-- Informações do Vídeo -->
+                    <div class="card-body">
+                        <h5 class="video-title">{{ video.title }}</h5>
+                        
+                        <div class="d-flex align-items-center text-muted small mb-2">
+                            {% if video.author %}
+                                <span>{{ video.author }}</span>
+                                {% if video.narrator %}•{% endif %}
+                            {% endif %}
+                            
+                            {% if video.narrator %}
+                                <span class="ms-1">Narrado por {{ video.narrator }}</span>
+                            {% endif %}
+                        </div>
+                        
+                        {% if video.description %}
+                            <p class="card-text text-muted small">
+                                {{ video.description|truncatechars:100 }}
+                            </p>
+                        {% endif %}
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Paginação -->
+    {% if is_paginated %}
+    <nav aria-label="Navegação de páginas">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1{% if search_query %}&q={{ search_query }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}">
+                    &laquo; Primeira
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}">
+                    Anterior
+                </a>
+            </li>
+            {% endif %}
+            
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}{% if search_query %}&q={{ search_query }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}">
+                            {{ num }}
+                        </a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+            
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}">
+                    Próxima
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&q={{ search_query }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}">
+                    Última &raquo;
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+    
+    {% else %}
+    <div class="text-center py-5">
+        <div class="mb-4">
+            <i class="fas fa-video-slash fa-4x text-muted"></i>
+        </div>
+        <h3 class="h4 mb-3">Nenhum vídeo encontrado</h3>
+        <p class="text-muted mb-4">
+            {% if search_query or current_category %}
+                Não foram encontrados vídeos com os critérios de busca selecionados.
+            {% else %}
+                Ainda não há vídeos cadastrados.
+            {% endif %}
+        </p>
+        {% if user.is_staff %}
+            <a href="{% url 'audiobooks:video_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>Adicionar o Primeiro Vídeo
+            </a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Filtro rápido por categoria
+    document.querySelectorAll('.filter-badge').forEach(badge => {
+        badge.addEventListener('click', function() {
+            const category = this.getAttribute('data-category');
+            const url = new URL(window.location.href);
+            
+            if (category) {
+                url.searchParams.set('category', category);
+            } else {
+                url.searchParams.delete('category');
+            }
+            
+            window.location.href = url.toString();
+        });
+    });
+    
+    // Ordenação
+    document.querySelector('select[name="sort_by"]').addEventListener('change', function() {
+        const url = new URL(window.location.href);
+        url.searchParams.set('sort_by', this.value);
+        window.location.href = url.toString();
+    });
+    
+    // Atualizar badges de filtro ativo
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentCategory = urlParams.get('category');
+        
+        if (currentCategory) {
+            document.querySelectorAll('.filter-badge').forEach(badge => {
+                if (badge.getAttribute('data-category') === currentCategory) {
+                    badge.classList.remove('btn-outline-secondary');
+                    badge.classList.add('btn-primary');
+                } else {
+                    badge.classList.remove('btn-primary');
+                    badge.classList.add('btn-outline-secondary');
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

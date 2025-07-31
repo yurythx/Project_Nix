@@ -1,4 +1,4 @@
 # Pacote de modelos do app audiobooks
-from .audiobook import Audiobook, AudiobookProgress, AudiobookFavorite
+from .audiobook import VideoAudio, VideoProgress, VideoFavorite
 
-__all__ = ['Audiobook', 'AudiobookProgress', 'AudiobookFavorite']
+__all__ = ['VideoAudio', 'VideoProgress', 'VideoFavorite']

@@ -3,106 +3,593 @@
 
 {% block title %}{{ book.title }} - Livros - Project Nix{% endblock %}
 
+{% block extra_css %}
+<style>
+    /* Estilos para o modo de visualização normal */
+    .book-detail-container {
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+    
+    .book-header {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .book-cover {
+        flex: 0 0 250px;
+        max-width: 100%;
+    }
+    
+    .book-cover img {
+        width: 100%;
+        height: auto;
+        border-radius: 4px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .book-info {
+        flex: 1;
+        min-width: 300px;
+    }
+    
+    .book-title {
+        font-size: 2rem;
+        margin-top: 0;
+        margin-bottom: 0.5rem;
+    }
+    
+    .book-meta {
+        color: #6c757d;
+        margin-bottom: 1.5rem;
+    }
+    
+    .book-actions {
+        display: flex;
+        gap: 0.5rem;
+        margin: 1.5rem 0;
+        flex-wrap: wrap;
+    }
+    
+    .book-description {
+        margin: 2rem 0;
+        line-height: 1.6;
+    }
+    
+    /* Estilos para o leitor de livros */
+    .book-reader-container {
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        overflow: hidden;
+        margin: 2rem 0;
+        position: relative;
+        background-color: #f8f9fa;
+    }
+    
+    .book-reader-header {
+        padding: 0.75rem 1rem;
+        background-color: #f1f1f1;
+        border-bottom: 1px solid #dee2e6;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .book-reader-title {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 500;
+    }
+    
+    .book-reader-controls {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .book-reader-content {
+        min-height: 600px;
+        width: 100%;
+        border: none;
+        background: #fff;
+    }
+    
+    /* Estilos para o modo tela cheia */
+    body.reader-fullscreen {
+        overflow: hidden;
+    }
+    
+    .reader-fullscreen .book-reader-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        margin: 0;
+        border: none;
+        border-radius: 0;
+        z-index: 1050;
+    }
+    
+    .reader-fullscreen .book-reader-content {
+        height: calc(100vh - 50px);
+        min-height: auto;
+    }
+    
+    /* Ajustes para dispositivos móveis */
+    @media (max-width: 768px) {
+        .book-header {
+            flex-direction: column;
+        }
+        
+        .book-cover {
+            margin: 0 auto;
+            max-width: 200px;
+        }
+        
+        .book-reader-content {
+            min-height: 400px;
+        }
+    }
+    
+    .reader-title {
+        margin: 0;
+        font-size: clamp(0.9rem, 4vw, 1.1rem);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 70%;
+        font-weight: 500;
+        padding-right: 10px;
+    }
+    
+    .reader-controls {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-shrink: 0;
+    }
+    
+    .reader-content {
+        flex: 1;
+        width: 100%;
+        height: calc(100% - var(--header-height));
+        overflow: auto;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
+        position: relative;
+    }
+    
+    #epub-reader {
+        width: 100%;
+        height: 100%;
+        border: none;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .pdf-container {
+        width: 100%;
+        height: 100%;
+        border: none;
+        overflow: hidden;
+    }
+    
+    .pdf-container embed {
+        width: 100%;
+        height: 100%;
+        min-height: 100%;
+    }
+    
+    .btn-reader {
+        padding: 6px 12px;
+        font-size: 0.9rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        border-radius: 4px;
+        border: 1px solid #dee2e6;
+        background-color: #fff;
+        color: #333;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        min-width: 40px;
+        min-height: 36px;
+    }
+    
+    .btn-reader:hover, .btn-reader:focus {
+        background-color: #f8f9fa;
+        border-color: #adb5bd;
+        outline: none;
+    }
+    
+    .btn-reader i {
+        font-size: 1.1em;
+    }
+    
+    .unsupported-format {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+        text-align: center;
+        padding: 20px;
+        box-sizing: border-box;
+    }
+    
+    /* Ajustes para telas pequenas (mobile) */
+    @media (max-width: 576px) {
+        .reader-header {
+            padding: 6px 12px;
+        }
+        
+        .reader-title {
+            font-size: 0.95rem;
+            max-width: 60%;
+        }
+        
+        .btn-reader {
+            padding: 6px 8px;
+            min-width: 36px;
+            min-height: 32px;
+        }
+        
+        .btn-reader span {
+            display: none;
+        }
+        
+        .btn-reader i {
+            margin: 0;
+        }
+    }
+    
+    /* Ajustes para tablets */
+    @media (min-width: 577px) and (max-width: 992px) {
+        .reader-title {
+            max-width: 65%;
+        }
+    }
+    
+    /* Ajustes para orientação paisagem em dispositivos móveis */
+    @media (max-height: 500px) and (orientation: landscape) {
+        .reader-header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1001;
+            background-color: rgba(248, 249, 250, 0.9);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+        }
+        
+        .reader-content {
+            padding-top: var(--header-height);
+        }
+    }
+    
+    /* Melhorias para dispositivos com notch */
+    @supports (padding: max(0px)) {
+        .reader-header {
+            padding-left: max(16px, env(safe-area-inset-left));
+            padding-right: max(16px, env(safe-area-inset-right));
+            padding-top: max(8px, env(safe-area-inset-top));
+        }
+        
+        .reader-content {
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container my-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <div class="card shadow-sm border-0 mb-4">
-                <div class="row g-0">
-                    {% if book.cover_image %}
-                    <div class="col-md-4">
-                        <img src="{{ book.cover_image.url }}" class="img-fluid rounded-start w-100 h-100 object-fit-cover" alt="{{ book.title }}">
-                    </div>
-                    {% endif %}
-                    <div class="col-md-8">
-                        <div class="card-body">
-                            <h1 class="card-title h3 mb-2">{{ book.title }}</h1>
-                            {% if book.author %}
-                            <p class="mb-2"><i class="fas fa-user me-1"></i> {{ book.author }}</p>
-                            {% endif %}
-                            {% if book.published_date %}
-                            <p class="mb-2"><i class="fas fa-calendar me-1"></i> {{ book.published_date|date:'d M, Y' }}</p>
-                            {% endif %}
-                            <p class="card-text">{{ book.description }}</p>
-                            <div class="mt-4 d-flex gap-2 align-items-center">
-                                <a href="{% url 'books:book_edit' book.slug %}" class="btn btn-outline-secondary btn-sm">
-                                    <i class="fas fa-edit"></i> Editar
-                                </a>
-                                <a href="{% url 'books:book_delete' book.slug %}" class="btn btn-outline-danger btn-sm">
-                                    <i class="fas fa-trash"></i> Deletar
-                                </a>
-                                <a href="{% url 'books:book_list' %}" class="btn btn-outline-primary btn-sm">
-                                    <i class="fas fa-arrow-left"></i> Voltar
-                                </a>
-                                {% if user.is_authenticated %}
-                                <button id="favorite-btn" class="btn btn-outline-warning btn-sm" type="button">
-                                    <i id="favorite-icon" class="far fa-star"></i> <span id="favorite-label">Favoritar</span>
-                                </button>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-                </div>
+<div class="book-detail-container">
+    <!-- Cabeçalho do livro -->
+    <div class="book-header">
+        {% if book.cover_image %}
+        <div class="book-cover">
+            <img src="{{ book.cover_image.url }}" alt="{{ book.title }}" class="img-fluid">
+        </div>
+        {% endif %}
+        
+        <div class="book-info">
+            <h1 class="book-title">{{ book.title }}</h1>
+            
+            <div class="book-meta">
+                {% if book.author %}
+                <div><i class="fas fa-user me-1"></i> {{ book.author }}</div>
+                {% endif %}
+                {% if book.published_date %}
+                <div><i class="far fa-calendar-alt me-1"></i> {{ book.published_date|date:"d/m/Y" }}</div>
+                {% endif %}
+                {% if book.pages %}
+                <div><i class="fas fa-file-alt me-1"></i> {{ book.pages }} páginas</div>
+                {% endif %}
             </div>
-            {% if book.file %}
-                <div class="mb-4">
-                    {% if is_epub %}
-                        <div id="epub-reader" style="min-height: 600px; border: 1px solid #eee;"></div>
-                        <script src="https://cdn.jsdelivr.net/npm/epubjs/dist/epub.min.js"></script>
-                        <script src="{% static 'js/epub-viewer.js' %}"></script>
-                        <script>
-                            document.addEventListener('DOMContentLoaded', function() {
-                                window.initEpubViewer && window.initEpubViewer(
-                                    "{{ book.file.url }}",
-                                    "{{ book.slug }}",
-                                    {{ user.is_authenticated|yesno:'true,false' }}
-                                );
-                            });
-                        </script>
-                    {% elif is_pdf %}
-                        <embed src="{{ book.file.url }}" type="application/pdf" width="100%" height="600px" style="border:1px solid #eee;">
-                    {% else %}
-                        <div class="alert alert-warning">Formato de arquivo não suportado para visualização online.</div>
-                    {% endif %}
+            
+            <div class="book-actions">
+                <a href="{% url 'books:book_list' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i> Voltar
+                </a>
+                {% if user.is_authenticated %}
+                <button id="favorite-btn" class="btn btn-outline-warning">
+                    <i id="favorite-icon" class="far fa-star me-1"></i>
+                    <span id="favorite-label">Favoritar</span>
+                </button>
+                {% endif %}
+                {% if user.is_staff %}
+                <a href="{% url 'books:book_edit' book.slug %}" class="btn btn-outline-primary">
+                    <i class="fas fa-edit me-1"></i> Editar
+                </a>
+                {% endif %}
+                {% if book.file %}
+                <a href="{{ book.file.url }}" class="btn btn-outline-success" download>
+                    <i class="fas fa-download me-1"></i> Baixar
+                </a>
+                {% endif %}
+            </div>
+            
+            {% if book.description %}
+            <div class="book-description">
+                <h5>Descrição</h5>
+                <p>{{ book.description|linebreaksbr }}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Leitor de livros -->
+    {% if book.file %}
+    <div class="book-reader-container" id="book-reader-container">
+        <div class="book-reader-header">
+            <h2 class="book-reader-title">Leitor</h2>
+            <div class="book-reader-controls">
+                <button class="btn btn-sm btn-outline-secondary" id="fullscreen-toggle">
+                    <i class="fas fa-expand me-1"></i> Tela cheia
+                </button>
+            </div>
+        </div>
+        
+        <div class="book-reader-content" id="book-reader-content">
+            {% if is_epub %}
+                <div id="epub-reader" style="width: 100%; height: 100%;"></div>
+            {% elif is_pdf %}
+                <embed id="pdf-viewer" src="{{ book.file.url }}" type="application/pdf" width="100%" height="100%">
+            {% else %}
+                <div class="text-center p-5">
+                    <i class="fas fa-exclamation-triangle fa-3x mb-3 text-warning"></i>
+                    <h4>Formato não suportado</h4>
+                    <p>Este formato de arquivo não suporta visualização online.</p>
+                    <a href="{{ book.file.url }}" class="btn btn-primary mt-2" download>
+                        <i class="fas fa-download me-1"></i> Baixar arquivo
+                    </a>
                 </div>
             {% endif %}
         </div>
     </div>
+    {% else %}
+    <div class="alert alert-warning">
+        <i class="fas fa-exclamation-circle me-2"></i> Nenhum arquivo disponível para visualização.
+    </div>
+    {% endif %}
 </div>
-{% if user.is_authenticated %}
+
+<!-- Scripts para o leitor -->
+{% if book.file and is_epub %}
+<script src="https://cdn.jsdelivr.net/npm/epubjs/dist/epub.min.js"></script>
+<script src="{% static 'js/epub-viewer.js' %}"></script>
+{% endif %}
+
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const btn = document.getElementById('favorite-btn');
-    const icon = document.getElementById('favorite-icon');
-    const label = document.getElementById('favorite-label');
+// Função para inicializar o leitor de EPUB
+function initializeEpubViewer() {
+    {% if book.file and is_epub %}
+    var isAuthenticated = {% if user.is_authenticated %}true{% else %}false{% endif %};
+    
+    if (window.initEpubViewer) {
+        window.initEpubViewer(
+            "{{ book.file.url|escapejs }}",
+            "{{ book.slug|escapejs }}",
+            isAuthenticated,
+            false  // Não forçar tela cheia inicialmente
+        );
+    }
+    {% endif %}
+}
+
+// Função para atualizar o botão de tela cheia
+function updateFullscreenButton() {
+    const fullscreenToggle = document.getElementById('fullscreen-toggle');
+    if (!fullscreenToggle) return;
+    
+    const isFullscreen = document.fullscreenElement || 
+                       document.webkitFullscreenElement ||
+                       document.mozFullScreenElement ||
+                       document.msFullscreenElement;
+    
+    const icon = fullscreenToggle.querySelector('i');
+    if (isFullscreen) {
+        document.body.classList.add('reader-fullscreen');
+        icon.classList.remove('fa-expand');
+        icon.classList.add('fa-compress');
+        fullscreenToggle.querySelector('span').textContent = ' Sair da tela cheia';
+    } else {
+        document.body.classList.remove('reader-fullscreen');
+        icon.classList.remove('fa-compress');
+        icon.classList.add('fa-expand');
+        fullscreenToggle.querySelector('span').textContent = ' Tela cheia';
+    }
+}
+
+// Função para gerenciar favoritos
+function setupFavoriteButton() {
+    const favoriteBtn = document.getElementById('favorite-btn');
+    if (!favoriteBtn) return;
+    
+    const favoriteIcon = document.getElementById('favorite-icon');
+    const favoriteLabel = document.getElementById('favorite-label');
     const slug = "{{ book.slug }}";
+    
     function updateFavoriteUI(isFav) {
         if (isFav) {
-            icon.classList.remove('far');
-            icon.classList.add('fas');
-            label.textContent = 'Favorito';
-            btn.classList.add('active');
+            favoriteIcon.classList.remove('far');
+            favoriteIcon.classList.add('fas');
+            favoriteLabel.textContent = ' Favorito';
+            favoriteBtn.classList.add('active');
         } else {
-            icon.classList.remove('fas');
-            icon.classList.add('far');
-            label.textContent = 'Favoritar';
-            btn.classList.remove('active');
+            favoriteIcon.classList.remove('fas');
+            favoriteIcon.classList.add('far');
+            favoriteLabel.textContent = ' Favoritar';
+            favoriteBtn.classList.remove('active');
         }
     }
+    
+    // Verificar status do favorito
     fetch(`/livros/${slug}/favorite/status/`, { credentials: 'same-origin' })
         .then(r => r.json())
-        .then(data => updateFavoriteUI(data.favorite));
-    btn.addEventListener('click', function() {
-        const isActive = btn.classList.contains('active');
+        .then(data => updateFavoriteUI(data.favorite))
+        .catch(err => console.error('Erro ao verificar favorito:', err));
+        
+    // Toggle favorito
+    favoriteBtn.addEventListener('click', function() {
+        const isActive = favoriteBtn.classList.contains('active');
         fetch(`/livros/${slug}/${isActive ? 'unfavorite' : 'favorite'}/`, {
             method: 'POST',
             credentials: 'same-origin',
-            headers: { 'X-CSRFToken': (document.cookie.match(/csrftoken=([^;]+)/)||[])[1] }
+            headers: { 
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json'
+            }
         })
         .then(r => r.json())
-        .then(data => updateFavoriteUI(!isActive));
+        .then(data => updateFavoriteUI(!isActive))
+        .catch(err => console.error('Erro ao atualizar favorito:', err));
     });
+}
+
+// Função auxiliar para obter cookies
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Gerenciamento de estado
+const appState = {
+    isInitialized: false,
+    eventListeners: []
+};
+
+// Função para limpar event listeners
+function cleanupEventListeners() {
+    appState.eventListeners.forEach(({ element, event, handler }) => {
+        element.removeEventListener(event, handler);
+    });
+    appState.eventListeners = [];
+}
+
+// Função para adicionar event listener com rastreamento
+function addTrackedListener(element, event, handler) {
+    element.addEventListener(event, handler);
+    appState.eventListeners.push({ element, event, handler });
+}
+
+// Inicialização quando o DOM estiver pronto
+document.addEventListener('DOMContentLoaded', function() {
+    // Limpar event listeners anteriores
+    cleanupEventListeners();
+    
+    // Configurar botão de tela cheia
+    var fullscreenToggle = document.getElementById('fullscreen-toggle');
+    var readerContainer = document.getElementById('book-reader-container');
+    
+    if (fullscreenToggle && readerContainer) {
+        var toggleFullscreen = function() {
+            if (!document.fullscreenElement && 
+                !document.webkitFullscreenElement && 
+                !document.mozFullScreenElement && 
+                !document.msFullscreenElement) {
+                // Entrar em tela cheia
+                var element = readerContainer;
+                if (element.requestFullscreen) {
+                    element.requestFullscreen().catch(function(err) {
+                        console.error('Erro ao ativar tela cheia:', err);
+                    });
+                } else if (element.webkitRequestFullscreen) {
+                    element.webkitRequestFullscreen();
+                } else if (element.mozRequestFullScreen) {
+                    element.mozRequestFullScreen();
+                } else if (element.msRequestFullscreen) {
+                    element.msRequestFullscreen();
+                }
+            } else {
+                // Sair da tela cheia
+                if (document.exitFullscreen) {
+                    document.exitFullscreen().catch(function(err) {
+                        console.error('Erro ao sair da tela cheia:', err);
+                    });
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                } else if (document.mozCancelFullScreen) {
+                    document.mozCancelFullScreen();
+                } else if (document.msExitFullscreen) {
+                    document.msExitFullscreen();
+                }
+            }
+        };
+        
+        // Adicionar event listener para o botão de tela cheia
+        addTrackedListener(fullscreenToggle, 'click', toggleFullscreen);
+        
+        // Adicionar event listeners para mudanças no modo de tela cheia
+        var fullscreenEvents = [
+            'fullscreenchange',
+            'webkitfullscreenchange',
+            'mozfullscreenchange',
+            'MSFullscreenChange'
+        ];
+        
+        fullscreenEvents.forEach(function(event) {
+            addTrackedListener(document, event, updateFullscreenButton);
+        });
+        
+        // Adicionar atalho de teclado (F11 para tela cheia)
+        var handleKeyDown = function(e) {
+            if (e.key === 'F11') {
+                e.preventDefault();
+                toggleFullscreen();
+            }
+        };
+        
+        addTrackedListener(document, 'keydown', handleKeyDown);
+    }
+    
+    // Inicializar componentes
+    initializeEpubViewer();
+    
+    // Configurar botão de favoritos apenas se o usuário estiver autenticado
+    {% if user.is_authenticated %}
+    setupFavoriteButton();
+    {% endif %}
+    
+    appState.isInitialized = true;
 });
+
+// Limpar event listeners quando a página for descarregada
+window.addEventListener('beforeunload', cleanupEventListeners);
 </script>
-{% endif %}
+</div>
 {% endblock %}

@@ -1,0 +1,46 @@
+{# Redireciona a visualização de detalhes de um audiobook para a visualização de detalhes do vídeo #}
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_head %}
+    {% comment %}
+    Tenta obter o slug do vídeo correspondente ao audiobook.
+    Se não houver correspondência, redireciona para a lista de vídeos.
+    {% endcomment %}
+    {% with video=object.videoaudio_set.first %}
+        {% if video %}
+            <meta http-equiv="refresh" content="0; url={% url 'audiobooks:video_detail' slug=video.slug %}">
+            <script>
+                window.location.href = "{% url 'audiobooks:video_detail' slug=video.slug %}";
+            </script>
+        {% else %}
+            <meta http-equiv="refresh" content="0; url={% url 'audiobooks:video_list' %}">
+            <script>
+                window.location.href = "{% url 'audiobooks:video_list' %}";
+            </script>
+        {% endif %}
+    {% endwith %}
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 text-center">
+            <div class="alert alert-info" role="alert">
+                <h4 class="alert-heading">Redirecionando...</h4>
+                <p>Você está sendo redirecionado para o conteúdo em vídeo.</p>
+                <hr>
+                <p class="mb-0">
+                    {% with video=object.videoaudio_set.first %}
+                        {% if video %}
+                            Se o redirecionamento não funcionar, <a href="{% url 'audiobooks:video_detail' slug=video.slug %}">clique aqui</a>.
+                        {% else %}
+                            Nenhum vídeo correspondente encontrado. <a href="{% url 'audiobooks:video_list' %}">Voltar para a lista de vídeos</a>.
+                        {% endif %}
+                    {% endwith %}
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

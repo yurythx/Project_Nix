@@ -1,4 +1,4 @@
 # Pacote de formulários do app audiobooks
-from .audiobook_form import AudiobookForm
+from .audiobook_form import VideoAudioForm
 
-__all__ = ['AudiobookForm']
+__all__ = ['VideoAudioForm']

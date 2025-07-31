@@ -1,0 +1,351 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ video.title }} - Vídeos - Project Nix{% endblock %}
+
+{% block extra_css %}
+<style>
+    .video-container {
+        position: relative;
+        width: 100%;
+        padding-top: 56.25%;
+        background: #000;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    #videoPlayer {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border: none;
+    }
+    
+    .video-actions {
+        margin: 1.5rem 0;
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .video-meta {
+        margin: 1rem 0;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    
+    .video-description {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin: 1.5rem 0;
+    }
+    
+    .related-videos {
+        margin-top: 2rem;
+    }
+    
+    .related-videos .card {
+        transition: transform 0.2s;
+    }
+    
+    .related-videos .card:hover {
+        transform: translateY(-5px);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <!-- Player de Vídeo -->
+        <div class="col-12 mb-4">
+            <div class="video-container">
+                <video id="videoPlayer" controls>
+                    {% if video.video_file %}
+                        <source src="{{ video.video_file.url }}" type="video/mp4">
+                    {% elif video.external_url %}
+                        <source src="{{ video.external_url }}" type="video/mp4">
+                    {% endif %}
+                    Seu navegador não suporta a reprodução de vídeos.
+                </video>
+            </div>
+        </div>
+        
+        <!-- Informações do Vídeo -->
+        <div class="col-lg-8">
+            <h1 class="h2 mb-3">{{ video.title }}</h1>
+            
+            <div class="video-meta mb-3">
+                {% if video.author %}
+                    <span class="badge bg-primary">{{ video.author }}</span>
+                {% endif %}
+                {% if video.narrator %}
+                    <span class="badge bg-secondary">Narrado por {{ video.narrator }}</span>
+                {% endif %}
+                <span class="badge bg-info">{{ video.get_category_display }}</span>
+                {% if video.duration %}
+                    <span class="badge bg-dark">{{ video.get_duration_display }}</span>
+                {% endif %}
+                <span class="badge bg-light text-dark">
+                    <i class="fas fa-eye me-1"></i> {{ video.views|default:0 }} visualizações
+                </span>
+            </div>
+            
+            <div class="video-actions">
+                <button id="btnPlayPause" class="btn btn-primary">
+                    <i class="fas fa-play me-1"></i> Reproduzir
+                </button>
+                
+                {% if user.is_authenticated %}
+                <button id="btnFavorite" class="btn btn-outline-danger {% if is_favorite %}active{% endif %}">
+                    <i class="{% if is_favorite %}fas{% else %}far{% endif %} fa-heart me-1"></i>
+                    <span>{% if is_favorite %}Favoritado{% else %}Favoritar{% endif %}</span>
+                </button>
+                {% else %}
+                <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-outline-secondary">
+                    <i class="far fa-heart me-1"></i> Favoritar
+                </a>
+                {% endif %}
+                
+                {% if video.video_file %}
+                <a href="{{ video.video_file.url }}" class="btn btn-outline-secondary" download>
+                    <i class="fas fa-download me-1"></i> Baixar
+                </a>
+                {% endif %}
+            </div>
+            
+            {% if video.description %}
+            <div class="video-description">
+                <h5 class="mb-3">Sobre este conteúdo</h5>
+                <div class="text-muted">
+                    {{ video.description|linebreaksbr }}
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Seção de vídeos relacionados -->
+            {% if related_videos %}
+            <div class="related-videos">
+                <h4 class="mb-4">Conteúdos relacionados</h4>
+                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                    {% for related in related_videos %}
+                    <div class="col">
+                        <a href="{% url 'audiobooks:video_detail' slug=related.slug %}" class="text-decoration-none text-dark">
+                            <div class="card h-100">
+                                <div class="position-relative" style="padding-top: 56.25%;">
+                                    {% if related.thumbnail %}
+                                    <img src="{{ related.thumbnail.url }}" class="card-img-top position-absolute w-100 h-100" style="top: 0; left: 0; object-fit: cover;" alt="{{ related.title }}">
+                                    {% else %}
+                                    <div class="bg-light w-100 h-100 d-flex align-items-center justify-content-center">
+                                        <i class="fas fa-film fa-3x text-muted"></i>
+                                    </div>
+                                    {% endif %}
+                                    <div class="position-absolute bottom-0 end-0 m-2">
+                                        <span class="badge bg-dark">{{ related.get_duration_display }}</span>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <h6 class="card-title text-truncate" title="{{ related.title }}">{{ related.title }}</h6>
+                                    <p class="card-text small text-muted mb-1">
+                                        {% if related.author %}{{ related.author }}{% endif %}
+                                    </p>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <small class="text-muted">{{ related.get_category_display }}</small>
+                                        <small class="text-muted">
+                                            <i class="fas fa-eye me-1"></i> {{ related.views|default:0 }}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Navegação -->
+        <div class="col-lg-4">
+            {% if video.chapters.exists %}
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Capítulos</h5>
+                </div>
+                <div class="chapter-list">
+                    {% for chapter in video.chapters.all %}
+                    <div class="chapter-item p-3 border-bottom">
+                        <div class="d-flex justify-content-between">
+                            <strong>{{ chapter.title }}</strong>
+                            <span class="text-muted">{{ chapter.get_timestamp_display }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Container para notificações toast -->
+    <div id="toastContainer" class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+        <!-- As notificações serão adicionadas aqui dinamicamente -->
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const video = document.getElementById('videoPlayer');
+        const btnPlayPause = document.getElementById('btnPlayPause');
+        const btnFavorite = document.getElementById('btnFavorite');
+        
+        // Inicializa o player de vídeo
+        if (video) {
+            // Salva o progresso periodicamente (a cada 5 segundos)
+            setInterval(() => {
+                if (video.readyState > 0 && !isNaN(video.duration) && video.duration > 0) {
+                    const videoId = '{{ video.id }}';
+                    const currentTime = video.currentTime;
+                    const duration = video.duration;
+                    const progress = (currentTime / duration) * 100;
+                    
+                    // Salva localmente para continuar de onde parou
+                    localStorage.setItem(`video_${videoId}_time`, currentTime);
+                    
+                    // Envia o progresso para o servidor (se autenticado)
+                    if ('{{ user.is_authenticated }}' === 'True') {
+                        updateVideoProgress(videoId, currentTime, progress);
+                    }
+                }
+            }, 5000);
+            
+            // Tenta carregar o tempo salvo
+            const savedTime = localStorage.getItem(`video_{{ video.id }}_time`);
+            if (savedTime) {
+                video.currentTime = parseFloat(savedTime);
+            }
+            
+            // Atualiza o botão de play/pause
+            video.addEventListener('play', () => {
+                btnPlayPause.innerHTML = '<i class="fas fa-pause me-1"></i> Pausar';
+            });
+            
+            video.addEventListener('pause', () => {
+                btnPlayPause.innerHTML = '<i class="fas fa-play me-1"></i> Reproduzir';
+            });
+        }
+        
+        // Controle de play/pause
+        if (btnPlayPause) {
+            btnPlayPause.addEventListener('click', () => {
+                if (video.paused) {
+                    video.play();
+                } else {
+                    video.pause();
+                }
+            });
+        }
+        
+        // Controle de favoritos
+        if (btnFavorite && '{{ user.is_authenticated }}' === 'True') {
+            btnFavorite.addEventListener('click', async () => {
+                const isFavorite = btnFavorite.classList.contains('active');
+                const action = isFavorite ? 'remove' : 'add';
+                
+                try {
+                    const response = await fetch(`{% url 'audiobooks:video_favorite' slug=video.slug %}`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': '{{ csrf_token }}',
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({ action: action })
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.status === 'added') {
+                            btnFavorite.classList.add('active');
+                            btnFavorite.innerHTML = '<i class="fas fa-heart me-1"></i> Favoritado';
+                        } else {
+                            btnFavorite.classList.remove('active');
+                            btnFavorite.innerHTML = '<i class="far fa-heart me-1"></i> Favoritar';
+                        }
+                        
+                        // Mostra mensagem de feedback
+                        showToast(data.message || 'Operação realizada com sucesso!', 'success');
+                    } else {
+                        throw new Error('Erro na resposta do servidor');
+                    }
+                } catch (error) {
+                    console.error('Erro ao atualizar favorito:', error);
+                    showToast('Erro ao atualizar favorito. Tente novamente.', 'danger');
+                }
+            });
+        }
+        
+        // Função para atualizar o progresso do vídeo no servidor
+        async function updateVideoProgress(videoId, currentTime, progress) {
+            try {
+                await fetch(`{% url 'audiobooks:video_progress' slug=video.slug %}`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({
+                        current_time: currentTime,
+                        progress: progress,
+                        is_completed: progress >= 95  // Considera concluído se assistiu 95% ou mais
+                    })
+                });
+            } catch (error) {
+                console.error('Erro ao salvar progresso:', error);
+            }
+        }
+        
+        // Função para exibir notificações toast
+        function showToast(message, type = 'info') {
+            const toastContainer = document.getElementById('toastContainer');
+            if (!toastContainer) return;
+            
+            const toastId = 'toast-' + Date.now();
+            const toast = document.createElement('div');
+            toast.id = toastId;
+            toast.className = `toast align-items-center text-white bg-${type} border-0 show`;
+            toast.role = 'alert';
+            toast.setAttribute('aria-live', 'assertive');
+            toast.setAttribute('aria-atomic', 'true');
+            
+            toast.innerHTML = `
+                <div class="d-flex">
+                    <div class="toast-body">
+                        ${message}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Fechar"></button>
+                </div>
+            `;
+            
+            toastContainer.appendChild(toast);
+            
+            // Remove o toast após 5 segundos
+            setTimeout(() => {
+                const toastElement = document.getElementById(toastId);
+                if (toastElement) {
+                    toastElement.classList.remove('show');
+                    setTimeout(() => toastElement.remove(), 300);
+                }
+            }, 5000);
+        }
+    });
+</script>
+{% endblock %}
