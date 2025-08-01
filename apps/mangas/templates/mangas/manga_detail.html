@@ -195,31 +195,7 @@
                                 <div id="collapse{{ volume.number }}" class="accordion-collapse collapse" aria-labelledby="heading{{ volume.number }}" data-bs-parent="#volumesAccordion">
                                     <div class="accordion-body p-3 bg-white">
                                         <!-- Ações do Volume -->
-                                        {% if user|has_manga_permission %}
-                                        <div class="d-flex justify-content-end mb-3 border-bottom pb-2">
-                                            <div class="btn-group btn-group-sm">
-                                                <a href="{% url 'mangas:volume_edit' manga.slug volume.id %}" class="btn btn-outline-secondary">
-                                                    <i class="fas fa-edit me-1"></i> Editar
-                                                </a>
-                                                <a href="{% url 'mangas:capitulo_create' manga_slug=manga.slug %}?volume={{ volume.id }}" class="btn btn-outline-primary">
-                                                    <i class="fas fa-plus me-1"></i> Adicionar Capítulo
-                                                </a>
-                                                <a href="{% url 'mangas:capitulo_complete_create' manga_slug=manga.slug %}?volume={{ volume.id }}" class="btn btn-outline-success">
-                                                    <i class="fas fa-file-archive me-1"></i> Upload Completo
-                                                </a>
-                                            </div>
-                                        </div>
-                                        {% endif %}
-                                        {% if user|has_manga_permission %}
-                                        <div class="d-flex justify-content-end p-2 bg-light border-bottom">
-                                            <a href="{% url 'mangas:volume_edit' manga.slug volume.slug %}" class="btn btn-sm btn-outline-secondary me-1">
-                                                <i class="fas fa-edit me-1"></i> Editar Volume
-                                            </a>
-                                            <a href="{% url 'mangas:volume_delete' manga.slug volume.slug %}" class="btn btn-sm btn-outline-danger">
-                                                <i class="fas fa-trash me-1"></i> Excluir
-                                            </a>
-                                        </div>
-                                        {% endif %}
+                                        {% include 'mangas/includes/volume_actions.html' with volume=volume manga=manga %}
                                         
                                         <!-- Lista de Capítulos -->
                                         <div class="list-group list-group-flush rounded overflow-hidden">
@@ -297,17 +273,6 @@
                                                 </div>
                                             {% endif %}
                                         </div>
-                                        
-                                        {% if user|has_manga_permission and volume.capitulos.exists %}
-                                        <div class="text-center p-2 bg-light border-top">
-                                            <a href="{% url 'mangas:capitulo_create' manga_slug=manga.slug %}?volume={{ volume.id }}" class="btn btn-sm btn-outline-primary me-1">
-                                                <i class="fas fa-plus me-1"></i> Adicionar Capítulo
-                                            </a>
-                                            <a href="{% url 'mangas:capitulo_complete_create' manga_slug=manga.slug %}?volume={{ volume.id }}" class="btn btn-sm btn-outline-success">
-                                                <i class="fas fa-file-archive me-1"></i> Upload Completo
-                                            </a>
-                                        </div>
-                                        {% endif %}
                                     </div>
                                 </div>
                             </div>
@@ -441,4 +406,4 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
-{% endblock %} 
+{% endblock %}

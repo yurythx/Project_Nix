@@ -134,15 +134,32 @@ class VolumeUploadForm(forms.ModelForm):
         
         # Se um arquivo foi fornecido, processa-o
         if archive_file and commit:
-            from ..services.volume_processor_service import VolumeProcessorService
+            # CORRIGIDO: Usar a classe correta
+            from ..services.volume_processor_service import VolumeFileProcessorService
+            import tempfile
+            import os
             
             try:
-                processor = VolumeProcessorService()
-                success, message = processor.process_volume_archive(volume, archive_file)
-                
-                if not success:
-                    # Se houver erro no processamento, levanta uma exceção
-                    raise ValidationError(message)
+                # Cria um arquivo temporário para o processamento
+                with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(archive_file.name)[1]) as temp_file:
+                    # Escreve o conteúdo do arquivo enviado no arquivo temporário
+                    for chunk in archive_file.chunks():
+                        temp_file.write(chunk)
+                    temp_file.flush()
+                    
+                    # Processa o arquivo usando o serviço correto
+                    processor = VolumeFileProcessorService()
+                    success, message = processor.process_volume_file(volume, temp_file.name)
+                    
+                    # Remove o arquivo temporário
+                    try:
+                        os.unlink(temp_file.name)
+                    except OSError:
+                        pass  # Ignora erro se não conseguir remover
+                    
+                    if not success:
+                        # Se houver erro no processamento, levanta uma exceção
+                        raise ValidationError(message)
                 
             except Exception as e:
                 # Em caso de erro, levanta uma exceção de validação

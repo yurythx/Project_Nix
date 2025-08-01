@@ -693,3 +693,29 @@ class MangaService(IMangaService):
             raise FileTooLargeError(
                 f"O arquivo é muito grande. Tamanho máximo permitido: {MAX_IMAGE_SIZE/1024/1024:.1f}MB"
             )
+
+# Separar em serviços específicos
+class MangaCreationService:
+    """Responsável apenas pela criação de mangás."""
+    
+    def create_manga(self, data: Dict[str, Any], cover_image: Optional[UploadedFile] = None) -> Manga:
+        # ... existing code ...
+        pass
+
+class MangaCacheService:
+    """Responsável apenas pelo cache de mangás."""
+    
+    def get_manga_with_cache(self, manga_id: int) -> Optional[Manga]:
+        # ... existing code ...
+        pass
+    
+    def invalidate_manga_cache(self, manga_id: Optional[int] = None):
+        # ... existing code ...
+        pass
+
+class MangaStatsService:
+    """Responsável apenas pelas estatísticas de mangás."""
+    
+    def get_manga_stats(self, manga: Manga) -> Dict[str, Any]:
+        # ... existing code ...
+        pass

@@ -1,4 +1,4 @@
-"""
+
 """Serviço para processamento de arquivos de volumes de mangá.
 
 Este módulo contém a implementação concreta do serviço de processamento de arquivos
@@ -84,43 +84,9 @@ class VolumeFileProcessorService:
         Returns:
             Tupla (success, message) indicando o resultado da operação
         """
-                
-        Args:
-            volume: Instância do modelo Volume
-            file_path: Caminho para o arquivo PDF
-            
-        Returns:
-            Tupla (success, message)
-        """
-        try:
-            if not fitz:
-                return False, "A biblioteca PyMuPDF (fitz) não está instalada. Instale com 'pip install pymupdf'"
-            
-            # Cria um diretório para as imagens do PDF
-            pdf_images_dir = os.path.join(self.temp_dir, 'pdf_images')
-            os.makedirs(pdf_images_dir, exist_ok=True)
-            
-            # Abre o PDF
-            doc = fitz.open(file_path)
-            
-            # Converte cada página em imagem
-            for page_num in range(len(doc)):
-                page = doc.load_page(page_num)
-                pix = page.get_pixmap()
-                
-                # Salva a imagem
-                img_path = os.path.join(pdf_images_dir, f"page_{page_num + 1:03d}.png")
-                pix.save(img_path)
-            
-            # Processa as imagens extraídas
-            return self._process_extracted_images(volume, pdf_images_dir)
-            
-        except Exception as e:
-            logger.exception(f"Erro ao processar PDF: {file_path}")
-            return False, f"Erro ao processar PDF: {str(e)}"
         if not isinstance(volume, Volume) or not volume.pk:
             raise ValueError("O parâmetro 'volume' deve ser uma instância de Volume válida")
-
+        
         # Verifica se o arquivo existe
         if not os.path.exists(file_path):
             return False, f"Arquivo não encontrado: {file_path}"

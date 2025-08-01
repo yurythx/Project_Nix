@@ -1,0 +1,60 @@
+{% load manga_permissions %}
+
+<div class="d-flex flex-wrap gap-2 mb-3">
+    {% if user|has_manga_permission %}
+        <!-- Upload de Volume Completo (Múltiplos Capítulos em um ZIP) -->
+        <a href="{% url 'mangas:volume_upload' manga_slug=manga.slug %}" 
+           class="btn btn-success btn-sm"
+           data-bs-toggle="tooltip" 
+           title="Fazer upload de arquivo compactado contendo múltiplos capítulos organizados em pastas">
+            <i class="fas fa-cloud-upload-alt me-1"></i> Upload Volume
+        </a>
+        
+        <!-- Upload de Capítulo Individual -->
+        <a href="{% url 'mangas:capitulo_complete_create' manga_slug=manga.slug %}?volume={{ volume.id }}" 
+           class="btn btn-primary btn-sm"
+           data-bs-toggle="tooltip" 
+           title="Adicionar um capítulo individual com imagens ou arquivo compactado">
+            <i class="fas fa-plus me-1"></i> Adicionar Capítulo
+        </a>
+        
+        <!-- Editar Volume -->
+        <a href="{% url 'mangas:volume_edit' manga_slug=manga.slug volume_slug=volume.slug %}" 
+           class="btn btn-outline-secondary btn-sm"
+           data-bs-toggle="tooltip" 
+           title="Editar informações do volume">
+            <i class="fas fa-edit me-1"></i> Editar
+        </a>
+        
+        <!-- Upload de Atualização do Volume -->
+        <a href="{% url 'mangas:volume_upload_update' manga_slug=manga.slug volume_slug=volume.slug %}" 
+           class="btn btn-outline-warning btn-sm"
+           data-bs-toggle="tooltip" 
+           title="Atualizar volume com novo arquivo compactado">
+            <i class="fas fa-sync-alt me-1"></i> Atualizar Upload
+        </a>
+        
+        <!-- Excluir Volume -->
+        <a href="{% url 'mangas:volume_delete' manga_slug=manga.slug volume_slug=volume.slug %}" 
+           class="btn btn-outline-danger btn-sm"
+           data-bs-toggle="tooltip" 
+           title="Excluir este volume e todos os seus capítulos"
+           onclick="return confirm('Tem certeza que deseja excluir este volume? Esta ação não pode ser desfeita.')">
+            <i class="fas fa-trash me-1"></i> Excluir
+        </a>
+    {% endif %}
+</div>
+
+<!-- Informações sobre estrutura esperada -->
+<div class="alert alert-info alert-sm mb-3" style="font-size: 0.875rem;">
+    <div class="d-flex align-items-start">
+        <i class="fas fa-info-circle me-2 mt-1"></i>
+        <div>
+            <strong>Upload Volume:</strong> Envie um arquivo ZIP/RAR com múltiplos capítulos:
+            <br>
+            <code class="small">volume_{{ volume.number }}/capitulo_1/001.jpg, capitulo_2/001.jpg, ...</code>
+            <br>
+            <strong>Adicionar Capítulo:</strong> Envie imagens individuais ou um arquivo compactado para um capítulo específico.
+        </div>
+    </div>
+</div>

@@ -153,17 +153,31 @@ class VolumeForm(forms.ModelForm):
     def clean_number(self):
         """Valida se o número do volume é único para o mangá."""
         number = self.cleaned_data.get('number')
-        manga = self.instance.manga if hasattr(self.instance, 'manga') else None
         
-        if manga and 'manga' in self.data:
+        # Obtém o mangá da instância ou do formulário
+        manga = None
+        if hasattr(self.instance, 'manga'):
+            manga = self.instance.manga
+        elif 'manga' in self.data:
+            from django.shortcuts import get_object_or_404
+            from apps.mangas.models.manga import Manga
+            try:
+                manga = Manga.objects.get(pk=self.data['manga'])
+            except (Manga.DoesNotExist, ValueError):
+                pass
+        
+        # Se temos um mangá, verifica a unicidade do número
+        if manga and number is not None:
             # Verifica se já existe um volume com o mesmo número para este mangá
             queryset = Volume.objects.filter(manga=manga, number=number)
+            
+            # Se estiver editando, exclui a instância atual da verificação
             if self.instance and self.instance.pk:
                 queryset = queryset.exclude(pk=self.instance.pk)
             
             if queryset.exists():
                 raise forms.ValidationError(
-                    _('Já existe um volume com este número para este mangá.')
+                    _('Já existe um volume com o número %(number)s para este mangá.') % {'number': number}
                 )
                 
         return number
