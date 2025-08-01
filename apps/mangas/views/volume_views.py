@@ -146,15 +146,31 @@ class VolumeDetailView(DetailView):
     
     def get_context_data(self, **kwargs):
         """Adiciona a lista paginada de capítulos e informações adicionais ao contexto."""
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        logger.info(f"Iniciando get_context_data para o volume: {self.object}")
+        
         context = super().get_context_data(**kwargs)
         volume = self.object
         
+        logger.info(f"Volume ID: {volume.id}, Número: {volume.number}, Título: {volume.title}")
+        logger.info(f"Mangá: {volume.manga.title} (ID: {volume.manga.id}, Slug: {volume.manga.slug})")
+        
         # Obtém todos os capítulos do volume
+        logger.info("Buscando capítulos do volume...")
         capitulos = list(volume.capitulos.all())
+        logger.info(f"Total de capítulos encontrados: {len(capitulos)}")
+        
+        # Log detalhado dos capítulos
+        for i, cap in enumerate(capitulos, 1):
+            logger.info(f"Capítulo {i}: ID={cap.id}, Número={cap.number}, Título='{cap.title}', Publicado={cap.is_published}")
         
         # Configura a paginação
+        logger.info(f"Configurando paginação com {self.paginate_by} itens por página...")
         paginator = Paginator(capitulos, self.paginate_by)
         page = self.request.GET.get('page')
+        logger.info(f"Página solicitada: {page if page else '1 (padrão)'}")
         
         try:
             capitulos_paginados = paginator.page(page)
