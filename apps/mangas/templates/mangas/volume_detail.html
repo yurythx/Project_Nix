@@ -98,12 +98,42 @@
             
             <!-- Lista de Capítulos -->
             <div class="card shadow-sm border-0 mb-4">
-                <div class="card-header bg-theme-secondary text-theme-light">
+                <div class="card-header bg-theme-secondary text-theme-light d-flex justify-content-between align-items-center">
                     <h2 class="h5 mb-0">
                         <i class="fas fa-list me-2"></i>Capítulos
                     </h2>
+                    <div class="text-muted small">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Total: {{ total_capitulos }} capítulo{{ total_capitulos|pluralize }}, 
+                        {{ total_paginas }} página{{ total_paginas|pluralize }}
+                    </div>
                 </div>
                 <div class="card-body p-0">
+                    <!-- Debug Info -->
+                    <div class="alert alert-info mb-0 rounded-0 border-0" style="border-bottom: 1px solid #dee2e6 !important;">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="fas fa-bug me-2"></i>
+                                <strong>Informações de Depuração</strong>
+                            </div>
+                            <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#debugInfo" aria-expanded="false" aria-controls="debugInfo">
+                                Mostrar/Esconder
+                            </button>
+                        </div>
+                        <div class="collapse mt-2" id="debugInfo">
+                            <div class="small">
+                                <div><strong>Volume ID:</strong> {{ volume.id }}</div>
+                                <div><strong>Slug do Volume:</strong> {{ volume.slug }}</div>
+                                <div><strong>Mangá ID:</strong> {{ volume.manga.id }}</div>
+                                <div><strong>Slug do Mangá:</strong> {{ volume.manga.slug }}</div>
+                                <div><strong>Total de Capítulos (DB):</strong> {{ volume.capitulos.count }}</div>
+                                <div><strong>Total de Capítulos (Contexto):</strong> {{ capitulos|length|default:0 }}</div>
+                                <div><strong>Usuário Autenticado:</strong> {{ user.is_authenticated|yesno:"Sim,Não" }}</div>
+                                <div><strong>É Staff:</strong> {{ user.is_staff|yesno:"Sim,Não"|default:"Não" }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    
                     {% if capitulos %}
                         <div class="list-group list-group-flush">
                             {% for capitulo in capitulos %}

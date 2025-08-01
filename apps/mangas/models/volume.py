@@ -37,6 +37,11 @@ class Volume(SlugMixin, TimestampMixin, models.Model):
         default=True,
         help_text=_('Se o volume está visível publicamente')
     )
+    extracted = models.BooleanField(
+        _('Extraído?'),
+        default=False,
+        help_text=_('Indica se as páginas do volume foram extraídas com sucesso')
+    )
     
     class Meta:
         app_label = 'mangas'
@@ -84,3 +89,20 @@ class Volume(SlugMixin, TimestampMixin, models.Model):
             manga=self.manga,
             number__gt=self.number
         ).order_by('number').first()
+        
+    def listar_capitulos(self):
+        """Lista todos os capítulos do volume com informações detalhadas."""
+        cap_list = []
+        for cap in self.capitulos.all():
+            cap_info = {
+                'id': cap.id,
+                'number': cap.number,
+                'title': cap.title,
+                'slug': cap.slug,
+                'is_published': cap.is_published,
+                'num_paginas': cap.paginas.count(),
+                'created_at': cap.created_at,
+                'updated_at': cap.updated_at
+            }
+            cap_list.append(cap_info)
+        return cap_list
