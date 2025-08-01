@@ -1,218 +1,111 @@
 """
-<<<<<<< HEAD
-Serviço para processamento de arquivos compactados de volumes de mangá.
-
-Este módulo contém a implementação do serviço que processa arquivos compactados
-contendo múltiplos capítulos organizados em pastas.
-"""
-import os
-import logging
-import tempfile
-from pathlib import Path
-from typing import List, Dict, Tuple, Optional, Set, BinaryIO
-from django.core.files.base import ContentFile
-from django.db import transaction
-from django.core.exceptions import ValidationError
-
-from .file_processor_service import MangaFileProcessorService
-from ..models import Volume, Capitulo
-from ..constants import (
-    ALLOWED_IMAGE_EXTENSIONS, 
-    ALLOWED_ARCHIVE_EXTENSIONS,
-    MAX_ARCHIVE_SIZE,
-    MESSAGES
-)
-
-logger = logging.getLogger(__name__)
-
-class VolumeProcessorService:
-    """
-    Serviço para processamento de arquivos compactados contendo volumes de mangá.
-    
-    Este serviço lida com o upload de arquivos compactados contendo múltiplos
-    capítulos organizados em pastas, criando automaticamente os registros
-    de Volume, Capítulo e Páginas no banco de dados.
-    """
-    
-    def __init__(self, file_processor: MangaFileProcessorService = None):
-        """
-        Inicializa o serviço com um processador de arquivos opcional.
-        
-        Args:
-            file_processor: Instância de MangaFileProcessorService para processar 
-                          arquivos de capítulo individuais. Se não fornecido, 
-                          uma nova instância será criada.
-        """
-        self.file_processor = file_processor or MangaFileProcessorService()
-    
-    def process_volume_archive(self, volume: Volume, archive_file) -> Tuple[bool, str]:
-        """
-        Processa um arquivo compactado contendo capítulos de um volume.
-        
-        Args:
-            volume: Instância do Volume ao qual os capítulos serão associados
-            archive_file: Arquivo compactado contendo as pastas dos capítulos
-=======
 Serviço para processamento de arquivos de volumes de mangá.
 
 Este módulo contém a implementação concreta do serviço de processamento de arquivos
 que extrai páginas de imagens de vários formatos de arquivo compactado para volumes.
 """
-from io import BytesIO
+import logging
 import os
+import re
+import shutil
+import tempfile
 import zipfile
+from pathlib import Path
+from typing import List, Dict, Tuple, Optional, Set, Any, BinaryIO, Union
+
+from django.core.files import File
+from django.core.files.storage import default_storage
+from django.db import transaction
+from django.core.exceptions import ValidationError
+from PIL import Image, UnidentifiedImageError, ImageFile
+
+# Importa os modelos necessários
+from ..models import Volume, Capitulo, Pagina
+
+# Tenta importar bibliotecas opcionais
 try:
     import rarfile
 except ImportError:
     rarfile = None
-try:
-    import tarfile
-except ImportError:
-    tarfile = None
+
 try:
     import py7zr
 except ImportError:
     py7zr = None
+    
 try:
-    import PyPDF2
     import fitz  # PyMuPDF
 except ImportError:
-    PyPDF2 = None
     fitz = None
-import tempfile
-import shutil
-from pathlib import Path
-from typing import List, Tuple, Optional, BinaryIO, Union, Dict, Any
-from django.core.files.base import ContentFile
-from django.core.files.storage import default_storage
-from django.db import transaction
-from PIL import Image, UnidentifiedImageError, ImageFile
-import logging
-import re
-
-from ..models.volume import Volume
-from ..models.capitulo import Capitulo
-from ..models.pagina import Pagina
 
 # Configura o Pillow para processar imagens grandes
 ImageFile.LOAD_TRUNCATED_IMAGES = True
+
+# Extensões de imagem permitidas
+ALLOWED_IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.webp']
 
 logger = logging.getLogger(__name__)
 
 class VolumeFileProcessorService:
     """
-    Implementação concreta do serviço de processamento de arquivos de volumes de mangá.
+    Serviço para processar arquivos de volumes de mangá.
     
-    Esta classe é responsável por processar arquivos de volumes de mangá em formatos
-    compactados (.zip, .rar, .7z, .pdf) e extrair as páginas de imagem contidas neles.
+    Esta classe é responsável por extrair e processar páginas de imagens
+    a partir de arquivos compactados (ZIP, RAR, 7Z) ou PDFs.
     """
-    # Formatos de arquivo suportados
-    SUPPORTED_FORMATS = ['.zip', '.rar', '.7z', '.pdf']
+    
+    # Tamanho máximo de arquivo permitido (100MB)
+    MAX_ARCHIVE_SIZE = 100 * 1024 * 1024
+    
+    # Número mínimo e máximo de páginas permitidas
+    MIN_PAGES = 1
+    MAX_PAGES = 2000
     
     # Extensões de imagem suportadas
-    IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp']
+    IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.webp']
+    
+    # Formatos de arquivo suportados
+    SUPPORTED_FORMATS = ['.zip', '.rar', '.7z', '.cbz', '.cbr', '.cb7']
     
     # Arquivos a serem ignorados
-    IGNORED_FILES = ['.DS_Store', 'Thumbs.db', 'desktop.ini', '.txt', '.pdf']
-    
-    # Tamanho máximo do arquivo (200MB para arquivos compactados)
-    MAX_ARCHIVE_SIZE = 200 * 1024 * 1024  # 200MB
-    MAX_IMAGE_SIZE = 20 * 1024 * 1024      # 20MB
-    
-    # Número mínimo e máximo de páginas por volume
-    MIN_PAGES = 1
+    IGNORED_FILES = ['.DS_Store', 'Thumbs.db', 'desktop.ini']
     MAX_PAGES = 1000
     
     def __init__(self):
         """Inicializa o serviço com um diretório temporário vazio."""
         self.temp_dir = None
+        self.logger = logging.getLogger(__name__)
     
-    def process_volume_file(self, volume: Volume, file_path: str) -> Tuple[bool, str]:
+    def process_volume_file(self, volume, file_path: str) -> Tuple[bool, str]:
         """
         Processa um arquivo de volume e cria as páginas correspondentes.
         
         Args:
             volume: Instância do modelo Volume
             file_path: Caminho para o arquivo a ser processado
->>>>>>> d2e4c0d332471828370082b79040fd5c19165703
             
         Returns:
             Tupla (success, message) indicando o resultado da operação
-        """
-<<<<<<< HEAD
-        logger.info(f"Iniciando processamento de arquivo para o volume {volume.id} - {volume}")
-        
-        try:
-            # Validações iniciais
-            if not volume or not hasattr(volume, 'pk'):
-                error_msg = "Volume inválido ou não salvo no banco de dados."
-                logger.error(error_msg)
-                return False, error_msg
-                
-            # Verifica se o arquivo foi fornecido
-            if not archive_file:
-                error_msg = "Nenhum arquivo foi fornecido para processamento."
-                logger.error(error_msg)
-                return False, error_msg
-                
-            # Cria um diretório temporário para extração
-            with tempfile.TemporaryDirectory(prefix=f'manga_volume_{volume.id}_') as temp_dir:
-                logger.debug(f"Diretório temporário criado: {temp_dir}")
-                
-                try:
-                    # Extrai o arquivo compactado
-                    logger.info("Iniciando extração do arquivo compactado...")
-                    extracted_files = self._extract_archive(archive_file, temp_dir)
-                    
-                    if not extracted_files:
-                        error_msg = "Falha ao extrair o arquivo compactado ou arquivo vazio."
-                        logger.error(error_msg)
-                        return False, error_msg
-                    
-                    logger.info(f"Arquivo extraído com sucesso. {len(extracted_files)} pastas de capítulos encontradas.")
-                    
-                    # Processa os capítulos encontrados
-                    logger.info("Iniciando processamento dos capítulos...")
-                    success, message = self._process_chapters(volume, temp_dir, extracted_files)
-                    
-                    if success:
-                        logger.info(f"Processamento concluído com sucesso: {message}")
-                    else:
-                        logger.warning(f"Processamento concluído com avisos: {message}")
-                    
-                    return success, message
-                    
-                except Exception as e:
-                    error_msg = f"Erro durante o processamento: {str(e)}"
-                    logger.error(error_msg, exc_info=True)
-                    return False, error_msg
-                
-        except Exception as e:
-            error_msg = f"Erro inesperado ao processar arquivo de volume: {str(e)}"
-            logger.error(error_msg, exc_info=True)
-            return False, error_msg
-    
-    def _extract_archive(self, archive_file, extract_dir: str) -> Dict[str, List[str]]:
-        """
-        Extrai o arquivo compactado para um diretório temporário.
-        
-        Args:
-            archive_file: Arquivo compactado a ser extraído
-            extract_dir: Diretório de destino para extração
-            
-        Returns:
-            Dicionário com a estrutura de pastas/arquivos extraídos
             
         Raises:
+            ValueError: Se o volume não for válido
             ValidationError: Se o arquivo não for um formato suportado
         """
+        if not hasattr(volume, 'pk') or not volume.pk:
+            raise ValueError("O parâmetro 'volume' deve ser uma instância de Volume válida")
+        
+        # Verifica se o arquivo existe
+        if not os.path.isfile(file_path):
+            error_msg = f"Arquivo não encontrado: {file_path}"
+            logger.error(error_msg)
+            return False, error_msg
         from pathlib import Path
         
         # Estrutura para armazenar os arquivos extraídos
         extracted_files = {}
         
         # Obtém o nome do arquivo para logging
-        file_name = getattr(archive_file, 'name', 'arquivo_desconhecido')
+        file_name = os.path.basename(file_path)
         logger.info(f"Iniciando extração do arquivo: {file_name}")
         
         # Verifica se o arquivo tem uma extensão suportada
@@ -221,75 +114,143 @@ class VolumeFileProcessorService:
         if not any(file_name_lower.endswith(ext) for ext in supported_extensions):
             error_msg = f"Formato de arquivo não suportado: {file_name}. Formatos suportados: {', '.join(supported_extensions)}"
             logger.error(error_msg)
-            raise ValidationError(error_msg)
+            return False, error_msg
         
         # Verifica o tamanho do arquivo
         try:
-            file_size = archive_file.size if hasattr(archive_file, 'size') else os.path.getsize(archive_file)
-            if file_size > MAX_ARCHIVE_SIZE:
-                error_msg = f"Arquivo muito grande. Tamanho máximo permitido: {MAX_ARCHIVE_SIZE/1024/1024:.2f}MB"
+            file_size = os.path.getsize(file_path)
+            if file_size > self.MAX_ARCHIVE_SIZE:
+                error_msg = f"Arquivo muito grande. Tamanho máximo permitido: {self.MAX_ARCHIVE_SIZE/1024/1024:.2f}MB"
                 logger.error(error_msg)
-                raise ValidationError(error_msg)
-        except (AttributeError, OSError) as e:
-            logger.warning(f"Não foi possível verificar o tamanho do arquivo: {str(e)}")
-        
-        # Tenta importar as bibliotecas necessárias
-        try:
-            import zipfile
-            import rarfile
-            import py7zr
-        except ImportError as e:
-            error_msg = f"Erro ao importar bibliotecas necessárias: {str(e)}"
-            logger.error(error_msg)
-            raise ImportError("Bibliotecas necessárias não encontradas. Certifique-se de que todas as dependências estão instaladas.")
-        
-        try:
-            # Salva o arquivo temporariamente se for um InMemoryUploadedFile
-            temp_path = os.path.join(extract_dir, 'temp_archive')
-            with open(temp_path, 'wb+') as temp_file:
-                for chunk in archive_file.chunks():
-                    temp_file.write(chunk)
+                return False, error_msg
+                
+            # Cria um diretório temporário para extração
+            self.temp_dir = tempfile.mkdtemp(prefix='manga_volume_')
+            logger.info(f"Diretório temporário criado: {self.temp_dir}")
             
             # Processa o arquivo com base na extensão
-            if file_name.endswith('.zip'):
-                with zipfile.ZipFile(temp_path, 'r') as zip_ref:
+            if file_name_lower.endswith(('.zip', '.cbz')):
+                with zipfile.ZipFile(file_path, 'r') as zip_ref:
                     # Extrai todos os arquivos
-                    zip_ref.extractall(extract_dir)
+                    zip_ref.extractall(self.temp_dir)
                     
                     # Mapeia a estrutura de diretórios
                     for file_path in zip_ref.namelist():
                         self._add_to_file_structure(extracted_files, file_path)
                         
-            elif file_name.endswith('.rar') and rarfile:
-                with rarfile.RarFile(temp_path, 'r') as rar_ref:
-                    # Extrai todos os arquivos
-                    rar_ref.extractall(extract_dir)
-                    
-                    # Mapeia a estrutura de diretórios
+                success, message = self._process_extracted_images(volume, self.temp_dir)
+                return success, message
+                
+            elif file_name_lower.endswith(('.rar', '.cbr')) and rarfile is not None:
+                with rarfile.RarFile(file_path, 'r') as rar_ref:
+                    rar_ref.extractall(self.temp_dir)
                     for file_path in rar_ref.namelist():
                         self._add_to_file_structure(extracted_files, file_path)
-                        
-            elif file_name.endswith('.7z') and py7zr:
-                with py7zr.SevenZipFile(temp_path, 'r') as seven_zip_ref:
-                    # Extrai todos os arquivos
-                    seven_zip_ref.extractall(extract_dir)
-                    
-                    # Mapeia a estrutura de diretórios
+                
+                success, message = self._process_extracted_images(volume, self.temp_dir)
+                return success, message
+                
+            elif file_name_lower.endswith(('.7z', '.cb7')) and py7zr is not None:
+                with py7zr.SevenZipFile(file_path, 'r') as seven_zip_ref:
+                    seven_zip_ref.extractall(self.temp_dir)
                     for file_path in seven_zip_ref.getnames():
                         self._add_to_file_structure(extracted_files, file_path)
-                        
-            else:
-                raise ValidationError("Formato de arquivo não suportado. Use ZIP, RAR ou 7Z.")
-            
-            # Remove o arquivo temporário
-            if os.path.exists(temp_path):
-                os.remove(temp_path)
                 
-            return extracted_files
-            
+                success, message = self._process_extracted_images(volume, self.temp_dir)
+                return success, message
+                
+            else:
+                error_msg = "Formato de arquivo não suportado ou biblioteca necessária não encontrada"
+                logger.error(error_msg)
+                return False, error_msg
+                
         except Exception as e:
-            logger.error(f"Erro ao extrair arquivo: {str(e)}", exc_info=True)
-            raise ValidationError(f"Erro ao extrair o arquivo: {str(e)}")
+            error_msg = f"Erro ao processar o arquivo: {str(e)}"
+            logger.exception(error_msg)
+            return False, error_msg
+            
+        finally:
+            # Limpa os arquivos temporários
+            self._cleanup_temp_dir()
+                        
+    def _extract_zip(self, file_path: str) -> List[str]:
+        """
+        Extrai arquivos de um arquivo ZIP.
+        
+        Args:
+            file_path: Caminho para o arquivo ZIP
+            
+        Returns:
+            Lista de caminhos para os arquivos extraídos
+            
+        Raises:
+            ValueError: Se o arquivo não for um ZIP válido ou estiver corrompido
+        """
+        extracted_files = []
+        
+        try:
+            with zipfile.ZipFile(file_path, 'r') as zip_ref:
+                # Cria um diretório temporário para extração
+                self.temp_dir = tempfile.mkdtemp(prefix='manga_extract_')
+                
+                # Extrai todos os arquivos
+                zip_ref.extractall(self.temp_dir)
+                
+                # Lista todos os arquivos extraídos
+                for root, _, files in os.walk(self.temp_dir):
+                    for file in files:
+                        file_path = os.path.join(root, file)
+                        if self._is_valid_file(file_path):
+                            extracted_files.append(file_path)
+                
+                return extracted_files
+                
+        except zipfile.BadZipFile as e:
+            self._cleanup_temp_dir()
+            raise ValueError(f"Arquivo ZIP inválido ou corrompido: {str(e)}")
+        except Exception as e:
+            self._cleanup_temp_dir()
+            raise ValueError(f"Erro ao extrair arquivo ZIP: {str(e)}")
+    
+    def _extract_7z(self, file_path: str) -> List[str]:
+        """
+        Extrai arquivos de um arquivo 7Z.
+        
+        Args:
+            file_path: Caminho para o arquivo 7Z
+            
+        Returns:
+            Lista de caminhos para os arquivos extraídos
+            
+        Raises:
+            ValueError: Se o arquivo não for um 7Z válido, estiver corrompido
+                      ou se a biblioteca py7zr não estiver instalada
+        """
+        if py7zr is None:
+            raise ImportError("A biblioteca 'py7zr' é necessária para extrair arquivos 7Z")
+            
+        extracted_files = []
+        
+        try:
+            with py7zr.SevenZipFile(file_path, 'r') as seven_zip_ref:
+                # Cria um diretório temporário para extração
+                self.temp_dir = tempfile.mkdtemp(prefix='manga_extract_')
+                
+                # Extrai todos os arquivos
+                seven_zip_ref.extractall(self.temp_dir)
+                
+                # Lista todos os arquivos extraídos
+                for root, _, files in os.walk(self.temp_dir):
+                    for file in files:
+                        file_path = os.path.join(root, file)
+                        if self._is_valid_file(file_path):
+                            extracted_files.append(file_path)
+                
+                return extracted_files
+                
+        except Exception as e:
+            self._cleanup_temp_dir()
+            raise ValueError(f"Erro ao extrair arquivo 7Z: {str(e)}")
     
     def _add_to_file_structure(self, file_structure: dict, file_path: str) -> None:
         """
@@ -690,7 +651,18 @@ class VolumeFileProcessorService:
             error_msg = f"Erro ao criar capítulo a partir da pasta {folder_path}: {str(e)}"
             logger.error(error_msg, exc_info=True)
             return False, error_msg
-=======
+        
+    def _process_volume_file(self, volume: Volume, file_path: str) -> Tuple[bool, str]:
+        """
+        Processa um arquivo de volume e cria as páginas correspondentes.
+        
+        Args:
+            volume: Instância do modelo Volume
+            file_path: Caminho para o arquivo a ser processado
+            
+        Returns:
+            Tupla (success, message) indicando o resultado da operação
+        """
         if not isinstance(volume, Volume) or not volume.pk:
             raise ValueError("O parâmetro 'volume' deve ser uma instância de Volume válida")
         
@@ -810,25 +782,62 @@ class VolumeFileProcessorService:
             raise ImportError("A biblioteca rarfile não está instalada. Instale com 'pip install rarfile'")
         with rarfile.RarFile(file_path, 'r') as rar_ref:
             rar_ref.extractall(self.temp_dir)
-    
-    def _extract_7z(self, file_path: str) -> None:
-        """Extrai um arquivo 7Z."""
-        if not py7zr:
-            raise ImportError("A biblioteca py7zr não está instalada. Instale com 'pip install py7zr'")
-        with py7zr.SevenZipFile(file_path, 'r') as zip_ref:
-            zip_ref.extractall(self.temp_dir)
-    
-    def _process_extracted_images(self, volume: Volume, base_dir: str = None) -> Tuple[bool, str]:
-        """
-        Processa as imagens extraídas e cria as páginas no banco de dados.
-        
-        Args:
-            volume: Instância do modelo Volume
-            base_dir: Diretório base para procurar imagens (opcional, usa self.temp_dir se None)
+
+    def _process_volume_file(self, volume: Volume, file_path: str) -> Tuple[bool, str]:
+        # Verifica se o volume é válido
+        if not hasattr(volume, 'pk') or not volume.pk:
+            raise ValueError("O parâmetro 'volume' deve ser uma instância de Volume válida")
+
+        # Verifica se o arquivo existe
+        if not os.path.isfile(file_path):
+            error_msg = f"Arquivo não encontrado: {file_path}"
+            logger.error(error_msg)
+            return False, error_msg
             
-        Returns:
-            Tupla (success, message)
-        """
+        # Verifica a extensão do arquivo
+        file_ext = os.path.splitext(file_path)[1].lower()
+        supported_extensions = ['.zip', '.rar', '.7z', '.cbz', '.cbr', '.cb7']
+        
+        if file_ext not in supported_extensions:
+            error_msg = f"Formato de arquivo não suportado: {file_ext}. Formatos suportados: {', '.join(supported_extensions)}"
+            logger.error(error_msg)
+            return False, error_msg
+            
+        try:
+            # Cria um diretório temporário para extração
+            self.temp_dir = tempfile.mkdtemp(prefix='manga_volume_')
+            logger.info(f"Diretório temporário criado: {self.temp_dir}")
+            
+            # Processa o arquivo com base na extensão
+            if file_ext in ['.zip', '.cbz']:
+                extracted_files = self._extract_zip(file_path)
+            elif file_ext in ['.rar', '.cbr'] and rarfile is not None:
+                extracted_files = self._extract_rar(file_path)
+            elif file_ext in ['.7z', '.cb7'] and py7zr is not None:
+                extracted_files = self._extract_7z(file_path)
+            else:
+                error_msg = "Formato de arquivo não suportado ou biblioteca necessária não encontrada"
+                logger.error(error_msg)
+                return False, error_msg
+                
+            # Processa as imagens extraídas
+            success, message = self._process_extracted_images(volume, self.temp_dir)
+            return success, message
+            
+        except Exception as e:
+            error_msg = f"Erro ao processar o arquivo: {str(e)}"
+            logger.exception(error_msg)
+            return False, error_msg
+            
+        finally:
+            # Limpa os arquivos temporários
+            # CORRIGIDO: Usar o método correto que existe
+            if hasattr(self, 'temp_dir') and self.temp_dir:
+                self._cleanup_temp_files(self.temp_dir)
+                logger.info(f"Diretório temporário removido: {self.temp_dir}")
+
+    def _process_extracted_images(self, volume: Volume, base_dir: str = None) -> Tuple[bool, str]:
+        """Processa as imagens extraídas e cria as páginas no banco de dados."""
         if base_dir is None:
             base_dir = self.temp_dir
         
@@ -850,47 +859,50 @@ class VolumeFileProcessorService:
             return False, f"O volume não pode ter mais de {self.MAX_PAGES} páginas"
         
         try:
-            # Cria um capítulo para o volume
-            capitulo = Capitulo.objects.create(
-                volume=volume,
-                number=1,  # Capítulo 1 para o volume
-                title=f"Volume {volume.number}",
-                is_published=volume.is_published
-            )
-            
-            # Diretório de destino para as imagens
-            pages_dir = os.path.join('pages', str(volume.id))
-            os.makedirs(os.path.join('media', pages_dir), exist_ok=True)
-            
-            # Processa cada imagem
-            for i, img_path in enumerate(image_files, start=1):
-                # Gera um nome único para o arquivo
-                filename = f"page_{i:03d}{os.path.splitext(img_path)[1]}"
-                dest_path = os.path.join(pages_dir, filename)
+            # ✅ ADICIONADO: Transação atômica para rollback em caso de erro
+            with transaction.atomic():
+                # Cria um capítulo para o volume
+                capitulo = Capitulo.objects.create(
+                    volume=volume,
+                    number=1,
+                    title=f"Volume {volume.number}",
+                    is_published=volume.is_published
+                )
                 
-                # Abre e verifica a imagem
-                try:
-                    with Image.open(img_path) as img:
-                        # Salva a imagem no diretório de mídia
-                        img.save(os.path.join('media', dest_path), quality=85, optimize=True)
-                        
-                        # Cria o registro da página no banco de dados
-                        Pagina.objects.create(
-                            capitulo=capitulo,
-                            number=i,
-                            image=dest_path,
-                            width=img.width,
-                            height=img.height,
-                            file_size=os.path.getsize(os.path.join('media', dest_path))
-                        )
-                        
-                except (UnidentifiedImageError, OSError) as e:
-                    logger.warning(f"Não foi possível processar a imagem {img_path}: {str(e)}")
-                    continue
-            
-            return True, f"Volume processado com sucesso. {len(image_files)} páginas adicionadas."
-            
+                # Processa cada imagem
+                for i, img_path in enumerate(image_files, start=1):
+                    try:
+                        with Image.open(img_path) as img:
+                            # ✅ CORRIGIDO: Usar Django File system em vez de path hardcoded
+                            from django.core.files.base import ContentFile
+                            from io import BytesIO
+                            
+                            # Cria arquivo em memória
+                            img_io = BytesIO()
+                            img_format = 'JPEG' if img_path.lower().endswith(('.jpg', '.jpeg')) else 'PNG'
+                            img.save(img_io, format=img_format, quality=85, optimize=True)
+                            img_io.seek(0)
+                            
+                            # Gera nome do arquivo
+                            filename = f"page_{i:03d}{os.path.splitext(img_path)[1]}"
+                            django_file = ContentFile(img_io.getvalue(), name=filename)
+                            
+                            # ✅ CORRIGIDO: Usar nomes corretos dos campos
+                            Pagina.objects.create(
+                                capitulo=capitulo,
+                                number=i,  # ✅ Campo correto
+                                image=django_file,  # ✅ Campo correto + Django File
+                                width=img.width,  # ✅ Campo correto
+                                height=img.height,  # ✅ Campo correto
+                                file_size=len(img_io.getvalue())  # ✅ Tamanho correto
+                            )
+                            
+                    except (UnidentifiedImageError, OSError) as e:
+                        logger.warning(f"Não foi possível processar a imagem {img_path}: {str(e)}")
+                        continue
+                
+                return True, f"Volume processado com sucesso. {len(image_files)} páginas adicionadas."
+                
         except Exception as e:
             logger.exception("Erro ao processar imagens extraídas")
             return False, f"Erro ao processar imagens: {str(e)}"
->>>>>>> d2e4c0d332471828370082b79040fd5c19165703

@@ -41,13 +41,26 @@ class VolumeCreateView(LoginRequiredMixin, StaffOrSuperuserRequiredMixin, Create
         return context
     
     def form_valid(self, form):
-        """Define o mangá e o criador do volume."""
-        manga_slug = self.kwargs.get('manga_slug')
-        manga = get_object_or_404(Manga, slug=manga_slug)
-        form.instance.manga = manga
-        response = super().form_valid(form)
-        messages.success(self.request, f'Volume {self.object.number} criado com sucesso!')
-        return response
+        """Define o mangá e o criador do volume, com tratamento de erros."""
+        try:
+            manga_slug = self.kwargs.get('manga_slug')
+            manga = get_object_or_404(Manga, slug=manga_slug)
+            form.instance.manga = manga
+            
+            # Verifica se já existe um volume com o mesmo número para este mangá
+            number = form.cleaned_data.get('number')
+            if Volume.objects.filter(manga=manga, number=number).exists():
+                form.add_error('number', f'Já existe um volume com o número {number} para este mangá.')
+                return self.form_invalid(form)
+                
+            response = super().form_valid(form)
+            messages.success(self.request, f'Volume {self.object.number} criado com sucesso!')
+            return response
+            
+        except Exception as e:
+            logger.error(f"Erro ao criar volume: {str(e)}")
+            messages.error(self.request, 'Ocorreu um erro ao criar o volume. Por favor, tente novamente.')
+            return self.form_invalid(form)
     
     def get_success_url(self):
         """Redireciona para a página do mangá após a criação do volume."""

@@ -1,5 +1,5 @@
 """
-Django settings for FireFlies CMS.
+Django settings for NIX CMS.
 
 Configurações otimizadas para desenvolvimento e produção.
 Utiliza variáveis de ambiente para máxima flexibilidade e segurança.
@@ -816,3 +816,37 @@ TINYMCE_DEFAULT_CONFIG = {
     'content_style': "body { font-family: 'Inter', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }",
     'setup': "function(editor) {\n  function syncFontAndTheme() {\n    var theme = document.documentElement.getAttribute('data-theme');\n    var doc = editor.getDoc();\n    if (doc) {\n      doc.body.style.fontFamily = 'Inter, Roboto, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif';\n      if (theme === 'dark') {\n        doc.documentElement.setAttribute('data-theme', 'dark');\n      } else {\n        doc.documentElement.removeAttribute('data-theme');\n      }\n    }\n  }\n  editor.on('init', syncFontAndTheme);\n  window.addEventListener('themechange', syncFontAndTheme);\n}",
 }
+
+# Configuração para rarfile (Windows)
+import os
+if os.name == 'nt':  # Windows
+    try:
+        import rarfile
+        import subprocess
+        
+        # Encontra o unrar.exe
+        winrar_paths = [
+            r"C:\Program Files\WinRAR\unrar.exe",
+            r"C:\Program Files (x86)\WinRAR\unrar.exe"
+        ]
+        
+        for path in winrar_paths:
+            if os.path.exists(path):
+                rarfile.UNRAR_TOOL = path
+                break
+        else:
+            # Tenta encontrar no PATH
+            try:
+                result = subprocess.run(['where', 'unrar'], 
+                                      capture_output=True, 
+                                      text=True, 
+                                      shell=True, 
+                                      encoding='utf-8', 
+                                      errors='ignore')
+                if result.returncode == 0:
+                    rarfile.UNRAR_TOOL = result.stdout.strip().split('\n')[0]
+            except:
+                pass
+                
+    except ImportError:
+        pass

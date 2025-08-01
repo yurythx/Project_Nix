@@ -7,18 +7,37 @@ from apps.common.mixins import (
     ReadOnlyMixin,
     CreatorRequiredMixin
 )
+from abc import ABC, abstractmethod
 from typing import Optional, Any
 
 
-class MangaOwnerOrStaffMixin(BaseOwnerOrStaffMixin):
-    """
-    Mixin que verifica se o usuário é o proprietário do mangá ou tem permissão de staff.
-    """
-    permission_denied_message = "🚫 Acesso negado! Você só pode editar ou excluir mangás que você criou."
-    redirect_url = 'mangas:manga_list'
+class BasePermissionMixin(ABC):
+    """Mixin base abstrato para permissões."""
+    
+    @abstractmethod
+    def has_permission(self, request, obj=None) -> bool:
+        pass
+    
+    @abstractmethod
+    def get_permission_denied_message(self) -> str:
+        pass
+
+class MangaOwnerOrStaffMixin(BasePermissionMixin, BaseOwnerOrStaffMixin):
+    """Mixin extensível para verificação de proprietário do mangá."""
+    
+    def has_permission(self, request, obj=None) -> bool:
+        if request.user.is_staff or request.user.is_superuser:
+            return True
+        
+        if obj and hasattr(obj, 'criado_por'):
+            return obj.criado_por == request.user
+        
+        return False
+    
+    def get_permission_denied_message(self) -> str:
+        return "🚫 Acesso negado! Você só pode editar ou excluir mangás que você criou."
     
     def _get_owner(self, obj):
-        """Obtém o criador do mangá."""
         return getattr(obj, 'criado_por', None)
 
 

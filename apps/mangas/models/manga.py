@@ -32,6 +32,11 @@ class Manga(SlugMixin, TimestampMixin, models.Model):
         verbose_name=_('Criado por'),
         help_text=_('Usuário que criou este mangá')
     )
+    view_count = models.PositiveIntegerField(
+        _('Visualizações'),
+        default=0,
+        help_text=_('Número de visualizações do mangá')
+    )
 
     class Meta:
         app_label = 'mangas'
@@ -50,6 +55,9 @@ class Manga(SlugMixin, TimestampMixin, models.Model):
         Sobrescreve o método save para garantir que o slug seja gerado automaticamente
         se não estiver definido ou se o título for alterado.
         """
+        # Validação completa do modelo
+        self.full_clean()
+        
         # Se o slug não existe ou o título foi alterado
         if not self.slug or (self.pk and 'title' in self.get_dirty_fields()):
             # Gera o slug a partir do título
@@ -79,13 +87,6 @@ class Manga(SlugMixin, TimestampMixin, models.Model):
     def clean(self):
         if not self.title or not self.title.strip():
             raise ValidationError({'title': 'O título é obrigatório.'})
-
-    def save(self, *args, **kwargs):
-        self.full_clean()
-        """Sobrescreve o método save para garantir um slug único."""
-        if not self.slug or self._state.adding:
-            self.slug = self.generate_unique_slug(self.title)
-        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.title
