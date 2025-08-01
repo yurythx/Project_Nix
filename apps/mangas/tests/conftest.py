@@ -41,11 +41,21 @@ def manga_factory(user_factory):
     class MangaFactory(factory.django.DjangoModelFactory):
         class Meta:
             model = Manga
+            skip_postgeneration_save = True  # Evita salvar automaticamente após a geração
+            
         title = Sequence(lambda n: f'Manga Teste {n}')
         slug = Sequence(lambda n: f'manga-teste-{n}')
         description = 'Descrição de teste do mangá'
-        status = 'published'
+        author = 'Autor Teste'
+        is_published = True
         criado_por = SubFactory(user_factory)
+        
+        @classmethod
+        def _create(cls, model_class, *args, **kwargs):
+            # Remove campos que não são do modelo antes de criar a instância
+            kwargs.pop('status', None)
+            return super()._create(model_class, *args, **kwargs)
+            
     return MangaFactory
 
 
