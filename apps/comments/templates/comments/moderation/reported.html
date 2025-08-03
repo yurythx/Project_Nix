@@ -1,0 +1,884 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Comentários Sinalizados - {{ block.super }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/comments.css' %}">
+<link rel="stylesheet" href="{% static 'css/moderation.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid my-4">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3">
+            <div class="card shadow-sm">
+                <div class="card-header bg-warning text-dark">
+                    <h6 class="mb-0">
+                        <i class="fas fa-flag me-2"></i>
+                        Comentários Sinalizados
+                    </h6>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="{% url 'comments:moderation_queue' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-list me-2"></i>
+                        Fila de Moderação
+                    </a>
+                    <a href="{% url 'comments:moderation_stats' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-chart-bar me-2"></i>
+                        Estatísticas
+                    </a>
+                    <a href="{% url 'comments:moderation_config' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-cog me-2"></i>
+                        Configurações
+                    </a>
+                    <a href="{% url 'comments:moderation_history' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-history me-2"></i>
+                        Histórico
+                    </a>
+                    <a href="{% url 'comments:moderation_spam_detection' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-shield-alt me-2"></i>
+                        Detecção de Spam
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Report Stats -->
+            <div class="card shadow-sm mt-3">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>
+                        Estatísticas de Sinalizações
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="border-end">
+                                <h5 class="text-warning mb-0">{{ total_reports|default:0 }}</h5>
+                                <small class="text-muted">Total</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <h5 class="text-danger mb-0">{{ pending_reports|default:0 }}</h5>
+                            <small class="text-muted">Pendentes</small>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="border-end">
+                                <h6 class="text-success mb-0">{{ resolved_reports|default:0 }}</h6>
+                                <small class="text-muted">Resolvidas</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <h6 class="text-secondary mb-0">{{ ignored_reports|default:0 }}</h6>
+                            <small class="text-muted">Ignoradas</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Quick Actions -->
+            <div class="card shadow-sm mt-3">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-bolt me-2"></i>
+                        Ações Rápidas
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-success" onclick="resolveAllPending()">
+                            <i class="fas fa-check-double me-1"></i>Resolver Pendentes
+                        </button>
+                        <button class="btn btn-outline-warning" onclick="bulkIgnore()">
+                            <i class="fas fa-eye-slash me-1"></i>Ignorar Selecionadas
+                        </button>
+                        <button class="btn btn-outline-info" onclick="exportReports()">
+                            <i class="fas fa-download me-1"></i>Exportar Relatório
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Report Categories -->
+            <div class="card shadow-sm mt-3">
+                <div class="card-header bg-secondary text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-tags me-2"></i>
+                        Categorias
+                    </h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for category in report_categories %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>
+                                <i class="fas fa-{{ category.icon }} me-2"></i>
+                                {{ category.name }}
+                            </span>
+                            <span class="badge bg-primary rounded-pill">{{ category.count }}</span>
+                        </div>
+                        {% empty %}
+                        <div class="list-group-item text-center text-muted">
+                            Nenhuma categoria encontrada
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-md-9">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>
+                    <i class="fas fa-flag me-2"></i>
+                    Comentários Sinalizados
+                </h2>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-primary" onclick="refreshData()">
+                        <i class="fas fa-sync-alt me-1"></i>
+                        Atualizar
+                    </button>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="autoRefresh" onchange="toggleAutoRefresh()">
+                        <label class="form-check-label" for="autoRefresh">
+                            Auto-atualizar
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Filters -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-filter me-2"></i>
+                        Filtros
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <form method="get" id="filterForm">
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <label for="status" class="form-label">Status:</label>
+                                <select class="form-select" id="status" name="status" onchange="applyFilters()">
+                                    <option value="">Todos</option>
+                                    <option value="pending" {% if request.GET.status == 'pending' %}selected{% endif %}>Pendente</option>
+                                    <option value="resolved" {% if request.GET.status == 'resolved' %}selected{% endif %}>Resolvido</option>
+                                    <option value="ignored" {% if request.GET.status == 'ignored' %}selected{% endif %}>Ignorado</option>
+                                    <option value="escalated" {% if request.GET.status == 'escalated' %}selected{% endif %}>Escalado</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="category" class="form-label">Categoria:</label>
+                                <select class="form-select" id="category" name="category" onchange="applyFilters()">
+                                    <option value="">Todas</option>
+                                    <option value="spam" {% if request.GET.category == 'spam' %}selected{% endif %}>Spam</option>
+                                    <option value="inappropriate" {% if request.GET.category == 'inappropriate' %}selected{% endif %}>Inapropriado</option>
+                                    <option value="harassment" {% if request.GET.category == 'harassment' %}selected{% endif %}>Assédio</option>
+                                    <option value="hate_speech" {% if request.GET.category == 'hate_speech' %}selected{% endif %}>Discurso de Ódio</option>
+                                    <option value="misinformation" {% if request.GET.category == 'misinformation' %}selected{% endif %}>Desinformação</option>
+                                    <option value="other" {% if request.GET.category == 'other' %}selected{% endif %}>Outro</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="priority" class="form-label">Prioridade:</label>
+                                <select class="form-select" id="priority" name="priority" onchange="applyFilters()">
+                                    <option value="">Todas</option>
+                                    <option value="low" {% if request.GET.priority == 'low' %}selected{% endif %}>Baixa</option>
+                                    <option value="medium" {% if request.GET.priority == 'medium' %}selected{% endif %}>Média</option>
+                                    <option value="high" {% if request.GET.priority == 'high' %}selected{% endif %}>Alta</option>
+                                    <option value="urgent" {% if request.GET.priority == 'urgent' %}selected{% endif %}>Urgente</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="date_range" class="form-label">Período:</label>
+                                <select class="form-select" id="date_range" name="date_range" onchange="applyFilters()">
+                                    <option value="">Todos</option>
+                                    <option value="today" {% if request.GET.date_range == 'today' %}selected{% endif %}>Hoje</option>
+                                    <option value="week" {% if request.GET.date_range == 'week' %}selected{% endif %}>Esta Semana</option>
+                                    <option value="month" {% if request.GET.date_range == 'month' %}selected{% endif %}>Este Mês</option>
+                                    <option value="custom" {% if request.GET.date_range == 'custom' %}selected{% endif %}>Personalizado</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="row g-3 mt-2" id="customDateRange" style="display: {% if request.GET.date_range == 'custom' %}block{% else %}none{% endif %};">
+                            <div class="col-md-6">
+                                <label for="start_date" class="form-label">Data Inicial:</label>
+                                <input type="date" class="form-control" id="start_date" name="start_date" value="{{ request.GET.start_date }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="end_date" class="form-label">Data Final:</label>
+                                <input type="date" class="form-control" id="end_date" name="end_date" value="{{ request.GET.end_date }}">
+                            </div>
+                        </div>
+                        
+                        <div class="row g-3 mt-2">
+                            <div class="col-md-8">
+                                <label for="search" class="form-label">Buscar:</label>
+                                <input type="text" class="form-control" id="search" name="search" placeholder="Buscar por conteúdo, usuário ou motivo..." value="{{ request.GET.search }}">
+                            </div>
+                            <div class="col-md-4 d-flex align-items-end">
+                                <div class="d-flex gap-2 w-100">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-search me-1"></i>
+                                        Buscar
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary" onclick="clearFilters()">
+                                        <i class="fas fa-times me-1"></i>
+                                        Limpar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Reported Comments -->
+            <div class="card shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">
+                        <i class="fas fa-list me-2"></i>
+                        Comentários Sinalizados ({{ page_obj.paginator.count|default:0 }})
+                    </h6>
+                    <div class="d-flex gap-2">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+                            <label class="form-check-label" for="selectAll">
+                                Selecionar Todos
+                            </label>
+                        </div>
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-cog me-1"></i>
+                                Ações em Massa
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="#" onclick="bulkResolve()"><i class="fas fa-check me-2"></i>Resolver</a></li>
+                                <li><a class="dropdown-item" href="#" onclick="bulkIgnore()"><i class="fas fa-eye-slash me-2"></i>Ignorar</a></li>
+                                <li><a class="dropdown-item" href="#" onclick="bulkEscalate()"><i class="fas fa-arrow-up me-2"></i>Escalar</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-danger" href="#" onclick="bulkDelete()"><i class="fas fa-trash me-2"></i>Excluir</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    {% if reported_comments %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th width="40">
+                                        <input type="checkbox" id="selectAllHeader" onchange="toggleSelectAll()">
+                                    </th>
+                                    <th>Comentário</th>
+                                    <th>Sinalização</th>
+                                    <th>Prioridade</th>
+                                    <th>Status</th>
+                                    <th>Moderador</th>
+                                    <th>Data</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for report in reported_comments %}
+                                <tr class="{% if report.priority == 'urgent' %}table-danger{% elif report.priority == 'high' %}table-warning{% endif %}">
+                                    <td>
+                                        <input type="checkbox" class="report-checkbox" value="{{ report.id }}">
+                                    </td>
+                                    <td>
+                                        <div class="d-flex">
+                                            <div class="flex-shrink-0">
+                                                {% if report.comment.user.profile.avatar %}
+                                                <img src="{{ report.comment.user.profile.avatar.url }}" alt="{{ report.comment.user.username }}" class="rounded-circle" width="40" height="40">
+                                                {% else %}
+                                                <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                    <i class="fas fa-user text-white"></i>
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                            <div class="flex-grow-1 ms-3">
+                                                <div class="fw-bold">{{ report.comment.user.username }}</div>
+                                                <div class="comment-content">{{ report.comment.content|truncatechars:100 }}</div>
+                                                <small class="text-muted">
+                                                    <i class="fas fa-clock me-1"></i>
+                                                    {{ report.comment.created_at|timesince }} atrás
+                                                    {% if report.comment.content_object %}
+                                                    | <a href="{{ report.comment.content_object.get_absolute_url }}" target="_blank">Ver contexto</a>
+                                                    {% endif %}
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center mb-2">
+                                            <div class="flex-shrink-0">
+                                                {% if report.reporter.profile.avatar %}
+                                                <img src="{{ report.reporter.profile.avatar.url }}" alt="{{ report.reporter.username }}" class="rounded-circle" width="24" height="24">
+                                                {% else %}
+                                                <div class="bg-info rounded-circle d-flex align-items-center justify-content-center" style="width: 24px; height: 24px;">
+                                                    <i class="fas fa-user text-white" style="font-size: 10px;"></i>
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                            <div class="flex-grow-1 ms-2">
+                                                <div class="fw-bold">{{ report.reporter.username }}</div>
+                                            </div>
+                                        </div>
+                                        <div class="mb-2">
+                                            <span class="badge {% if report.category == 'spam' %}bg-danger{% elif report.category == 'inappropriate' %}bg-warning{% elif report.category == 'harassment' %}bg-dark{% else %}bg-secondary{% endif %}">
+                                                {% if report.category == 'spam' %}
+                                                    <i class="fas fa-ban me-1"></i>Spam
+                                                {% elif report.category == 'inappropriate' %}
+                                                    <i class="fas fa-exclamation-triangle me-1"></i>Inapropriado
+                                                {% elif report.category == 'harassment' %}
+                                                    <i class="fas fa-user-slash me-1"></i>Assédio
+                                                {% elif report.category == 'hate_speech' %}
+                                                    <i class="fas fa-angry me-1"></i>Discurso de Ódio
+                                                {% elif report.category == 'misinformation' %}
+                                                    <i class="fas fa-info-circle me-1"></i>Desinformação
+                                                {% else %}
+                                                    <i class="fas fa-question me-1"></i>{{ report.get_category_display }}
+                                                {% endif %}
+                                            </span>
+                                        </div>
+                                        {% if report.reason %}
+                                        <div class="small text-muted">
+                                            <strong>Motivo:</strong> {{ report.reason|truncatechars:50 }}
+                                        </div>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge {% if report.priority == 'urgent' %}bg-danger{% elif report.priority == 'high' %}bg-warning{% elif report.priority == 'medium' %}bg-info{% else %}bg-secondary{% endif %}">
+                                            {% if report.priority == 'urgent' %}
+                                                <i class="fas fa-exclamation me-1"></i>Urgente
+                                            {% elif report.priority == 'high' %}
+                                                <i class="fas fa-arrow-up me-1"></i>Alta
+                                            {% elif report.priority == 'medium' %}
+                                                <i class="fas fa-minus me-1"></i>Média
+                                            {% else %}
+                                                <i class="fas fa-arrow-down me-1"></i>Baixa
+                                            {% endif %}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge {% if report.status == 'pending' %}bg-warning{% elif report.status == 'resolved' %}bg-success{% elif report.status == 'ignored' %}bg-secondary{% elif report.status == 'escalated' %}bg-danger{% endif %}">
+                                            {% if report.status == 'pending' %}
+                                                <i class="fas fa-clock me-1"></i>Pendente
+                                            {% elif report.status == 'resolved' %}
+                                                <i class="fas fa-check me-1"></i>Resolvido
+                                            {% elif report.status == 'ignored' %}
+                                                <i class="fas fa-eye-slash me-1"></i>Ignorado
+                                            {% elif report.status == 'escalated' %}
+                                                <i class="fas fa-arrow-up me-1"></i>Escalado
+                                            {% endif %}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if report.moderator %}
+                                        <div class="d-flex align-items-center">
+                                            {% if report.moderator.profile.avatar %}
+                                            <img src="{{ report.moderator.profile.avatar.url }}" alt="{{ report.moderator.username }}" class="rounded-circle me-2" width="24" height="24">
+                                            {% else %}
+                                            <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 24px; height: 24px;">
+                                                <i class="fas fa-user text-white" style="font-size: 10px;"></i>
+                                            </div>
+                                            {% endif %}
+                                            <small>{{ report.moderator.username }}</small>
+                                        </div>
+                                        {% else %}
+                                        <small class="text-muted">Não atribuído</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="d-flex flex-column">
+                                            <span class="fw-bold">{{ report.created_at|date:"d/m/Y" }}</span>
+                                            <small class="text-muted">{{ report.created_at|time:"H:i" }}</small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <button class="btn btn-sm btn-outline-primary" onclick="viewReportDetails({{ report.id }})" title="Ver detalhes">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            {% if report.status == 'pending' %}
+                                            <button class="btn btn-sm btn-outline-success" onclick="resolveReport({{ report.id }})" title="Resolver">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-secondary" onclick="ignoreReport({{ report.id }})" title="Ignorar">
+                                                <i class="fas fa-eye-slash"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-warning" onclick="escalateReport({{ report.id }})" title="Escalar">
+                                                <i class="fas fa-arrow-up"></i>
+                                            </button>
+                                            {% endif %}
+                                            <div class="btn-group" role="group">
+                                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" title="Mais ações">
+                                                    <i class="fas fa-ellipsis-v"></i>
+                                                </button>
+                                                <ul class="dropdown-menu">
+                                                    <li><a class="dropdown-item" href="#" onclick="assignToMe({{ report.id }})"><i class="fas fa-user me-2"></i>Atribuir a mim</a></li>
+                                                    <li><a class="dropdown-item" href="#" onclick="changeCategory({{ report.id }})"><i class="fas fa-tag me-2"></i>Alterar categoria</a></li>
+                                                    <li><a class="dropdown-item" href="#" onclick="changePriority({{ report.id }})"><i class="fas fa-flag me-2"></i>Alterar prioridade</a></li>
+                                                    <li><hr class="dropdown-divider"></li>
+                                                    <li><a class="dropdown-item" href="#" onclick="addNote({{ report.id }})"><i class="fas fa-sticky-note me-2"></i>Adicionar nota</a></li>
+                                                    <li><a class="dropdown-item" href="#" onclick="viewHistory({{ report.id }})"><i class="fas fa-history me-2"></i>Ver histórico</a></li>
+                                                    <li><hr class="dropdown-divider"></li>
+                                                    <li><a class="dropdown-item text-danger" href="#" onclick="deleteReport({{ report.id }})"><i class="fas fa-trash me-2"></i>Excluir</a></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Pagination -->
+                    {% if is_paginated %}
+                    <div class="card-footer">
+                        <nav aria-label="Navegação dos comentários sinalizados">
+                            <ul class="pagination justify-content-center mb-0">
+                                {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=1{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">
+                                        <i class="fas fa-angle-double-left"></i>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">
+                                        <i class="fas fa-angle-left"></i>
+                                    </a>
+                                </li>
+                                {% endif %}
+                                
+                                {% for num in page_obj.paginator.page_range %}
+                                {% if page_obj.number == num %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ num }}</span>
+                                </li>
+                                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">{{ num }}</a>
+                                </li>
+                                {% endif %}
+                                {% endfor %}
+                                
+                                {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">
+                                        <i class="fas fa-angle-right"></i>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">
+                                        <i class="fas fa-angle-double-right"></i>
+                                    </a>
+                                </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                    </div>
+                    {% endif %}
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-flag fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">Nenhum comentário sinalizado</h5>
+                        <p class="text-muted">Não há comentários sinalizados no momento.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Report Details Modal -->
+<div class="modal fade" id="reportDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Detalhes da Sinalização
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="reportDetailsContent">
+                <!-- Content loaded via AJAX -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Action Confirmation Modal -->
+<div class="modal fade" id="actionConfirmModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="actionConfirmTitle">Confirmar Ação</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="actionConfirmContent">
+                <!-- Content set via JavaScript -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="actionConfirmButton">Confirmar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let autoRefreshInterval;
+
+// Toggle auto refresh
+function toggleAutoRefresh() {
+    const enabled = document.getElementById('autoRefresh').checked;
+    
+    if (enabled) {
+        autoRefreshInterval = setInterval(() => {
+            refreshData();
+        }, 30000); // Refresh every 30 seconds
+        showAlert('Auto-atualização ativada (30s)', 'info');
+    } else {
+        if (autoRefreshInterval) {
+            clearInterval(autoRefreshInterval);
+        }
+        showAlert('Auto-atualização desativada', 'info');
+    }
+}
+
+// Refresh data
+function refreshData() {
+    location.reload();
+}
+
+// Apply filters
+function applyFilters() {
+    document.getElementById('filterForm').submit();
+}
+
+// Clear filters
+function clearFilters() {
+    const form = document.getElementById('filterForm');
+    const inputs = form.querySelectorAll('input, select');
+    inputs.forEach(input => {
+        if (input.type === 'checkbox' || input.type === 'radio') {
+            input.checked = false;
+        } else {
+            input.value = '';
+        }
+    });
+    form.submit();
+}
+
+// Toggle select all
+function toggleSelectAll() {
+    const selectAll = document.getElementById('selectAll') || document.getElementById('selectAllHeader');
+    const checkboxes = document.querySelectorAll('.report-checkbox');
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = selectAll.checked;
+    });
+    
+    // Sync both select all checkboxes
+    document.getElementById('selectAll').checked = selectAll.checked;
+    document.getElementById('selectAllHeader').checked = selectAll.checked;
+}
+
+// Get selected reports
+function getSelectedReports() {
+    const checkboxes = document.querySelectorAll('.report-checkbox:checked');
+    return Array.from(checkboxes).map(cb => cb.value);
+}
+
+// View report details
+function viewReportDetails(reportId) {
+    fetch(`/comments/moderation/reported/${reportId}/details/`)
+        .then(response => response.text())
+        .then(html => {
+            document.getElementById('reportDetailsContent').innerHTML = html;
+            const modal = new bootstrap.Modal(document.getElementById('reportDetailsModal'));
+            modal.show();
+        })
+        .catch(error => {
+            showAlert('Erro ao carregar detalhes: ' + error.message, 'danger');
+        });
+}
+
+// Individual report actions
+function resolveReport(reportId) {
+    confirmAction(
+        'Resolver Sinalização',
+        'Tem certeza de que deseja resolver esta sinalização?',
+        () => performReportAction(reportId, 'resolve')
+    );
+}
+
+function ignoreReport(reportId) {
+    confirmAction(
+        'Ignorar Sinalização',
+        'Tem certeza de que deseja ignorar esta sinalização?',
+        () => performReportAction(reportId, 'ignore')
+    );
+}
+
+function escalateReport(reportId) {
+    confirmAction(
+        'Escalar Sinalização',
+        'Tem certeza de que deseja escalar esta sinalização?',
+        () => performReportAction(reportId, 'escalate')
+    );
+}
+
+function deleteReport(reportId) {
+    confirmAction(
+        'Excluir Sinalização',
+        'Tem certeza de que deseja excluir esta sinalização? Esta ação não pode ser desfeita.',
+        () => performReportAction(reportId, 'delete'),
+        'danger'
+    );
+}
+
+// Bulk actions
+function bulkResolve() {
+    const selected = getSelectedReports();
+    if (selected.length === 0) {
+        showAlert('Selecione pelo menos uma sinalização.', 'warning');
+        return;
+    }
+    
+    confirmAction(
+        'Resolver Sinalizações',
+        `Tem certeza de que deseja resolver ${selected.length} sinalização(ões)?`,
+        () => performBulkAction(selected, 'resolve')
+    );
+}
+
+function bulkIgnore() {
+    const selected = getSelectedReports();
+    if (selected.length === 0) {
+        showAlert('Selecione pelo menos uma sinalização.', 'warning');
+        return;
+    }
+    
+    confirmAction(
+        'Ignorar Sinalizações',
+        `Tem certeza de que deseja ignorar ${selected.length} sinalização(ões)?`,
+        () => performBulkAction(selected, 'ignore')
+    );
+}
+
+function bulkEscalate() {
+    const selected = getSelectedReports();
+    if (selected.length === 0) {
+        showAlert('Selecione pelo menos uma sinalização.', 'warning');
+        return;
+    }
+    
+    confirmAction(
+        'Escalar Sinalizações',
+        `Tem certeza de que deseja escalar ${selected.length} sinalização(ões)?`,
+        () => performBulkAction(selected, 'escalate')
+    );
+}
+
+function bulkDelete() {
+    const selected = getSelectedReports();
+    if (selected.length === 0) {
+        showAlert('Selecione pelo menos uma sinalização.', 'warning');
+        return;
+    }
+    
+    confirmAction(
+        'Excluir Sinalizações',
+        `Tem certeza de que deseja excluir ${selected.length} sinalização(ões)? Esta ação não pode ser desfeita.`,
+        () => performBulkAction(selected, 'delete'),
+        'danger'
+    );
+}
+
+function resolveAllPending() {
+    confirmAction(
+        'Resolver Todas Pendentes',
+        'Tem certeza de que deseja resolver todas as sinalizações pendentes?',
+        () => {
+            fetch('/comments/moderation/reported/resolve-all-pending/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert(`${data.count} sinalizações resolvidas!`, 'success');
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showAlert('Erro ao resolver sinalizações.', 'danger');
+                }
+            });
+        }
+    );
+}
+
+// Perform individual report action
+function performReportAction(reportId, action) {
+    fetch(`/comments/moderation/reported/${reportId}/${action}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert(data.message || 'Ação realizada com sucesso!', 'success');
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showAlert(data.message || 'Erro ao realizar ação.', 'danger');
+        }
+    })
+    .catch(error => {
+        showAlert('Erro: ' + error.message, 'danger');
+    });
+}
+
+// Perform bulk action
+function performBulkAction(reportIds, action) {
+    fetch('/comments/moderation/reported/bulk-action/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+        },
+        body: JSON.stringify({
+            report_ids: reportIds,
+            action: action
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert(`${data.count} sinalização(ões) processada(s)!`, 'success');
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showAlert('Erro ao processar sinalizações.', 'danger');
+        }
+    })
+    .catch(error => {
+        showAlert('Erro: ' + error.message, 'danger');
+    });
+}
+
+// Additional actions
+function assignToMe(reportId) {
+    fetch(`/comments/moderation/reported/${reportId}/assign/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('Sinalização atribuída a você!', 'success');
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showAlert('Erro ao atribuir sinalização.', 'danger');
+        }
+    });
+}
+
+function changeCategory(reportId) {
+    // This would open a modal to change category
+    showAlert('Funcionalidade em desenvolvimento.', 'info');
+}
+
+function changePriority(reportId) {
+    // This would open a modal to change priority
+    showAlert('Funcionalidade em desenvolvimento.', 'info');
+}
+
+function addNote(reportId) {
+    // This would open a modal to add a note
+    showAlert('Funcionalidade em desenvolvimento.', 'info');
+}
+
+function viewHistory(reportId) {
+    // This would open a modal to view history
+    showAlert('Funcionalidade em desenvolvimento.', 'info');
+}
+
+function exportReports() {
+    window.open('/comments/moderation/reported/export/', '_blank');
+}
+
+// Confirmation modal
+function confirmAction(title, message, callback, type = 'primary') {
+    document.getElementById('actionConfirmTitle').textContent = title;
+    document.getElementById('actionConfirmContent').textContent = message;
+    
+    const button = document.getElementById('actionConfirmButton');
+    button.className = `btn btn-${type}`;
+    button.onclick = () => {
+        callback();
+        bootstrap.Modal.getInstance(document.getElementById('actionConfirmModal')).hide();
+    };
+    
+    const modal = new bootstrap.Modal(document.getElementById('actionConfirmModal'));
+    modal.show();
+}
+
+// Alert function
+function showAlert(message, type) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; max-width: 400px;';
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(alertDiv);
+    
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.remove();
+        }
+    }, 5000);
+}
+
+// Handle custom date range
+document.getElementById('date_range').addEventListener('change', function() {
+    const customRange = document.getElementById('customDateRange');
+    if (this.value === 'custom') {
+        customRange.style.display = 'block';
+    } else {
+        customRange.style.display = 'none';
+    }
+});
+
+// Initialize page
+document.addEventListener('DOMContentLoaded', function() {
+    // Set up any initial state
+    console.log('Reported comments page loaded');
+});
+</script>
+{% endblock %}

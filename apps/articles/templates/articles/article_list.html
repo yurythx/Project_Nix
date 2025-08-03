@@ -2,6 +2,8 @@
 {% load static %}
 {% load articles_tags %}
 
+{% block title %}{% if current_category %}{{ current_category|title }} - {% endif %}Artigos - Project Nix{% endblock %}
+
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'articles/css/article-list.css' %}">
 
@@ -13,15 +15,79 @@
 
 {% block content %}
 <div class="container my-5">
+    <!-- Barra de Pesquisa e Filtros -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-theme-primary text-white">
+            <h6 class="mb-0"><i class="fas fa-filter me-2"></i>Barra de Pesquisa e Filtros</h6>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <!-- Barra de Pesquisa -->
+                <div class="col-md-6">
+                    <div class="input-group">
+                        <input type="text" name="q" class="form-control" placeholder="Buscar artigos..." value="{{ search_query }}">
+                        <button class="btn btn-primary" type="submit">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Filtro por Categoria -->
+                <div class="col-md-3">
+                    <select name="category" class="form-select" onchange="this.form.submit()">
+                        <option value="">Todas as Categorias</option>
+                        {% for cat in categories %}
+                            <option value="{{ cat.slug }}" {% if current_category == cat.slug %}selected{% endif %}>
+                                {{ cat.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <!-- Ordenação -->
+                <div class="col-md-3">
+                    <select name="sort_by" class="form-select" onchange="this.form.submit()">
+                        <option value="newest" {% if sort_by == 'newest' %}selected{% endif %}>Mais Recentes</option>
+                        <option value="oldest" {% if sort_by == 'oldest' %}selected{% endif %}>Mais Antigos</option>
+                        <option value="title" {% if sort_by == 'title' %}selected{% endif %}>Título A-Z</option>
+                        <option value="views" {% if sort_by == 'views' %}selected{% endif %}>Mais Visualizados</option>
+                        <option value="author" {% if sort_by == 'author' %}selected{% endif %}>Autor A-Z</option>
+                    </select>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Categorias Rápidas -->
+    {% if categories %}
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-theme-info text-white">
+            <h6 class="mb-0"><i class="fas fa-tags me-2"></i>Categorias Rápidas</h6>
+        </div>
+        <div class="card-body">
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{% url 'articles:article_list' %}" class="btn btn-sm {% if not current_category %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                    <i class="fas fa-list me-1"></i>Todas
+                </a>
+                {% for category in categories %}
+                    <a href="{% url 'articles:article_category' category_slug=category.slug %}" class="btn btn-sm {% if current_category == category.slug %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                        {{ category.name }}
+                    </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <div class="row">
-        <div class="col-lg-8">
+        <div class="col-12">
             {# Seção de artigos em destaque #}
             {% if featured_articles %}
             <div class="mb-5">
                 <h2 class="h4 mb-4 text-theme-primary text-sans"><i class="fas fa-star me-2"></i>Conteúdo em Destaque</h2>
                 <div class="row g-4">
                     {% for article in featured_articles %}
-                    <div class="col-md-6 col-12">
+                    <div class="col-md-6 col-lg-4">
                         <article class="card h-100 shadow-sm article-card border-primary border-2">
                             {% if article.featured_image %}
                             <div class="position-relative">
@@ -67,11 +133,19 @@
                         <i class="fas fa-newspaper me-2 text-theme-primary"></i>
                         {% if category %}
                             Artigos em <span class="text-theme-primary">{{ category.name }}</span>
+                        {% elif search_query %}
+                            Resultados para "<span class="text-theme-primary">{{ search_query }}</span>"
                         {% else %}
-                            Todos os Artigos
+                            Artigos
                         {% endif %}
                     </h1>
-                    <p class="text-theme-secondary mb-0 text-body">Leitura de artigos, livros, mangás e audiolivros</p>
+                    <p class="text-theme-secondary mb-0 text-body">
+                        {% if search_query or category %}
+                            Mostrando {{ page_obj.paginator.count }} artigo{{ page_obj.paginator.count|pluralize }}
+                        {% else %}
+                            Explore nossa coleção de artigos disponíveis
+                        {% endif %}
+                    </p>
                 </div>
                 <div>
                     {% if user.is_authenticated and user.is_staff or user.is_authenticated and user.is_superuser or user.is_authenticated and user|has_group:'Editor' %}
@@ -163,7 +237,7 @@
                     <ul class="pagination justify-content-center">
                         {% if page_obj.has_previous %}
                             <li class="page-item">
-                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Anterior</a>
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}">Anterior</a>
                             </li>
                         {% endif %}
                         {% for num in page_obj.paginator.page_range %}
@@ -173,13 +247,13 @@
                                 </li>
                             {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
                                 <li class="page-item">
-                                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                    <a class="page-link" href="?page={{ num }}{% if search_query %}&q={{ search_query }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}">{{ num }}</a>
                                 </li>
                             {% endif %}
                         {% endfor %}
                         {% if page_obj.has_next %}
                             <li class="page-item">
-                                <a class="page-link" href="?page={{ page_obj.next_page_number }}">Próximo</a>
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}">Próximo</a>
                             </li>
                         {% endif %}
                     </ul>
@@ -188,47 +262,29 @@
             {% else %}
                 <div class="text-center py-5">
                     <i class="fas fa-newspaper fa-5x text-theme-secondary mb-3"></i>
-                    <h3 class="text-theme-secondary text-sans text-body">Nenhum artigo encontrado</h3>
-                    <p class="text-theme-secondary text-body">Ainda não há artigos publicados.</p>
+                    <h3 class="text-theme-secondary text-sans text-body">
+                        {% if search_query %}
+                            Nenhum artigo encontrado para "{{ search_query }}"
+                        {% elif category %}
+                            Nenhum artigo encontrado na categoria "{{ category.name }}"
+                        {% else %}
+                            Nenhum artigo encontrado
+                        {% endif %}
+                    </h3>
+                    <p class="text-theme-secondary text-body">
+                        {% if search_query or category %}
+                            Tente ajustar os filtros ou fazer uma nova busca.
+                        {% else %}
+                            Ainda não há artigos publicados.
+                        {% endif %}
+                    </p>
+                    {% if search_query or category %}
+                        <a href="{% url 'articles:article_list' %}" class="btn btn-primary mt-3">
+                            <i class="fas fa-list me-2"></i>Ver Todos os Artigos
+                        </a>
+                    {% endif %}
                 </div>
             {% endif %}
-        </div>
-        <div class="col-lg-4">
-            <div class="card border-0 shadow-sm mb-4 article-list-card">
-                <div class="card-header bg-theme-secondary text-theme-light">
-                    <h6 class="mb-0"><i class="fas fa-search me-2"></i>Buscar Artigos</h6>
-                </div>
-                <div class="card-body">
-                    <form method="get" action="{% url 'articles:search' %}" aria-label="Formulário de busca" role="form">
-                        <div class="input-group">
-                            <input type="text" name="q" class="form-control" placeholder="Digite sua busca...">
-                            <button class="btn btn-primary" type="submit">
-                                <i class="fas fa-search"></i>
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-            <div class="card border-0 shadow-sm mb-4 article-list-card">
-                <div class="card-header bg-theme-info text-theme-light">
-                    <h6 class="mb-0"><i class="fas fa-folder me-2"></i>Categorias</h6>
-                </div>
-                <div class="card-body">
-                    <ul class="list-group mb-4">
-                        {% if categories %}
-                            {% for cat in categories %}
-                                <a href="{{ cat.get_absolute_url }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center {% if category and cat.pk == category.pk %}active{% endif %}">
-                                    {% if cat.icon %}<i class="{{ cat.icon }} me-2"></i>{% endif %}
-                                    {{ cat.name }}
-                                    <span class="badge bg-theme-primary rounded-pill">{{ cat.articles.count }}</span>
-                                </a>
-                            {% endfor %}
-                        {% else %}
-                            <li class="list-group-item text-center text-muted">Nenhuma categoria cadastrada.</li>
-                        {% endif %}
-                    </ul>
-                </div>
-            </div>
         </div>
     </div>
 </div>

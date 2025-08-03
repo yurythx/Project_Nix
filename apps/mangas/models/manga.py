@@ -58,10 +58,13 @@ class Manga(SlugMixin, TimestampMixin, models.Model):
         # Validação completa do modelo
         self.full_clean()
         
-        # Se o slug não existe ou o título foi alterado
-        if not self.slug or (self.pk and 'title' in self.get_dirty_fields()):
+        # Verifica se o título foi alterado ou se o slug não existe
+        title_changed = self.pk and 'title' in self.get_dirty_fields()
+        
+        # Se o slug não existe, está vazio, ou o título foi alterado
+        if not self.slug or not self.slug.strip() or title_changed:
             # Gera o slug a partir do título
-            self.slug = self.generate_unique_slug(self.title)
+            self.slug = self.generate_unique_slug(self.title, max_length=255)
             
         super().save(*args, **kwargs)
         

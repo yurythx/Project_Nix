@@ -87,7 +87,7 @@
                 {% if video.narrator %}
                     <span class="badge bg-secondary">Narrado por {{ video.narrator }}</span>
                 {% endif %}
-                <span class="badge bg-info">{{ video.get_category_display }}</span>
+                <a href="{% url 'audiobooks:video_category' category=video.category %}" class="badge bg-info text-decoration-none">{{ video.get_category_display }}</a>
                 {% if video.duration %}
                     <span class="badge bg-dark">{{ video.get_duration_display }}</span>
                 {% endif %}

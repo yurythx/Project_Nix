@@ -6,6 +6,7 @@ from django.contrib import messages
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.http import Http404
 from django.db import models
+from django.db.models import Q
 
 from apps.mangas.models.manga import Manga
 from apps.mangas.models.volume import Volume
@@ -28,13 +29,46 @@ class MangaListView(ListView):
     template_name = 'mangas/manga_list.html'
     context_object_name = 'mangas'
     paginate_by = 12
-    
+
     def get_queryset(self):
-        queryset = super().get_queryset()
-        q = self.request.GET.get('q')
-        if q:
-            queryset = queryset.filter(title__icontains=q)
+        queryset = Manga.objects.filter(is_published=True)
+        
+        # Busca por query
+        search_query = self.request.GET.get('q')
+        if search_query:
+            queryset = queryset.filter(
+                Q(title__icontains=search_query) |
+                Q(description__icontains=search_query) |
+                Q(author__icontains=search_query)
+            )
+        
+        # Ordenação
+        sort_by = self.request.GET.get('sort_by', 'newest')
+        if sort_by == 'title':
+            queryset = queryset.order_by('title')
+        elif sort_by == 'oldest':
+            queryset = queryset.order_by('created_at')
+        elif sort_by == 'views':
+            queryset = queryset.order_by('-view_count')
+        elif sort_by == 'author':
+            queryset = queryset.order_by('author')
+        else:  # newest (default)
+            queryset = queryset.order_by('-created_at')
+        
         return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Parâmetros de busca e filtro
+        search_query = self.request.GET.get('q', '')
+        sort_by = self.request.GET.get('sort_by', 'newest')
+        
+        # Adicionar ao contexto
+        context['search_query'] = search_query
+        context['sort_by'] = sort_by
+        
+        return context
 
 class MangaDetailView(DetailView):
     """

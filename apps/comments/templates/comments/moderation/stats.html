@@ -1,0 +1,559 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Estatísticas de Moderação - {{ block.super }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/comments.css' %}">
+<link rel="stylesheet" href="{% static 'css/moderation.css' %}">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid my-4">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>
+                        Estatísticas
+                    </h6>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="{% url 'comments:moderation_queue' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-list me-2"></i>
+                        Fila de Moderação
+                    </a>
+                    <a href="{% url 'comments:moderation_history' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-history me-2"></i>
+                        Histórico
+                    </a>
+                    <a href="{% url 'comments:moderation_config' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-cog me-2"></i>
+                        Configurações
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Time Period Filter -->
+            <div class="card shadow-sm mt-3">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-calendar me-2"></i>
+                        Período
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <form method="get" id="periodForm">
+                        <div class="mb-3">
+                            <select class="form-select" name="period" onchange="document.getElementById('periodForm').submit()">
+                                <option value="today" {% if period == 'today' %}selected{% endif %}>Hoje</option>
+                                <option value="week" {% if period == 'week' %}selected{% endif %}>Esta Semana</option>
+                                <option value="month" {% if period == 'month' %}selected{% endif %}>Este Mês</option>
+                                <option value="quarter" {% if period == 'quarter' %}selected{% endif %}>Este Trimestre</option>
+                                <option value="year" {% if period == 'year' %}selected{% endif %}>Este Ano</option>
+                                <option value="all" {% if period == 'all' %}selected{% endif %}>Todo o Período</option>
+                            </select>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-6">
+                                <label for="start_date" class="form-label small">De:</label>
+                                <input type="date" class="form-control form-control-sm" name="start_date" value="{{ start_date|date:'Y-m-d' }}">
+                            </div>
+                            <div class="col-6">
+                                <label for="end_date" class="form-label small">Até:</label>
+                                <input type="date" class="form-control form-control-sm" name="end_date" value="{{ end_date|date:'Y-m-d' }}">
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-sm btn-primary mt-2 w-100">
+                            <i class="fas fa-filter me-1"></i>
+                            Filtrar
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-md-9">
+            <!-- Overview Cards -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card bg-primary text-white shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h4 class="mb-0">{{ stats.total_comments }}</h4>
+                                    <small>Total de Comentários</small>
+                                </div>
+                                <i class="fas fa-comments fa-2x opacity-75"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-warning text-white shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h4 class="mb-0">{{ stats.pending_comments }}</h4>
+                                    <small>Pendentes</small>
+                                </div>
+                                <i class="fas fa-clock fa-2x opacity-75"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-success text-white shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h4 class="mb-0">{{ stats.approved_comments }}</h4>
+                                    <small>Aprovados</small>
+                                </div>
+                                <i class="fas fa-check fa-2x opacity-75"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-danger text-white shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h4 class="mb-0">{{ stats.rejected_comments }}</h4>
+                                    <small>Rejeitados</small>
+                                </div>
+                                <i class="fas fa-times fa-2x opacity-75"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Charts Row -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card shadow-sm">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i class="fas fa-pie-chart me-2"></i>
+                                Distribuição por Status
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="statusChart" width="400" height="300"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card shadow-sm">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i class="fas fa-line-chart me-2"></i>
+                                Comentários por Dia
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="timelineChart" width="400" height="300"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Moderation Performance -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card shadow-sm">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i class="fas fa-users me-2"></i>
+                                Performance dos Moderadores
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            {% if moderator_stats %}
+                                <div class="table-responsive">
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>Moderador</th>
+                                                <th>Ações</th>
+                                                <th>Aprovados</th>
+                                                <th>Rejeitados</th>
+                                                <th>Tempo Médio</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for mod in moderator_stats %}
+                                                <tr>
+                                                    <td>
+                                                        <div class="d-flex align-items-center">
+                                                            {% if mod.user.avatar %}
+                                                                <img src="{{ mod.user.avatar.url }}" alt="{{ mod.user.get_full_name }}" class="rounded-circle me-2" width="24" height="24">
+                                                            {% else %}
+                                                                <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 24px; height: 24px;">
+                                                                    <i class="fas fa-user text-white small"></i>
+                                                                </div>
+                                                            {% endif %}
+                                                            <small>{{ mod.user.get_full_name|default:mod.user.username }}</small>
+                                                        </div>
+                                                    </td>
+                                                    <td><span class="badge bg-primary">{{ mod.total_actions }}</span></td>
+                                                    <td><span class="badge bg-success">{{ mod.approved_count }}</span></td>
+                                                    <td><span class="badge bg-danger">{{ mod.rejected_count }}</span></td>
+                                                    <td><small class="text-muted">{{ mod.avg_response_time|default:"N/A" }}</small></td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <p class="text-muted text-center py-3">Nenhuma atividade de moderação registrada.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card shadow-sm">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                Detecção de Spam
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row text-center mb-3">
+                                <div class="col-4">
+                                    <h5 class="text-danger mb-0">{{ spam_stats.total_spam }}</h5>
+                                    <small class="text-muted">Total Spam</small>
+                                </div>
+                                <div class="col-4">
+                                    <h5 class="text-warning mb-0">{{ spam_stats.auto_detected }}</h5>
+                                    <small class="text-muted">Auto-detectado</small>
+                                </div>
+                                <div class="col-4">
+                                    <h5 class="text-info mb-0">{{ spam_stats.manual_flagged }}</h5>
+                                    <small class="text-muted">Manual</small>
+                                </div>
+                            </div>
+                            
+                            <div class="progress mb-2">
+                                <div class="progress-bar bg-success" role="progressbar" style="width: {{ spam_stats.accuracy_rate }}%">
+                                    {{ spam_stats.accuracy_rate }}% Precisão
+                                </div>
+                            </div>
+                            
+                            <div class="small text-muted">
+                                <div class="d-flex justify-content-between">
+                                    <span>Falsos Positivos:</span>
+                                    <span>{{ spam_stats.false_positives }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <span>Falsos Negativos:</span>
+                                    <span>{{ spam_stats.false_negatives }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Content Analysis -->
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <div class="card shadow-sm">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i class="fas fa-chart-bar me-2"></i>
+                                Análise de Conteúdo
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6 class="text-muted mb-3">Comentários por Tipo de Conteúdo</h6>
+                                    {% if content_type_stats %}
+                                        {% for content_type in content_type_stats %}
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <span>{{ content_type.name|capfirst }}</span>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="progress me-2" style="width: 100px; height: 8px;">
+                                                        <div class="progress-bar" role="progressbar" style="width: {{ content_type.percentage }}%"></div>
+                                                    </div>
+                                                    <span class="badge bg-secondary">{{ content_type.count }}</span>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                    {% else %}
+                                        <p class="text-muted">Nenhum dado disponível.</p>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="text-muted mb-3">Palavras-chave Mais Comuns</h6>
+                                    {% if keyword_stats %}
+                                        <div class="d-flex flex-wrap gap-1">
+                                            {% for keyword in keyword_stats %}
+                                                <span class="badge bg-light text-dark border" style="font-size: {{ keyword.size }}px;">
+                                                    {{ keyword.word }} ({{ keyword.count }})
+                                                </span>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        <p class="text-muted">Nenhum dado disponível.</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Response Time Analysis -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card shadow-sm">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i class="fas fa-stopwatch me-2"></i>
+                                Tempo de Resposta
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row text-center">
+                                <div class="col-4">
+                                    <h5 class="text-primary mb-0">{{ response_time_stats.average }}</h5>
+                                    <small class="text-muted">Média</small>
+                                </div>
+                                <div class="col-4">
+                                    <h5 class="text-success mb-0">{{ response_time_stats.median }}</h5>
+                                    <small class="text-muted">Mediana</small>
+                                </div>
+                                <div class="col-4">
+                                    <h5 class="text-warning mb-0">{{ response_time_stats.max }}</h5>
+                                    <small class="text-muted">Máximo</small>
+                                </div>
+                            </div>
+                            
+                            <hr>
+                            
+                            <div class="small">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span>< 1 hora:</span>
+                                    <span class="badge bg-success">{{ response_time_stats.under_1h }}%</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-1">
+                                    <span>1-24 horas:</span>
+                                    <span class="badge bg-warning">{{ response_time_stats.under_24h }}%</span>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <span>> 24 horas:</span>
+                                    <span class="badge bg-danger">{{ response_time_stats.over_24h }}%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card shadow-sm">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i class="fas fa-flag me-2"></i>
+                                Comentários Sinalizados
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row text-center mb-3">
+                                <div class="col-6">
+                                    <h5 class="text-danger mb-0">{{ flagged_stats.total_flagged }}</h5>
+                                    <small class="text-muted">Total Sinalizados</small>
+                                </div>
+                                <div class="col-6">
+                                    <h5 class="text-warning mb-0">{{ flagged_stats.pending_review }}</h5>
+                                    <small class="text-muted">Aguardando Revisão</small>
+                                </div>
+                            </div>
+                            
+                            <h6 class="text-muted mb-2">Motivos Mais Comuns:</h6>
+                            {% if flagged_stats.reasons %}
+                                {% for reason in flagged_stats.reasons %}
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <small>{{ reason.name }}</small>
+                                        <span class="badge bg-secondary">{{ reason.count }}</span>
+                                    </div>
+                                {% endfor %}
+                            {% else %}
+                                <p class="text-muted small">Nenhum comentário sinalizado.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Export Options -->
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card shadow-sm">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i class="fas fa-download me-2"></i>
+                                Exportar Dados
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex gap-2">
+                                <a href="?export=csv&{{ request.GET.urlencode }}" class="btn btn-outline-primary">
+                                    <i class="fas fa-file-csv me-1"></i>
+                                    Exportar CSV
+                                </a>
+                                <a href="?export=excel&{{ request.GET.urlencode }}" class="btn btn-outline-success">
+                                    <i class="fas fa-file-excel me-1"></i>
+                                    Exportar Excel
+                                </a>
+                                <a href="?export=pdf&{{ request.GET.urlencode }}" class="btn btn-outline-danger">
+                                    <i class="fas fa-file-pdf me-1"></i>
+                                    Exportar PDF
+                                </a>
+                                <button class="btn btn-outline-info" onclick="printReport()">
+                                    <i class="fas fa-print me-1"></i>
+                                    Imprimir
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Status Distribution Chart
+const statusCtx = document.getElementById('statusChart').getContext('2d');
+const statusChart = new Chart(statusCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Aprovados', 'Pendentes', 'Rejeitados', 'Spam'],
+        datasets: [{
+            data: [
+                {{ stats.approved_comments }},
+                {{ stats.pending_comments }},
+                {{ stats.rejected_comments }},
+                {{ stats.spam_comments|default:0 }}
+            ],
+            backgroundColor: [
+                '#28a745',
+                '#ffc107',
+                '#dc3545',
+                '#6c757d'
+            ],
+            borderWidth: 2,
+            borderColor: '#fff'
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+
+// Timeline Chart
+const timelineCtx = document.getElementById('timelineChart').getContext('2d');
+const timelineChart = new Chart(timelineCtx, {
+    type: 'line',
+    data: {
+        labels: {{ timeline_labels|safe }},
+        datasets: [{
+            label: 'Comentários',
+            data: {{ timeline_data|safe }},
+            borderColor: '#007bff',
+            backgroundColor: 'rgba(0, 123, 255, 0.1)',
+            borderWidth: 2,
+            fill: true,
+            tension: 0.4
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    stepSize: 1
+                }
+            }
+        },
+        plugins: {
+            legend: {
+                display: false
+            }
+        }
+    }
+});
+
+// Print function
+function printReport() {
+    window.print();
+}
+
+// Auto-refresh every 5 minutes
+setInterval(function() {
+    if (document.visibilityState === 'visible') {
+        location.reload();
+    }
+}, 300000);
+
+// Real-time updates notification
+function checkForUpdates() {
+    fetch('/comments/moderation/stats/updates/', {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.has_updates) {
+            showUpdateNotification();
+        }
+    })
+    .catch(error => console.log('Update check failed:', error));
+}
+
+function showUpdateNotification() {
+    const notification = document.createElement('div');
+    notification.className = 'alert alert-info alert-dismissible fade show position-fixed';
+    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; max-width: 300px;';
+    notification.innerHTML = `
+        <i class="fas fa-info-circle me-2"></i>
+        Novos dados disponíveis. 
+        <a href="javascript:location.reload()" class="alert-link">Atualizar página</a>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(notification);
+    
+    // Auto-remove after 10 seconds
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.remove();
+        }
+    }, 10000);
+}
+
+// Check for updates every 2 minutes
+setInterval(checkForUpdates, 120000);
+</script>
+{% endblock %}

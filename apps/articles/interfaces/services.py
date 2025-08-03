@@ -111,6 +111,24 @@ class IArticleService(ABC):
         :return: QuerySet de artigos do autor
         """
         pass
+    
+    @abstractmethod
+    def increment_article_views(self, article_id: int) -> None:
+        """
+        Incrementa contador de visualizações
+        :param article_id: ID do artigo
+        """
+        pass
+    
+    @abstractmethod
+    def get_related_articles(self, article, limit: int = 3) -> QuerySet:
+        """
+        Obtém artigos relacionados
+        :param article: Artigo de referência
+        :param limit: Limite de resultados
+        :return: QuerySet de artigos relacionados
+        """
+        pass
 
 class ICategoryService(ABC):
     """Interface para serviços de categorias"""
@@ -150,6 +168,14 @@ class ICategoryService(ABC):
         :return: Categoria atualizada
         """
         pass
+    
+    @abstractmethod
+    def get_categories_with_articles(self) -> QuerySet:
+        """
+        Obtém categorias que possuem artigos
+        :return: QuerySet de categorias com artigos
+        """
+        pass
 
 class ITagService(ABC):
     """Interface para serviços de tags"""
@@ -181,47 +207,7 @@ class ITagService(ABC):
         """
         pass
 
-class ICommentService(ABC):
-    """Interface para serviços de comentários"""
-    
-    @abstractmethod
-    def get_article_comments(self, article_id: int) -> QuerySet:
-        """
-        Obtém comentários de um artigo
-        :param article_id: ID do artigo
-        :return: QuerySet de comentários aprovados
-        """
-        pass
-    
-    @abstractmethod
-    def create_comment(self, comment_data: Dict[str, Any], request=None):
-        """
-        Cria um novo comentário
-        :param comment_data: Dados do comentário
-        :param request: Request HTTP para capturar IP
-        :return: Comentário criado
-        """
-        pass
-    
-    @abstractmethod
-    def approve_comment(self, comment_id: int, approved_by: User):
-        """
-        Aprova um comentário
-        :param comment_id: ID do comentário
-        :param approved_by: Usuário que está aprovando
-        :return: Comentário aprovado
-        """
-        pass
-    
-    @abstractmethod
-    def mark_comment_as_spam(self, comment_id: int, marked_by: User):
-        """
-        Marca comentário como spam
-        :param comment_id: ID do comentário
-        :param marked_by: Usuário que está marcando
-        :return: Comentário marcado
-        """
-        pass
+# ICommentService removido - migrado para apps.comments
 
 
 class IContentProcessorService(ABC):

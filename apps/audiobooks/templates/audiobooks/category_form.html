@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{{ title }} | {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'audiobooks:video_list' %}">{% trans 'Audiobooks' %}</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'audiobooks:category_list' %}">{% trans 'Categorias' %}</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ title }}</li>
+        </ol>
+    </nav>
+    
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h1 class="h3 mb-0">{{ title }}</h1>
+        </div>
+        <div class="card-body">
+            <form method="post" novalidate>
+                {% csrf_token %}
+                
+                {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    {% for error in form.non_field_errors %}
+                    <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
+                <div class="mb-3">
+                    <label for="{{ form.name.id_for_label }}" class="form-label">{% trans 'Nome' %} <span class="text-danger">*</span></label>
+                    {{ form.name }}
+                    {% if form.name.errors %}
+                    <div class="invalid-feedback d-block">
+                        {% for error in form.name.errors %}
+                        {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    <div class="form-text">{% trans 'Nome da categoria que será exibido para os usuários.' %}</div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="{{ form.description.id_for_label }}" class="form-label">{% trans 'Descrição' %}</label>
+                    {{ form.description }}
+                    {% if form.description.errors %}
+                    <div class="invalid-feedback d-block">
+                        {% for error in form.description.errors %}
+                        {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    <div class="form-text">{% trans 'Uma breve descrição sobre o conteúdo desta categoria.' %}</div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="{{ form.icon.id_for_label }}" class="form-label">{% trans 'Ícone' %}</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-icons"></i></span>
+                        {{ form.icon }}
+                    </div>
+                    {% if form.icon.errors %}
+                    <div class="invalid-feedback d-block">
+                        {% for error in form.icon.errors %}
+                        {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    <div class="form-text">{% trans 'Nome do ícone FontAwesome (ex: fa-podcast, fa-book, fa-graduation-cap).' %}</div>
+                </div>
+                
+                <div class="mb-4 form-check">
+                    {{ form.is_active }}
+                    <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                        {% trans 'Categoria ativa' %}
+                    </label>
+                    {% if form.is_active.errors %}
+                    <div class="invalid-feedback d-block">
+                        {% for error in form.is_active.errors %}
+                        {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    <div class="form-text">{% trans 'Desmarque para ocultar esta categoria temporariamente.' %}</div>
+                </div>
+                
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'audiobooks:category_list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> {% trans 'Voltar' %}
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> {{ button_text }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

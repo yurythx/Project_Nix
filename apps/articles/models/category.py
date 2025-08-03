@@ -6,7 +6,13 @@ from django.core.validators import MinLengthValidator
 class Category(models.Model):
     """Modelo para categorias de artigos"""
     
-    name = models.CharField(max_length=100, unique=False)
+    name = models.CharField(
+        'nome',
+        max_length=100,
+        unique=True,
+        validators=[MinLengthValidator(2)],
+        help_text='Nome da categoria'
+    )
     slug = models.SlugField(
         'slug',
         max_length=100,

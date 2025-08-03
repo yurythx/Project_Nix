@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% load static %}
+{% load comments_tags %}
+
+{% block title %}Comentários{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/comments.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="comments-container">
+    <div class="comments-header">
+        <h2>Comentários</h2>
+        <div class="comments-stats">
+            <span class="comment-count">{{ total_comments }} comentário{{ total_comments|pluralize }}</span>
+        </div>
+    </div>
+
+    {% if user.is_authenticated %}
+    <div class="comment-form-container">
+        <h3>Deixe seu comentário</h3>
+        <form method="post" action="{% url 'comments:comment_create' %}" class="comment-form">
+            {% csrf_token %}
+            <input type="hidden" name="content_type" value="{{ content_type.id }}">
+            <input type="hidden" name="object_id" value="{{ object_id }}">
+            
+            <div class="form-group">
+                <label for="id_content">Comentário:</label>
+                <textarea name="content" id="id_content" rows="4" class="form-control" 
+                         placeholder="Escreva seu comentário..." required></textarea>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Publicar Comentário</button>
+            </div>
+        </form>
+    </div>
+    {% else %}
+    <div class="login-prompt">
+        <p><a href="{% url 'accounts:login' %}">Faça login</a> para comentar.</p>
+    </div>
+    {% endif %}
+
+    <div class="comments-list">
+        {% if comments %}
+            {% for comment in comments %}
+                {% include "comments/comment_item.html" with comment=comment %}
+            {% endfor %}
+            
+            {% if page_obj.has_other_pages %}
+            <div class="pagination-container">
+                <nav aria-label="Navegação de comentários">
+                    <ul class="pagination">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                                    &laquo; Anterior
+                                </a>
+                            </li>
+                        {% endif %}
+                        
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if page_obj.number == num %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ num }}</span>
+                                </li>
+                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                                    Próximo &raquo;
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+            {% endif %}
+        {% else %}
+            <div class="no-comments">
+                <p>Ainda não há comentários. Seja o primeiro a comentar!</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/comments.js' %}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const commentsSystem = new CommentsSystem({
+            contentType: '{{ content_type.id }}',
+            objectId: '{{ object_id }}',
+            apiUrl: '{% url "comments:api_comments" %}',
+            csrfToken: '{{ csrf_token }}'
+        });
+    });
+</script>
+{% endblock %}

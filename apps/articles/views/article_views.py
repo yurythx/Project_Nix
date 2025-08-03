@@ -57,6 +57,34 @@ class BaseArticleView(ModuleEnabledRequiredMixin):
         return self._content_processor
 
 
+class ArticleSlugMixin:
+    """
+    Mixin para obter artigos por slug
+    
+    Elimina duplicação de código entre views que precisam obter artigos por slug
+    """
+    def get_object(self, queryset=None) -> Article:
+        """Obtém artigo por slug usando service"""
+        try:
+            return self.article_service.get_article_by_slug(self.kwargs['slug'])
+        except Article.DoesNotExist:
+            raise Http404("Artigo não encontrado")
+
+
+class CategorySlugMixin:
+    """
+    Mixin para obter categorias por slug
+    
+    Elimina duplicação de código entre views que precisam obter categorias por slug
+    """
+    def get_object(self, queryset=None) -> Category:
+        """Obtém categoria por slug usando service"""
+        try:
+            return self.category_service.get_category_by_slug(self.kwargs['slug'])
+        except Category.DoesNotExist:
+            raise Http404("Categoria não encontrada")
+
+
 class ArticleListView(BaseArticleView, ListView):
     """
     View para listagem de artigos
@@ -72,24 +100,75 @@ class ArticleListView(BaseArticleView, ListView):
     paginate_by = 12
 
     def get_queryset(self) -> QuerySet[Article]:
-        """Retorna queryset de artigos publicados"""
-        return self.article_service.get_published_articles()
+        """Retorna queryset de artigos com filtros e busca"""
+        queryset = self.article_service.get_published_articles()
+        
+        # Filtro por categoria
+        category_slug = self.request.GET.get('category')
+        if category_slug:
+            queryset = queryset.filter(category__slug=category_slug)
+        
+        # Busca por query
+        search_query = self.request.GET.get('q')
+        if search_query:
+            queryset = queryset.filter(
+                Q(title__icontains=search_query) |
+                Q(excerpt__icontains=search_query) |
+                Q(content__icontains=search_query)
+            )
+        
+        # Ordenação
+        sort_by = self.request.GET.get('sort_by', 'newest')
+        if sort_by == 'title':
+            queryset = queryset.order_by('title')
+        elif sort_by == 'oldest':
+            queryset = queryset.order_by('published_at')
+        elif sort_by == 'views':
+            queryset = queryset.order_by('-view_count')
+        elif sort_by == 'author':
+            queryset = queryset.order_by('author__first_name', 'author__last_name')
+        else:  # newest (default)
+            queryset = queryset.order_by('-published_at')
+        
+        return queryset
 
     def get_context_data(self, **kwargs) -> Dict[str, Any]:
         """Adiciona dados específicos do contexto"""
         context = super().get_context_data(**kwargs)
-
+        
+        # Parâmetros de busca e filtro
+        search_query = self.request.GET.get('q', '')
+        category_slug = self.request.GET.get('category', '')
+        sort_by = self.request.GET.get('sort_by', 'newest')
+        
+        # Adicionar ao contexto
+        context['search_query'] = search_query
+        context['current_category'] = category_slug
+        context['sort_by'] = sort_by
+        
+        # Adicionar categorias
+        context['categories'] = self.category_service.get_categories_with_articles()
+        
+        # Categoria atual para exibição
+        if category_slug:
+            try:
+                context['category'] = self.category_service.get_category_by_slug(category_slug)
+            except:
+                context['category'] = None
+        
+        # Artigos em destaque apenas se não houver busca ou filtro
+        if not search_query and not category_slug:
+            context['featured_articles'] = self.article_service.get_featured_articles(limit=3)
+        
         # Dados específicos da listagem
         context.update({
-            'featured_articles': self.article_service.get_featured_articles(limit=3),
-            'categories': self.category_service.get_categories_with_articles(),
             'meta_title': 'Artigos',
             'meta_description': 'Todos os artigos do blog',
         })
 
         return context
 
-class ArticleDetailView(BaseArticleView, DetailView):
+class ArticleDetailView(ArticleSlugMixin, BaseArticleView, DetailView):
     """
     View para exibir detalhes de um artigo
 
@@ -103,18 +182,6 @@ class ArticleDetailView(BaseArticleView, DetailView):
     context_object_name = 'article'
     slug_field = 'slug'
     slug_url_kwarg = 'slug'
-
-    def get_object(self, queryset=None) -> Article:
-        """
-        Obtém o artigo usando service
-
-        Raises:
-            Http404: Se artigo não for encontrado
-        """
-        try:
-            return self.article_service.get_article_by_slug(self.kwargs['slug'])
-        except Article.DoesNotExist:
-            raise Http404("Artigo não encontrado")
 
     def get_context_data(self, **kwargs) -> Dict[str, Any]:
         """Adiciona dados específicos do contexto"""
@@ -130,8 +197,8 @@ class ArticleDetailView(BaseArticleView, DetailView):
         # Dados relacionados
         context.update({
             'related_articles': self.article_service.get_related_articles(article, limit=3),
-            'comments': article.comments.filter(is_approved=True, parent__isnull=True).order_by('-created_at')[:5],
-            'comment_count': article.comments.filter(is_approved=True).count(),
+            # Comentários são gerenciados pelo sistema global (apps.comments)
+            # Use as template tags {% load comments_tags %} nos templates
         })
 
         # SEO metadata
@@ -266,7 +333,7 @@ class ArticleCreateView(EditorOrAdminRequiredMixin, BaseArticleView, CreateView)
         return context
 
 
-class ArticleUpdateView(EditorOrAdminRequiredMixin, BaseArticleView, UpdateView):
+class ArticleUpdateView(ArticleSlugMixin, EditorOrAdminRequiredMixin, BaseArticleView, UpdateView):
     """
     View para edição de artigos
 
@@ -279,13 +346,6 @@ class ArticleUpdateView(EditorOrAdminRequiredMixin, BaseArticleView, UpdateView)
     template_name = 'articles/article_form.html'
     slug_field = 'slug'
     slug_url_kwarg = 'slug'
-
-    def get_object(self, queryset=None) -> Article:
-        """Obtém artigo para edição"""
-        try:
-            return self.article_service.get_article_by_slug(self.kwargs['slug'])
-        except Article.DoesNotExist:
-            raise Http404("Artigo não encontrado")
 
     def form_valid(self, form) -> Any:
         """Processa formulário válido"""
@@ -315,7 +375,7 @@ class ArticleUpdateView(EditorOrAdminRequiredMixin, BaseArticleView, UpdateView)
         return context
 
 
-class ArticleDeleteView(EditorOrAdminRequiredMixin, BaseArticleView, DeleteView):
+class ArticleDeleteView(ArticleSlugMixin, EditorOrAdminRequiredMixin, BaseArticleView, DeleteView):
     """
     View para exclusão de artigos
 
@@ -328,13 +388,6 @@ class ArticleDeleteView(EditorOrAdminRequiredMixin, BaseArticleView, DeleteView)
     success_url = reverse_lazy('articles:article_list')
     slug_field = 'slug'
     slug_url_kwarg = 'slug'
-
-    def get_object(self, queryset=None) -> Article:
-        """Obtém artigo para exclusão"""
-        try:
-            return self.article_service.get_article_by_slug(self.kwargs['slug'])
-        except Article.DoesNotExist:
-            raise Http404("Artigo não encontrado")
 
     def delete(self, request, *args, **kwargs) -> Any:
         """Processa exclusão do artigo"""
@@ -364,7 +417,7 @@ class ArticleDeleteView(EditorOrAdminRequiredMixin, BaseArticleView, DeleteView)
         return context
 
 
-class CategoryDetailView(BaseArticleView, DetailView):
+class CategoryDetailView(CategorySlugMixin, BaseArticleView, DetailView):
     """
     View para detalhes de categoria
 
@@ -378,12 +431,7 @@ class CategoryDetailView(BaseArticleView, DetailView):
     slug_field = 'slug'
     slug_url_kwarg = 'slug'
 
-    def get_object(self, queryset=None) -> Category:
-        """Obtém categoria"""
-        try:
-            return self.category_service.get_category_by_slug(self.kwargs['slug'])
-        except Category.DoesNotExist:
-            raise Http404("Categoria não encontrada")
+
 
     def get_context_data(self, **kwargs) -> Dict[str, Any]:
         """Adiciona artigos da categoria"""
@@ -422,4 +470,3 @@ class CategoryListView(BaseArticleView, ListView):
             'meta_description': 'Todas as categorias de artigos',
         })
         return context
-        return redirect('articles:article_list')

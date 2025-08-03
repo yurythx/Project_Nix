@@ -1,0 +1,612 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Configurações de Moderação - {{ block.super }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/comments.css' %}">
+<link rel="stylesheet" href="{% static 'css/moderation.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid my-4">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3">
+            <div class="card shadow-sm">
+                <div class="card-header bg-secondary text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-cog me-2"></i>
+                        Configurações
+                    </h6>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="{% url 'comments:moderation_queue' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-list me-2"></i>
+                        Fila de Moderação
+                    </a>
+                    <a href="{% url 'comments:moderation_stats' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-chart-bar me-2"></i>
+                        Estatísticas
+                    </a>
+                    <a href="{% url 'comments:moderation_history' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-history me-2"></i>
+                        Histórico
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Quick Actions -->
+            <div class="card shadow-sm mt-3">
+                <div class="card-header bg-warning text-dark">
+                    <h6 class="mb-0">
+                        <i class="fas fa-bolt me-2"></i>
+                        Ações Rápidas
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-primary" onclick="resetToDefaults()">
+                            <i class="fas fa-undo me-1"></i>Restaurar Padrões
+                        </button>
+                        <button class="btn btn-outline-success" onclick="exportConfig()">
+                            <i class="fas fa-download me-1"></i>Exportar Config
+                        </button>
+                        <button class="btn btn-outline-info" onclick="importConfig()">
+                            <i class="fas fa-upload me-1"></i>Importar Config
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-md-9">
+            <form method="post" id="configForm">
+                {% csrf_token %}
+                
+                <!-- General Settings -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-sliders-h me-2"></i>
+                            Configurações Gerais
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="moderation_enabled" class="form-label">Moderação Ativa</label>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="moderation_enabled" name="moderation_enabled" {% if config.moderation_enabled %}checked{% endif %}>
+                                        <label class="form-check-label" for="moderation_enabled">
+                                            Ativar sistema de moderação
+                                        </label>
+                                    </div>
+                                    <small class="form-text text-muted">Quando desativado, todos os comentários são aprovados automaticamente.</small>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="auto_approve_trusted" class="form-label">Auto-aprovação para Usuários Confiáveis</label>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="auto_approve_trusted" name="auto_approve_trusted" {% if config.auto_approve_trusted %}checked{% endif %}>
+                                        <label class="form-check-label" for="auto_approve_trusted">
+                                            Aprovar automaticamente comentários de usuários confiáveis
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="require_approval_new_users" class="form-label">Aprovação Obrigatória para Novos Usuários</label>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="require_approval_new_users" name="require_approval_new_users" {% if config.require_approval_new_users %}checked{% endif %}>
+                                        <label class="form-check-label" for="require_approval_new_users">
+                                            Exigir aprovação para usuários com menos de 30 dias
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="max_comment_length" class="form-label">Tamanho Máximo do Comentário</label>
+                                    <input type="number" class="form-control" id="max_comment_length" name="max_comment_length" value="{{ config.max_comment_length|default:1000 }}" min="100" max="10000">
+                                    <small class="form-text text-muted">Número máximo de caracteres permitidos.</small>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="min_comment_length" class="form-label">Tamanho Mínimo do Comentário</label>
+                                    <input type="number" class="form-control" id="min_comment_length" name="min_comment_length" value="{{ config.min_comment_length|default:10 }}" min="1" max="100">
+                                    <small class="form-text text-muted">Número mínimo de caracteres necessários.</small>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="rate_limit_per_hour" class="form-label">Limite de Comentários por Hora</label>
+                                    <input type="number" class="form-control" id="rate_limit_per_hour" name="rate_limit_per_hour" value="{{ config.rate_limit_per_hour|default:10 }}" min="1" max="100">
+                                    <small class="form-text text-muted">Máximo de comentários por usuário por hora.</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Spam Detection -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-shield-alt me-2"></i>
+                            Detecção de Spam
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="spam_detection_enabled" class="form-label">Detecção Automática de Spam</label>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="spam_detection_enabled" name="spam_detection_enabled" {% if config.spam_detection_enabled %}checked{% endif %}>
+                                        <label class="form-check-label" for="spam_detection_enabled">
+                                            Ativar detecção automática de spam
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="spam_threshold" class="form-label">Limite de Spam (0-100)</label>
+                                    <input type="range" class="form-range" id="spam_threshold" name="spam_threshold" value="{{ config.spam_threshold|default:70 }}" min="0" max="100" oninput="updateSpamThresholdValue(this.value)">
+                                    <div class="d-flex justify-content-between">
+                                        <small class="text-muted">Permissivo</small>
+                                        <small class="text-muted">Valor: <span id="spamThresholdValue">{{ config.spam_threshold|default:70 }}</span></small>
+                                        <small class="text-muted">Rigoroso</small>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="check_duplicate_content" class="form-label">Verificar Conteúdo Duplicado</label>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="check_duplicate_content" name="check_duplicate_content" {% if config.check_duplicate_content %}checked{% endif %}>
+                                        <label class="form-check-label" for="check_duplicate_content">
+                                            Detectar comentários duplicados
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="blocked_words" class="form-label">Palavras Bloqueadas</label>
+                                    <textarea class="form-control" id="blocked_words" name="blocked_words" rows="4" placeholder="Digite uma palavra por linha...">{{ config.blocked_words|default:"" }}</textarea>
+                                    <small class="form-text text-muted">Comentários contendo essas palavras serão automaticamente rejeitados.</small>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="suspicious_words" class="form-label">Palavras Suspeitas</label>
+                                    <textarea class="form-control" id="suspicious_words" name="suspicious_words" rows="4" placeholder="Digite uma palavra por linha...">{{ config.suspicious_words|default:"" }}</textarea>
+                                    <small class="form-text text-muted">Comentários contendo essas palavras serão sinalizados para revisão.</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Notification Settings -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-bell me-2"></i>
+                            Configurações de Notificação
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="notify_moderators" class="form-label">Notificar Moderadores</label>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="notify_moderators" name="notify_moderators" {% if config.notify_moderators %}checked{% endif %}>
+                                        <label class="form-check-label" for="notify_moderators">
+                                            Enviar notificações para moderadores
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="notify_users" class="form-label">Notificar Usuários</label>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="notify_users" name="notify_users" {% if config.notify_users %}checked{% endif %}>
+                                        <label class="form-check-label" for="notify_users">
+                                            Notificar usuários sobre status dos comentários
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="email_notifications" class="form-label">Notificações por Email</label>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="email_notifications" name="email_notifications" {% if config.email_notifications %}checked{% endif %}>
+                                        <label class="form-check-label" for="email_notifications">
+                                            Enviar notificações por email
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="notification_frequency" class="form-label">Frequência de Notificação</label>
+                                    <select class="form-select" id="notification_frequency" name="notification_frequency">
+                                        <option value="immediate" {% if config.notification_frequency == 'immediate' %}selected{% endif %}>Imediata</option>
+                                        <option value="hourly" {% if config.notification_frequency == 'hourly' %}selected{% endif %}>A cada hora</option>
+                                        <option value="daily" {% if config.notification_frequency == 'daily' %}selected{% endif %}>Diária</option>
+                                        <option value="weekly" {% if config.notification_frequency == 'weekly' %}selected{% endif %}>Semanal</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="moderator_emails" class="form-label">Emails dos Moderadores</label>
+                                    <textarea class="form-control" id="moderator_emails" name="moderator_emails" rows="3" placeholder="Digite um email por linha...">{{ config.moderator_emails|default:"" }}</textarea>
+                                    <small class="form-text text-muted">Emails adicionais para receber notificações de moderação.</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Auto-moderation Rules -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-robot me-2"></i>
+                            Regras de Auto-moderação
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="auto_reject_spam" class="form-label">Auto-rejeitar Spam</label>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="auto_reject_spam" name="auto_reject_spam" {% if config.auto_reject_spam %}checked{% endif %}>
+                                        <label class="form-check-label" for="auto_reject_spam">
+                                            Rejeitar automaticamente comentários identificados como spam
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="auto_approve_threshold" class="form-label">Limite para Auto-aprovação</label>
+                                    <input type="number" class="form-control" id="auto_approve_threshold" name="auto_approve_threshold" value="{{ config.auto_approve_threshold|default:5 }}" min="1" max="50">
+                                    <small class="form-text text-muted">Número de comentários aprovados necessários para auto-aprovação futura.</small>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="quarantine_suspicious" class="form-label">Quarentena para Suspeitos</label>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="quarantine_suspicious" name="quarantine_suspicious" {% if config.quarantine_suspicious %}checked{% endif %}>
+                                        <label class="form-check-label" for="quarantine_suspicious">
+                                            Colocar comentários suspeitos em quarentena
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="max_links_allowed" class="form-label">Máximo de Links Permitidos</label>
+                                    <input type="number" class="form-control" id="max_links_allowed" name="max_links_allowed" value="{{ config.max_links_allowed|default:2 }}" min="0" max="10">
+                                    <small class="form-text text-muted">Número máximo de links permitidos em um comentário.</small>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="block_disposable_emails" class="form-label">Bloquear Emails Temporários</label>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="block_disposable_emails" name="block_disposable_emails" {% if config.block_disposable_emails %}checked{% endif %}>
+                                        <label class="form-check-label" for="block_disposable_emails">
+                                            Bloquear comentários de emails temporários
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="require_phone_verification" class="form-label">Verificação de Telefone</label>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="require_phone_verification" name="require_phone_verification" {% if config.require_phone_verification %}checked{% endif %}>
+                                        <label class="form-check-label" for="require_phone_verification">
+                                            Exigir verificação de telefone para novos usuários
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Advanced Settings -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-cogs me-2"></i>
+                            Configurações Avançadas
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="enable_machine_learning" class="form-label">Machine Learning</label>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="enable_machine_learning" name="enable_machine_learning" {% if config.enable_machine_learning %}checked{% endif %}>
+                                        <label class="form-check-label" for="enable_machine_learning">
+                                            Usar machine learning para detecção de spam
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="log_level" class="form-label">Nível de Log</label>
+                                    <select class="form-select" id="log_level" name="log_level">
+                                        <option value="DEBUG" {% if config.log_level == 'DEBUG' %}selected{% endif %}>Debug</option>
+                                        <option value="INFO" {% if config.log_level == 'INFO' %}selected{% endif %}>Info</option>
+                                        <option value="WARNING" {% if config.log_level == 'WARNING' %}selected{% endif %}>Warning</option>
+                                        <option value="ERROR" {% if config.log_level == 'ERROR' %}selected{% endif %}>Error</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="cache_timeout" class="form-label">Timeout do Cache (segundos)</label>
+                                    <input type="number" class="form-control" id="cache_timeout" name="cache_timeout" value="{{ config.cache_timeout|default:300 }}" min="60" max="3600">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="api_rate_limit" class="form-label">Limite de API (req/min)</label>
+                                    <input type="number" class="form-control" id="api_rate_limit" name="api_rate_limit" value="{{ config.api_rate_limit|default:60 }}" min="10" max="1000">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="backup_frequency" class="form-label">Frequência de Backup</label>
+                                    <select class="form-select" id="backup_frequency" name="backup_frequency">
+                                        <option value="daily" {% if config.backup_frequency == 'daily' %}selected{% endif %}>Diário</option>
+                                        <option value="weekly" {% if config.backup_frequency == 'weekly' %}selected{% endif %}>Semanal</option>
+                                        <option value="monthly" {% if config.backup_frequency == 'monthly' %}selected{% endif %}>Mensal</option>
+                                        <option value="never" {% if config.backup_frequency == 'never' %}selected{% endif %}>Nunca</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="retention_days" class="form-label">Retenção de Dados (dias)</label>
+                                    <input type="number" class="form-control" id="retention_days" name="retention_days" value="{{ config.retention_days|default:365 }}" min="30" max="3650">
+                                    <small class="form-text text-muted">Tempo para manter logs e dados de moderação.</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Save Button -->
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <small class="text-muted">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Última atualização: {{ config.updated_at|date:"d/m/Y H:i"|default:"Nunca" }}
+                                </small>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-outline-secondary" onclick="resetForm()">
+                                    <i class="fas fa-undo me-1"></i>
+                                    Resetar
+                                </button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-1"></i>
+                                    Salvar Configurações
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Import Config Modal -->
+<div class="modal fade" id="importConfigModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-upload me-2"></i>
+                    Importar Configurações
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="importForm" enctype="multipart/form-data">
+                <div class="modal-body">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="configFile" class="form-label">Arquivo de Configuração:</label>
+                        <input type="file" class="form-control" id="configFile" name="config_file" accept=".json,.yaml,.yml" required>
+                        <small class="form-text text-muted">Formatos suportados: JSON, YAML</small>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="overwriteExisting" name="overwrite_existing">
+                        <label class="form-check-label" for="overwriteExisting">
+                            Sobrescrever configurações existentes
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-upload me-1"></i>
+                        Importar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Update spam threshold value display
+function updateSpamThresholdValue(value) {
+    document.getElementById('spamThresholdValue').textContent = value;
+}
+
+// Form submission
+document.getElementById('configForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    
+    // Show loading state
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Salvando...';
+    submitBtn.disabled = true;
+    
+    fetch(window.location.href, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('Configurações salvas com sucesso!', 'success');
+        } else {
+            showAlert('Erro ao salvar configurações: ' + (data.error || 'Erro desconhecido'), 'danger');
+        }
+    })
+    .catch(error => {
+        showAlert('Erro ao salvar configurações: ' + error.message, 'danger');
+    })
+    .finally(() => {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    });
+});
+
+// Reset form
+function resetForm() {
+    if (confirm('Tem certeza de que deseja resetar todas as alterações?')) {
+        document.getElementById('configForm').reset();
+    }
+}
+
+// Reset to defaults
+function resetToDefaults() {
+    if (confirm('Tem certeza de que deseja restaurar as configurações padrão? Esta ação não pode ser desfeita.')) {
+        fetch('/comments/moderation/config/reset/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showAlert('Configurações restauradas para os padrões!', 'success');
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                showAlert('Erro ao restaurar configurações padrão.', 'danger');
+            }
+        });
+    }
+}
+
+// Export config
+function exportConfig() {
+    window.open('/comments/moderation/config/export/', '_blank');
+}
+
+// Import config
+function importConfig() {
+    const modal = new bootstrap.Modal(document.getElementById('importConfigModal'));
+    modal.show();
+}
+
+// Import form submission
+document.getElementById('importForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    
+    fetch('/comments/moderation/config/import/', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('Configurações importadas com sucesso!', 'success');
+            bootstrap.Modal.getInstance(document.getElementById('importConfigModal')).hide();
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showAlert('Erro ao importar configurações: ' + (data.error || 'Erro desconhecido'), 'danger');
+        }
+    })
+    .catch(error => {
+        showAlert('Erro ao importar configurações: ' + error.message, 'danger');
+    });
+});
+
+// Show alert function
+function showAlert(message, type) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; max-width: 400px;';
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(alertDiv);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.remove();
+        }
+    }, 5000);
+}
+
+// Form validation
+function validateForm() {
+    const maxLength = parseInt(document.getElementById('max_comment_length').value);
+    const minLength = parseInt(document.getElementById('min_comment_length').value);
+    
+    if (minLength >= maxLength) {
+        showAlert('O tamanho mínimo deve ser menor que o tamanho máximo.', 'warning');
+        return false;
+    }
+    
+    return true;
+}
+
+// Add validation to form
+document.getElementById('configForm').addEventListener('submit', function(e) {
+    if (!validateForm()) {
+        e.preventDefault();
+    }
+});
+
+// Real-time validation
+document.getElementById('min_comment_length').addEventListener('input', validateForm);
+document.getElementById('max_comment_length').addEventListener('input', validateForm);
+
+// Initialize tooltips
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize any tooltips if using Bootstrap tooltips
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
+{% endblock %}

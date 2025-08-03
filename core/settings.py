@@ -126,6 +126,8 @@ ESSENTIAL_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',  
+    'channels',  
     'crispy_forms',
     'crispy_bootstrap5',
     'tinymce',
@@ -145,6 +147,7 @@ LOCAL_APPS = [
     'apps.books',
     'apps.mangas',
     'apps.audiobooks',
+    'apps.comments',  
     # Adicione outros módulos aqui
 ]
 
@@ -174,8 +177,18 @@ def get_active_local_apps():
     # Remove duplicatas e mantém ordem
     return [app for i, app in enumerate(active_apps) if app not in active_apps[:i]]
 
-# Use a função para definir os apps locais ativos
-ACTIVE_LOCAL_APPS = get_active_local_apps()
+# Apps locais ativos - incluindo comments explicitamente para resolver problemas de modularização
+# Temporariamente usando lista estática até resolver o problema de carregamento dinâmico
+ACTIVE_LOCAL_APPS = [
+    'apps.accounts',
+    'apps.config', 
+    'apps.pages',
+    'apps.articles',
+    'apps.books',
+    'apps.mangas',
+    'apps.audiobooks',
+    'apps.comments',  # Incluído explicitamente
+]
 
 INSTALLED_APPS = [
     *ESSENTIAL_APPS,
@@ -184,7 +197,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'corsheaders.middleware.CorsMiddleware',  # Deve vir logo após SecurityMiddleware
+    'corsheaders.middleware.CorsMiddleware',  
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -193,8 +206,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'axes.middleware.AxesMiddleware',
-    'csp.middleware.CSPMiddleware',  # Corrigido de 'django_csp.middleware.CSPMiddleware'
-    # 'ratelimit.middleware.RatelimitMiddleware',  # Comentado para isolar erro
+    'csp.middleware.CSPMiddleware', 
     'apps.accounts.middleware.RateLimitMiddleware',
     'apps.accounts.middleware.AccessControlMiddleware',
     'apps.accounts.middleware.SmartRedirectMiddleware',
@@ -706,6 +718,7 @@ ARTICLES_PER_PAGE = int(os.environ.get('ARTICLES_PER_PAGE', '12'))
 USERS_PER_PAGE = int(os.environ.get('USERS_PER_PAGE', '20'))
 
 # Informações do site
+SITE_ID = 1  # Django Sites Framework
 SITE_NAME = os.environ.get('SITE_NAME', 'FireFlies')
 SITE_DESCRIPTION = os.environ.get('SITE_DESCRIPTION', 'Sistema de gerenciamento de conteúdo moderno')
 SITE_URL = os.environ.get('SITE_URL', 'http://127.0.0.1:8000')
@@ -801,6 +814,33 @@ if SENTRY_DSN:
         )
     except ImportError:
         pass  # Sentry não instalado
+
+# =============================================================================
+# CONFIGURAÇÕES DO DJANGO CHANNELS (WebSocket)
+# =============================================================================
+
+# Configuração ASGI
+ASGI_APPLICATION = 'core.asgi.application'
+
+# Configuração do Channel Layers
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [(os.environ.get('REDIS_HOST', '127.0.0.1'), int(os.environ.get('REDIS_PORT', 6379)))],
+            "capacity": 1500,
+            "expiry": 60,
+        },
+    },
+}
+
+# Fallback para desenvolvimento sem Redis
+if not os.environ.get('REDIS_URL') and DEBUG:
+    CHANNEL_LAYERS = {
+        'default': {
+            'BACKEND': 'channels.layers.InMemoryChannelLayer'
+        }
+    }
 
 # Versão do sistema para uso no wizard e exibição
 VERSION = '1.0.0'

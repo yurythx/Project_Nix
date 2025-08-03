@@ -1,0 +1,655 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Histórico de Moderação - {{ block.super }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/comments.css' %}">
+<link rel="stylesheet" href="{% static 'css/moderation.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid my-4">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3">
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-history me-2"></i>
+                        Histórico
+                    </h6>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="{% url 'comments:moderation_queue' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-list me-2"></i>
+                        Fila de Moderação
+                    </a>
+                    <a href="{% url 'comments:moderation_stats' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-chart-bar me-2"></i>
+                        Estatísticas
+                    </a>
+                    <a href="{% url 'comments:moderation_config' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-cog me-2"></i>
+                        Configurações
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Quick Stats -->
+            <div class="card shadow-sm mt-3">
+                <div class="card-header bg-secondary text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>
+                        Estatísticas Rápidas
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="border-end">
+                                <h5 class="text-primary mb-0">{{ total_actions|default:0 }}</h5>
+                                <small class="text-muted">Total de Ações</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <h5 class="text-success mb-0">{{ today_actions|default:0 }}</h5>
+                            <small class="text-muted">Hoje</small>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="border-end">
+                                <h6 class="text-info mb-0">{{ approved_count|default:0 }}</h6>
+                                <small class="text-muted">Aprovados</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <h6 class="text-warning mb-0">{{ rejected_count|default:0 }}</h6>
+                            <small class="text-muted">Rejeitados</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Export Options -->
+            <div class="card shadow-sm mt-3">
+                <div class="card-header bg-success text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-download me-2"></i>
+                        Exportar
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-primary btn-sm" onclick="exportHistory('csv')">
+                            <i class="fas fa-file-csv me-1"></i>CSV
+                        </button>
+                        <button class="btn btn-outline-success btn-sm" onclick="exportHistory('excel')">
+                            <i class="fas fa-file-excel me-1"></i>Excel
+                        </button>
+                        <button class="btn btn-outline-info btn-sm" onclick="exportHistory('pdf')">
+                            <i class="fas fa-file-pdf me-1"></i>PDF
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-md-9">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>
+                    <i class="fas fa-history me-2"></i>
+                    Histórico de Moderação
+                </h2>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-secondary" onclick="refreshHistory()">
+                        <i class="fas fa-sync-alt me-1"></i>
+                        Atualizar
+                    </button>
+                    <button class="btn btn-outline-danger" onclick="clearOldHistory()">
+                        <i class="fas fa-trash me-1"></i>
+                        Limpar Antigos
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Filters -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-filter me-2"></i>
+                        Filtros
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <form method="get" id="filterForm">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <label for="date_from" class="form-label">Data Inicial:</label>
+                                <input type="date" class="form-control" id="date_from" name="date_from" value="{{ request.GET.date_from }}">
+                            </div>
+                            <div class="col-md-3">
+                                <label for="date_to" class="form-label">Data Final:</label>
+                                <input type="date" class="form-control" id="date_to" name="date_to" value="{{ request.GET.date_to }}">
+                            </div>
+                            <div class="col-md-2">
+                                <label for="action_type" class="form-label">Ação:</label>
+                                <select class="form-select" id="action_type" name="action_type">
+                                    <option value="">Todas</option>
+                                    <option value="approved" {% if request.GET.action_type == 'approved' %}selected{% endif %}>Aprovado</option>
+                                    <option value="rejected" {% if request.GET.action_type == 'rejected' %}selected{% endif %}>Rejeitado</option>
+                                    <option value="spam" {% if request.GET.action_type == 'spam' %}selected{% endif %}>Spam</option>
+                                    <option value="deleted" {% if request.GET.action_type == 'deleted' %}selected{% endif %}>Excluído</option>
+                                    <option value="flagged" {% if request.GET.action_type == 'flagged' %}selected{% endif %}>Sinalizado</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label for="moderator" class="form-label">Moderador:</label>
+                                <select class="form-select" id="moderator" name="moderator">
+                                    <option value="">Todos</option>
+                                    {% for mod in moderators %}
+                                    <option value="{{ mod.id }}" {% if request.GET.moderator == mod.id|stringformat:'s' %}selected{% endif %}>{{ mod.username }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">&nbsp;</label>
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-search me-1"></i>
+                                        Filtrar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-md-4">
+                                <label for="search" class="form-label">Buscar:</label>
+                                <input type="text" class="form-control" id="search" name="search" placeholder="Buscar por comentário, usuário..." value="{{ request.GET.search }}">
+                            </div>
+                            <div class="col-md-2">
+                                <label for="per_page" class="form-label">Por página:</label>
+                                <select class="form-select" id="per_page" name="per_page">
+                                    <option value="25" {% if request.GET.per_page == '25' %}selected{% endif %}>25</option>
+                                    <option value="50" {% if request.GET.per_page == '50' %}selected{% endif %}>50</option>
+                                    <option value="100" {% if request.GET.per_page == '100' %}selected{% endif %}>100</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">&nbsp;</label>
+                                <div class="d-flex gap-2">
+                                    <button type="button" class="btn btn-outline-secondary" onclick="clearFilters()">
+                                        <i class="fas fa-times me-1"></i>
+                                        Limpar
+                                    </button>
+                                    <button type="button" class="btn btn-outline-info" onclick="saveFilters()">
+                                        <i class="fas fa-bookmark me-1"></i>
+                                        Salvar Filtros
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- History Table -->
+            <div class="card shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">
+                        <i class="fas fa-list me-2"></i>
+                        Histórico de Ações
+                        {% if history_entries %}
+                        <span class="badge bg-primary ms-2">{{ paginator.count }} registro{{ paginator.count|pluralize }}</span>
+                        {% endif %}
+                    </h6>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-sm btn-outline-primary" onclick="selectAll()">
+                            <i class="fas fa-check-square me-1"></i>
+                            Selecionar Todos
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteSelected()" id="deleteSelectedBtn" disabled>
+                            <i class="fas fa-trash me-1"></i>
+                            Excluir Selecionados
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    {% if history_entries %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th width="40">
+                                        <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll()">
+                                    </th>
+                                    <th>Data/Hora</th>
+                                    <th>Moderador</th>
+                                    <th>Ação</th>
+                                    <th>Comentário</th>
+                                    <th>Usuário</th>
+                                    <th>Motivo</th>
+                                    <th width="100">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for entry in history_entries %}
+                                <tr class="{% if entry.action_type == 'rejected' %}table-warning{% elif entry.action_type == 'spam' %}table-danger{% elif entry.action_type == 'approved' %}table-success{% endif %}">
+                                    <td>
+                                        <input type="checkbox" class="history-checkbox" value="{{ entry.id }}" onchange="updateDeleteButton()">
+                                    </td>
+                                    <td>
+                                        <div class="d-flex flex-column">
+                                            <span class="fw-bold">{{ entry.created_at|date:"d/m/Y" }}</span>
+                                            <small class="text-muted">{{ entry.created_at|time:"H:i:s" }}</small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            {% if entry.moderator.profile.avatar %}
+                                            <img src="{{ entry.moderator.profile.avatar.url }}" alt="{{ entry.moderator.username }}" class="rounded-circle me-2" width="32" height="32">
+                                            {% else %}
+                                            <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
+                                                <i class="fas fa-user text-white"></i>
+                                            </div>
+                                            {% endif %}
+                                            <div>
+                                                <div class="fw-bold">{{ entry.moderator.username }}</div>
+                                                <small class="text-muted">{{ entry.moderator.get_full_name|default:"Moderador" }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge {% if entry.action_type == 'approved' %}bg-success{% elif entry.action_type == 'rejected' %}bg-warning{% elif entry.action_type == 'spam' %}bg-danger{% elif entry.action_type == 'deleted' %}bg-dark{% else %}bg-secondary{% endif %}">
+                                            {% if entry.action_type == 'approved' %}
+                                                <i class="fas fa-check me-1"></i>Aprovado
+                                            {% elif entry.action_type == 'rejected' %}
+                                                <i class="fas fa-times me-1"></i>Rejeitado
+                                            {% elif entry.action_type == 'spam' %}
+                                                <i class="fas fa-exclamation-triangle me-1"></i>Spam
+                                            {% elif entry.action_type == 'deleted' %}
+                                                <i class="fas fa-trash me-1"></i>Excluído
+                                            {% elif entry.action_type == 'flagged' %}
+                                                <i class="fas fa-flag me-1"></i>Sinalizado
+                                            {% else %}
+                                                <i class="fas fa-question me-1"></i>{{ entry.action_type|title }}
+                                            {% endif %}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="comment-preview">
+                                            <div class="comment-content">
+                                                {{ entry.comment.content|truncatechars:100 }}
+                                            </div>
+                                            <small class="text-muted">
+                                                ID: {{ entry.comment.id }} | 
+                                                {% if entry.comment.content_object %}
+                                                    {{ entry.comment.content_object|truncatechars:30 }}
+                                                {% else %}
+                                                    Conteúdo removido
+                                                {% endif %}
+                                            </small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            {% if entry.comment.user.profile.avatar %}
+                                            <img src="{{ entry.comment.user.profile.avatar.url }}" alt="{{ entry.comment.user.username }}" class="rounded-circle me-2" width="24" height="24">
+                                            {% else %}
+                                            <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 24px; height: 24px;">
+                                                <i class="fas fa-user text-white" style="font-size: 10px;"></i>
+                                            </div>
+                                            {% endif %}
+                                            <div>
+                                                <div class="fw-bold">{{ entry.comment.user.username }}</div>
+                                                <small class="text-muted">{{ entry.comment.user.email|truncatechars:20 }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if entry.reason %}
+                                        <span class="text-muted" title="{{ entry.reason }}">{{ entry.reason|truncatechars:50 }}</span>
+                                        {% else %}
+                                        <span class="text-muted fst-italic">Sem motivo</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <button class="btn btn-sm btn-outline-primary" onclick="viewDetails({{ entry.id }})" title="Ver detalhes">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            {% if entry.comment %}
+                                            <a href="{% url 'comments:comment_detail' entry.comment.id %}" class="btn btn-sm btn-outline-info" title="Ver comentário">
+                                                <i class="fas fa-comment"></i>
+                                            </a>
+                                            {% endif %}
+                                            <button class="btn btn-sm btn-outline-danger" onclick="deleteEntry({{ entry.id }})" title="Excluir entrada">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Pagination -->
+                    {% if is_paginated %}
+                    <div class="card-footer">
+                        <nav aria-label="Navegação do histórico">
+                            <ul class="pagination justify-content-center mb-0">
+                                {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page=1">
+                                        <i class="fas fa-angle-double-left"></i>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.previous_page_number }}">
+                                        <i class="fas fa-angle-left"></i>
+                                    </a>
+                                </li>
+                                {% endif %}
+                                
+                                {% for num in page_obj.paginator.page_range %}
+                                {% if page_obj.number == num %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ num }}</span>
+                                </li>
+                                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ num }}">{{ num }}</a>
+                                </li>
+                                {% endif %}
+                                {% endfor %}
+                                
+                                {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.next_page_number }}">
+                                        <i class="fas fa-angle-right"></i>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.paginator.num_pages }}">
+                                        <i class="fas fa-angle-double-right"></i>
+                                    </a>
+                                </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                        
+                        <div class="text-center mt-2">
+                            <small class="text-muted">
+                                Mostrando {{ page_obj.start_index }} a {{ page_obj.end_index }} de {{ paginator.count }} registro{{ paginator.count|pluralize }}
+                            </small>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-history fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">Nenhum histórico encontrado</h5>
+                        <p class="text-muted">Não há registros de moderação para os filtros selecionados.</p>
+                        <button class="btn btn-outline-primary" onclick="clearFilters()">
+                            <i class="fas fa-times me-1"></i>
+                            Limpar Filtros
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Details Modal -->
+<div class="modal fade" id="detailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Detalhes da Ação
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="detailsContent">
+                <!-- Content loaded via AJAX -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Auto-refresh functionality
+let autoRefreshInterval;
+let autoRefreshEnabled = false;
+
+function toggleAutoRefresh() {
+    if (autoRefreshEnabled) {
+        clearInterval(autoRefreshInterval);
+        autoRefreshEnabled = false;
+    } else {
+        autoRefreshInterval = setInterval(refreshHistory, 30000); // 30 seconds
+        autoRefreshEnabled = true;
+    }
+}
+
+function refreshHistory() {
+    location.reload();
+}
+
+// Filter functions
+function clearFilters() {
+    document.getElementById('filterForm').reset();
+    window.location.href = window.location.pathname;
+}
+
+function saveFilters() {
+    const formData = new FormData(document.getElementById('filterForm'));
+    const params = new URLSearchParams(formData);
+    localStorage.setItem('moderationHistoryFilters', params.toString());
+    showAlert('Filtros salvos com sucesso!', 'success');
+}
+
+function loadSavedFilters() {
+    const savedFilters = localStorage.getItem('moderationHistoryFilters');
+    if (savedFilters) {
+        const params = new URLSearchParams(savedFilters);
+        for (const [key, value] of params) {
+            const element = document.getElementById(key);
+            if (element) {
+                element.value = value;
+            }
+        }
+    }
+}
+
+// Selection functions
+function toggleSelectAll() {
+    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+    const checkboxes = document.querySelectorAll('.history-checkbox');
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = selectAllCheckbox.checked;
+    });
+    
+    updateDeleteButton();
+}
+
+function selectAll() {
+    const checkboxes = document.querySelectorAll('.history-checkbox');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = true;
+    });
+    document.getElementById('selectAllCheckbox').checked = true;
+    updateDeleteButton();
+}
+
+function updateDeleteButton() {
+    const checkedBoxes = document.querySelectorAll('.history-checkbox:checked');
+    const deleteBtn = document.getElementById('deleteSelectedBtn');
+    deleteBtn.disabled = checkedBoxes.length === 0;
+}
+
+// Delete functions
+function deleteSelected() {
+    const checkedBoxes = document.querySelectorAll('.history-checkbox:checked');
+    const ids = Array.from(checkedBoxes).map(cb => cb.value);
+    
+    if (ids.length === 0) {
+        showAlert('Nenhum item selecionado.', 'warning');
+        return;
+    }
+    
+    if (confirm(`Tem certeza de que deseja excluir ${ids.length} entrada(s) do histórico?`)) {
+        fetch('/comments/moderation/history/delete-multiple/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            },
+            body: JSON.stringify({ ids: ids })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showAlert(`${data.deleted_count} entrada(s) excluída(s) com sucesso!`, 'success');
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                showAlert('Erro ao excluir entradas: ' + (data.error || 'Erro desconhecido'), 'danger');
+            }
+        })
+        .catch(error => {
+            showAlert('Erro ao excluir entradas: ' + error.message, 'danger');
+        });
+    }
+}
+
+function deleteEntry(entryId) {
+    if (confirm('Tem certeza de que deseja excluir esta entrada do histórico?')) {
+        fetch(`/comments/moderation/history/${entryId}/delete/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showAlert('Entrada excluída com sucesso!', 'success');
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                showAlert('Erro ao excluir entrada.', 'danger');
+            }
+        });
+    }
+}
+
+function clearOldHistory() {
+    if (confirm('Tem certeza de que deseja excluir entradas antigas do histórico? Esta ação não pode ser desfeita.')) {
+        const days = prompt('Excluir entradas mais antigas que quantos dias?', '90');
+        if (days && !isNaN(days)) {
+            fetch('/comments/moderation/history/clear-old/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                },
+                body: JSON.stringify({ days: parseInt(days) })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert(`${data.deleted_count} entrada(s) antiga(s) excluída(s)!`, 'success');
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showAlert('Erro ao limpar histórico antigo.', 'danger');
+                }
+            });
+        }
+    }
+}
+
+// Details modal
+function viewDetails(entryId) {
+    fetch(`/comments/moderation/history/${entryId}/details/`)
+        .then(response => response.text())
+        .then(html => {
+            document.getElementById('detailsContent').innerHTML = html;
+            const modal = new bootstrap.Modal(document.getElementById('detailsModal'));
+            modal.show();
+        })
+        .catch(error => {
+            showAlert('Erro ao carregar detalhes: ' + error.message, 'danger');
+        });
+}
+
+// Export functions
+function exportHistory(format) {
+    const formData = new FormData(document.getElementById('filterForm'));
+    const params = new URLSearchParams(formData);
+    params.append('format', format);
+    
+    window.open(`/comments/moderation/history/export/?${params.toString()}`, '_blank');
+}
+
+// Alert function
+function showAlert(message, type) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; max-width: 400px;';
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(alertDiv);
+    
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.remove();
+        }
+    }, 5000);
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Load saved filters
+    loadSavedFilters();
+    
+    // Auto-submit form on filter changes
+    const filterInputs = document.querySelectorAll('#filterForm input, #filterForm select');
+    filterInputs.forEach(input => {
+        if (input.type !== 'submit') {
+            input.addEventListener('change', function() {
+                if (this.id !== 'search') {
+                    document.getElementById('filterForm').submit();
+                }
+            });
+        }
+    });
+    
+    // Search with delay
+    let searchTimeout;
+    document.getElementById('search').addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            document.getElementById('filterForm').submit();
+        }, 500);
+    });
+    
+    // Update delete button state
+    updateDeleteButton();
+});
+</script>
+{% endblock %}

@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ category_name }} - Vídeos - Project Nix{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h2">
+                    <i class="fas fa-folder-open me-2"></i>
+                    Categoria: {{ category_name }}
+                </h1>
+                <a href="{% url 'audiobooks:video_list' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Voltar para todos os vídeos
+                </a>
+            </div>
+
+            <!-- Filtros e Ordenação -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-6">
+                            <label for="sort_by" class="form-label">Ordenar por:</label>
+                            <select name="sort_by" id="sort_by" class="form-select" onchange="this.form.submit()">
+                                <option value="-created_at" {% if sort_by == '-created_at' %}selected{% endif %}>Mais recentes</option>
+                                <option value="created_at" {% if sort_by == 'created_at' %}selected{% endif %}>Mais antigos</option>
+                                <option value="title" {% if sort_by == 'title' %}selected{% endif %}>Título (A-Z)</option>
+                                <option value="-title" {% if sort_by == '-title' %}selected{% endif %}>Título (Z-A)</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Vídeos Grid -->
+            {% if videos %}
+            <div class="row">
+                {% for video in videos %}
+                <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+                    <div class="card h-100 shadow-sm">
+                        {% if video.thumbnail %}
+                        <img src="{{ video.thumbnail.url }}" class="card-img-top" 
+                             alt="{{ video.title }}" style="height: 180px; object-fit: cover;">
+                        {% else %}
+                        <div class="card-img-top bg-light d-flex align-items-center justify-content-center" 
+                             style="height: 180px;">
+                            <i class="fas fa-video fa-3x text-muted"></i>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title">{{ video.title }}</h5>
+                            {% if video.author %}
+                            <p class="card-text text-muted mb-1">
+                                <i class="fas fa-user me-1"></i>{{ video.author }}
+                            </p>
+                            {% endif %}
+                            {% if video.narrator %}
+                            <p class="card-text text-muted mb-2">
+                                <i class="fas fa-microphone me-1"></i>{{ video.narrator }}
+                            </p>
+                            {% endif %}
+                            {% if video.description %}
+                            <p class="card-text flex-grow-1">
+                                {{ video.description|truncatewords:15 }}
+                            </p>
+                            {% endif %}
+                            {% if video.duration %}
+                            <p class="card-text text-muted mb-2">
+                                <i class="fas fa-clock me-1"></i>{{ video.get_duration_display }}
+                            </p>
+                            {% endif %}
+                            <div class="mt-auto">
+                                <a href="{{ video.get_absolute_url }}" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-play me-1"></i>Assistir
+                                </a>
+                                {% if user.is_staff %}
+                                <a href="{% url 'audiobooks:video_edit' video.slug %}" 
+                                   class="btn btn-outline-secondary btn-sm">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Pagination -->
+            {% if is_paginated %}
+            <nav aria-label="Navegação de páginas">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if sort_by %}&sort_by={{ sort_by }}{% endif %}">
+                            Primeira
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}">
+                            Anterior
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    <li class="page-item active">
+                        <span class="page-link">
+                            Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+                        </span>
+                    </li>
+
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}">
+                            Próxima
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}">
+                            Última
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-folder-open fa-4x text-muted mb-3"></i>
+                <h3 class="text-muted">Nenhum vídeo encontrado nesta categoria</h3>
+                <p class="text-muted">
+                    <a href="{% url 'audiobooks:video_list' %}" class="btn btn-outline-primary mt-3">
+                        <i class="fas fa-arrow-left me-2"></i>Voltar para todos os vídeos
+                    </a>
+                </p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

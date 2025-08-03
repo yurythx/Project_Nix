@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block title %}
+    {% if comment %}
+        Editar Comentário
+    {% else %}
+        Novo Comentário
+    {% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/comments.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="comment-form-page">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            {% if comment %}
+                                ✏️ Editar Comentário
+                            {% else %}
+                                💬 Novo Comentário
+                            {% endif %}
+                        </h3>
+                    </div>
+                    
+                    <div class="card-body">
+                        {% if messages %}
+                            {% for message in messages %}
+                                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                        
+                        <form method="post" class="comment-form">
+                            {% csrf_token %}
+                            
+                            {% if not comment %}
+                                <!-- Hidden fields for new comments -->
+                                <input type="hidden" name="content_type" value="{{ content_type.id }}">
+                                <input type="hidden" name="object_id" value="{{ object_id }}">
+                                {% if parent_comment %}
+                                    <input type="hidden" name="parent" value="{{ parent_comment.uuid }}">
+                                {% endif %}
+                            {% endif %}
+                            
+                            {% if parent_comment %}
+                                <div class="parent-comment-preview">
+                                    <h5>Respondendo a:</h5>
+                                    <div class="parent-comment">
+                                        <div class="comment-author">
+                                            <strong>{{ parent_comment.author.username }}</strong>
+                                            <small class="text-muted">{{ parent_comment.created_at|date:"d/m/Y H:i" }}</small>
+                                        </div>
+                                        <div class="comment-content">
+                                            {{ parent_comment.content|truncatewords:30|linebreaks }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <hr>
+                            {% endif %}
+                            
+                            <div class="form-group mb-3">
+                                <label for="{{ form.content.id_for_label }}" class="form-label">
+                                    Comentário <span class="text-danger">*</span>
+                                </label>
+                                {{ form.content|add_class:"form-control"|attr:"rows:6"|attr:"placeholder:Escreva seu comentário..." }}
+                                {% if form.content.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.content.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">
+                                    <small class="text-muted">
+                                        Mínimo 3 caracteres, máximo 2000 caracteres.
+                                        <span id="char-count">0</span>/2000
+                                    </small>
+                                </div>
+                            </div>
+                            
+                            {% if form.non_field_errors %}
+                                <div class="alert alert-danger">
+                                    {% for error in form.non_field_errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            
+                            <div class="form-actions">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="comment-guidelines">
+                                        <small class="text-muted">
+                                            📝 Seja respeitoso e construtivo em seus comentários.
+                                        </small>
+                                    </div>
+                                    
+                                    <div class="action-buttons">
+                                        <a href="{{ request.META.HTTP_REFERER|default:'/' }}" class="btn btn-secondary me-2">
+                                            Cancelar
+                                        </a>
+                                        <button type="submit" class="btn btn-primary">
+                                            {% if comment %}
+                                                💾 Salvar Alterações
+                                            {% else %}
+                                                📤 Publicar Comentário
+                                            {% endif %}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                        
+                        {% if comment %}
+                            <hr>
+                            <div class="comment-info">
+                                <h5>Informações do Comentário</h5>
+                                <ul class="list-unstyled">
+                                    <li><strong>Criado em:</strong> {{ comment.created_at|date:"d/m/Y H:i" }}</li>
+                                    {% if comment.is_edited %}
+                                        <li><strong>Última edição:</strong> {{ comment.updated_at|date:"d/m/Y H:i" }}</li>
+                                    {% endif %}
+                                    <li><strong>Status:</strong> 
+                                        <span class="badge bg-{% if comment.status == 'approved' %}success{% elif comment.status == 'pending' %}warning{% else %}danger{% endif %}">
+                                            {{ comment.get_status_display }}
+                                        </span>
+                                    </li>
+                                    <li><strong>Reações:</strong> 👍 {{ comment.likes_count }} | 👎 {{ comment.dislikes_count }}</li>
+                                    {% if comment.replies_count > 0 %}
+                                        <li><strong>Respostas:</strong> {{ comment.replies_count }}</li>
+                                    {% endif %}
+                                </ul>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                {% if not comment %}
+                    <!-- Comment Guidelines -->
+                    <div class="card mt-4">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">📋 Diretrizes para Comentários</h5>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-unstyled mb-0">
+                                <li>✅ Seja respeitoso com outros usuários</li>
+                                <li>✅ Mantenha-se no tópico da discussão</li>
+                                <li>✅ Use linguagem apropriada</li>
+                                <li>❌ Não faça spam ou autopromocão</li>
+                                <li>❌ Não compartilhe informações pessoais</li>
+                                <li>❌ Não use linguagem ofensiva ou discriminatória</li>
+                            </ul>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const contentTextarea = document.getElementById('{{ form.content.id_for_label }}');
+    const charCount = document.getElementById('char-count');
+    const maxLength = 2000;
+    
+    function updateCharCount() {
+        const currentLength = contentTextarea.value.length;
+        charCount.textContent = currentLength;
+        
+        if (currentLength > maxLength) {
+            charCount.classList.add('text-danger');
+            charCount.classList.remove('text-muted');
+        } else if (currentLength > maxLength * 0.9) {
+            charCount.classList.add('text-warning');
+            charCount.classList.remove('text-muted', 'text-danger');
+        } else {
+            charCount.classList.add('text-muted');
+            charCount.classList.remove('text-warning', 'text-danger');
+        }
+    }
+    
+    // Update character count on input
+    contentTextarea.addEventListener('input', updateCharCount);
+    
+    // Initial count
+    updateCharCount();
+    
+    // Auto-resize textarea
+    function autoResize() {
+        contentTextarea.style.height = 'auto';
+        contentTextarea.style.height = contentTextarea.scrollHeight + 'px';
+    }
+    
+    contentTextarea.addEventListener('input', autoResize);
+    autoResize();
+    
+    // Form validation
+    const form = document.querySelector('.comment-form');
+    form.addEventListener('submit', function(e) {
+        const content = contentTextarea.value.trim();
+        
+        if (content.length < 3) {
+            e.preventDefault();
+            alert('O comentário deve ter pelo menos 3 caracteres.');
+            contentTextarea.focus();
+            return false;
+        }
+        
+        if (content.length > maxLength) {
+            e.preventDefault();
+            alert(`O comentário não pode ter mais de ${maxLength} caracteres.`);
+            contentTextarea.focus();
+            return false;
+        }
+        
+        // Disable submit button to prevent double submission
+        const submitBtn = form.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '⏳ Enviando...';
+    });
+});
+</script>
+{% endblock %}

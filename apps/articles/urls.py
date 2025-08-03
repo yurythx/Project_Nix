@@ -11,16 +11,7 @@ from apps.articles.views import (
     # TagDetailView,
     # TagListView,
 )
-from apps.articles.views.comment_views import (
-    CommentCreateView,
-    ReplyCreateView,
-    CommentListView,
-    CommentModerationView,
-    CommentModerationActionView,
-    CommentStatsView,
-    LoadMoreCommentsView,
-    LoadRepliesView,
-)
+# Views de comentários migradas para apps.comments.views
 
 
 app_name = 'articles'
@@ -35,17 +26,7 @@ urlpatterns = [
     path('<slug:slug>/editar/', ArticleUpdateView.as_view(), name='article_update'),
     path('<slug:slug>/deletar/', ArticleDeleteView.as_view(), name='article_delete'),
 
-    # Moderação de comentários (staff apenas) - deve vir antes dos slugs
-    path('admin/comentarios/', CommentModerationView.as_view(), name='moderate_comments'),
-    path('admin/comentarios/<int:comment_id>/moderar/', CommentModerationActionView.as_view(), name='moderate_comment_action'),
-    path('admin/comentarios/stats/', CommentStatsView.as_view(), name='comment_stats'),
-
-    # Comentários
-    path('<slug:slug>/comentarios/', CommentListView.as_view(), name='comment_list'),
-    path('<slug:slug>/comentar/', CommentCreateView.as_view(), name='add_comment'),
-    path('<slug:slug>/comentarios/<int:comment_id>/responder/', ReplyCreateView.as_view(), name='add_reply'),
-    path('comentarios/', LoadMoreCommentsView.as_view(), name='load_more_comments'),
-    path('comentarios/<int:comment_id>/replies/', LoadRepliesView.as_view(), name='load_replies'),
+    # URLs de comentários disponíveis em apps.comments.urls
 
     # Categorias (deve vir antes dos slugs de artigo)
     path('categoria/', CategoryListView.as_view(), name='category_list'),

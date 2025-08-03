@@ -1,0 +1,810 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Detecção de Spam - {{ block.super }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/comments.css' %}">
+<link rel="stylesheet" href="{% static 'css/moderation.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid my-4">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3">
+            <div class="card shadow-sm">
+                <div class="card-header bg-danger text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-shield-alt me-2"></i>
+                        Detecção de Spam
+                    </h6>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="{% url 'comments:moderation_queue' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-list me-2"></i>
+                        Fila de Moderação
+                    </a>
+                    <a href="{% url 'comments:moderation_stats' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-chart-bar me-2"></i>
+                        Estatísticas
+                    </a>
+                    <a href="{% url 'comments:moderation_config' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-cog me-2"></i>
+                        Configurações
+                    </a>
+                    <a href="{% url 'comments:moderation_history' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-history me-2"></i>
+                        Histórico
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Spam Stats -->
+            <div class="card shadow-sm mt-3">
+                <div class="card-header bg-warning text-dark">
+                    <h6 class="mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>
+                        Estatísticas de Spam
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="border-end">
+                                <h5 class="text-danger mb-0">{{ spam_detected|default:0 }}</h5>
+                                <small class="text-muted">Detectados</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <h5 class="text-success mb-0">{{ spam_blocked|default:0 }}</h5>
+                            <small class="text-muted">Bloqueados</small>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="border-end">
+                                <h6 class="text-info mb-0">{{ accuracy|default:0 }}%</h6>
+                                <small class="text-muted">Precisão</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <h6 class="text-primary mb-0">{{ false_positives|default:0 }}</h6>
+                            <small class="text-muted">Falsos Positivos</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Quick Actions -->
+            <div class="card shadow-sm mt-3">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-bolt me-2"></i>
+                        Ações Rápidas
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-success" onclick="trainModel()">
+                            <i class="fas fa-brain me-1"></i>Treinar Modelo
+                        </button>
+                        <button class="btn btn-outline-info" onclick="updateRules()">
+                            <i class="fas fa-sync me-1"></i>Atualizar Regras
+                        </button>
+                        <button class="btn btn-outline-warning" onclick="testDetection()">
+                            <i class="fas fa-vial me-1"></i>Testar Detecção
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-md-9">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>
+                    <i class="fas fa-shield-alt me-2"></i>
+                    Sistema de Detecção de Spam
+                </h2>
+                <div class="d-flex gap-2">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="autoDetection" {% if spam_detection_enabled %}checked{% endif %} onchange="toggleAutoDetection()">
+                        <label class="form-check-label" for="autoDetection">
+                            Detecção Automática
+                        </label>
+                    </div>
+                    <button class="btn btn-outline-primary" onclick="refreshData()">
+                        <i class="fas fa-sync-alt me-1"></i>
+                        Atualizar
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Detection Methods -->
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-header bg-info text-white">
+                            <h6 class="mb-0">
+                                <i class="fas fa-robot me-2"></i>
+                                Machine Learning
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span>Status:</span>
+                                <span class="badge {% if ml_model_active %}bg-success{% else %}bg-secondary{% endif %}">
+                                    {% if ml_model_active %}Ativo{% else %}Inativo{% endif %}
+                                </span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span>Precisão:</span>
+                                <span class="fw-bold text-primary">{{ ml_accuracy|default:"N/A" }}%</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span>Última Atualização:</span>
+                                <small class="text-muted">{{ ml_last_update|date:"d/m/Y H:i"|default:"Nunca" }}</small>
+                            </div>
+                            <div class="d-grid">
+                                <button class="btn btn-outline-primary" onclick="configureML()">
+                                    <i class="fas fa-cog me-1"></i>
+                                    Configurar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-header bg-warning text-dark">
+                            <h6 class="mb-0">
+                                <i class="fas fa-list me-2"></i>
+                                Palavras-chave
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span>Palavras Bloqueadas:</span>
+                                <span class="fw-bold text-danger">{{ blocked_words_count|default:0 }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span>Palavras Suspeitas:</span>
+                                <span class="fw-bold text-warning">{{ suspicious_words_count|default:0 }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span>Detecções Hoje:</span>
+                                <span class="fw-bold text-info">{{ keyword_detections_today|default:0 }}</span>
+                            </div>
+                            <div class="d-grid">
+                                <button class="btn btn-outline-warning" onclick="manageKeywords()">
+                                    <i class="fas fa-edit me-1"></i>
+                                    Gerenciar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-header bg-success text-white">
+                            <h6 class="mb-0">
+                                <i class="fas fa-link me-2"></i>
+                                Análise de Links
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span>Links Verificados:</span>
+                                <span class="fw-bold text-primary">{{ links_checked|default:0 }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span>Links Maliciosos:</span>
+                                <span class="fw-bold text-danger">{{ malicious_links|default:0 }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span>Taxa de Bloqueio:</span>
+                                <span class="fw-bold text-warning">{{ link_block_rate|default:0 }}%</span>
+                            </div>
+                            <div class="d-grid">
+                                <button class="btn btn-outline-success" onclick="configureLinkAnalysis()">
+                                    <i class="fas fa-cog me-1"></i>
+                                    Configurar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recent Detections -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Detecções Recentes
+                    </h6>
+                    <div class="d-flex gap-2">
+                        <select class="form-select form-select-sm" id="detectionFilter" onchange="filterDetections()">
+                            <option value="all">Todas</option>
+                            <option value="spam">Spam</option>
+                            <option value="suspicious">Suspeitas</option>
+                            <option value="blocked">Bloqueadas</option>
+                        </select>
+                        <button class="btn btn-sm btn-outline-primary" onclick="exportDetections()">
+                            <i class="fas fa-download me-1"></i>
+                            Exportar
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    {% if recent_detections %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Data/Hora</th>
+                                    <th>Comentário</th>
+                                    <th>Usuário</th>
+                                    <th>Método</th>
+                                    <th>Confiança</th>
+                                    <th>Status</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for detection in recent_detections %}
+                                <tr class="{% if detection.is_spam %}table-danger{% elif detection.is_suspicious %}table-warning{% endif %}">
+                                    <td>
+                                        <div class="d-flex flex-column">
+                                            <span class="fw-bold">{{ detection.created_at|date:"d/m/Y" }}</span>
+                                            <small class="text-muted">{{ detection.created_at|time:"H:i:s" }}</small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="comment-preview">
+                                            <div class="comment-content">{{ detection.comment.content|truncatechars:80 }}</div>
+                                            <small class="text-muted">ID: {{ detection.comment.id }}</small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            {% if detection.comment.user.profile.avatar %}
+                                            <img src="{{ detection.comment.user.profile.avatar.url }}" alt="{{ detection.comment.user.username }}" class="rounded-circle me-2" width="32" height="32">
+                                            {% else %}
+                                            <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
+                                                <i class="fas fa-user text-white"></i>
+                                            </div>
+                                            {% endif %}
+                                            <div>
+                                                <div class="fw-bold">{{ detection.comment.user.username }}</div>
+                                                <small class="text-muted">{{ detection.comment.user.email|truncatechars:20 }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge {% if detection.detection_method == 'ml' %}bg-info{% elif detection.detection_method == 'keyword' %}bg-warning{% elif detection.detection_method == 'link' %}bg-success{% else %}bg-secondary{% endif %}">
+                                            {% if detection.detection_method == 'ml' %}
+                                                <i class="fas fa-robot me-1"></i>ML
+                                            {% elif detection.detection_method == 'keyword' %}
+                                                <i class="fas fa-list me-1"></i>Palavra-chave
+                                            {% elif detection.detection_method == 'link' %}
+                                                <i class="fas fa-link me-1"></i>Link
+                                            {% else %}
+                                                <i class="fas fa-question me-1"></i>{{ detection.detection_method|title }}
+                                            {% endif %}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="progress me-2" style="width: 60px; height: 8px;">
+                                                <div class="progress-bar {% if detection.confidence >= 80 %}bg-danger{% elif detection.confidence >= 60 %}bg-warning{% else %}bg-info{% endif %}" 
+                                                     style="width: {{ detection.confidence }}%"></div>
+                                            </div>
+                                            <small class="fw-bold">{{ detection.confidence }}%</small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if detection.is_blocked %}
+                                        <span class="badge bg-danger">
+                                            <i class="fas fa-ban me-1"></i>Bloqueado
+                                        </span>
+                                        {% elif detection.is_spam %}
+                                        <span class="badge bg-warning">
+                                            <i class="fas fa-exclamation-triangle me-1"></i>Spam
+                                        </span>
+                                        {% else %}
+                                        <span class="badge bg-info">
+                                            <i class="fas fa-eye me-1"></i>Suspeito
+                                        </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <button class="btn btn-sm btn-outline-primary" onclick="viewDetectionDetails({{ detection.id }})" title="Ver detalhes">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            {% if not detection.is_blocked %}
+                                            <button class="btn btn-sm btn-outline-success" onclick="approveComment({{ detection.comment.id }})" title="Aprovar">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger" onclick="blockComment({{ detection.comment.id }})" title="Bloquear">
+                                                <i class="fas fa-ban"></i>
+                                            </button>
+                                            {% endif %}
+                                            <button class="btn btn-sm btn-outline-warning" onclick="reportFalsePositive({{ detection.id }})" title="Falso positivo">
+                                                <i class="fas fa-flag"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Pagination -->
+                    {% if is_paginated %}
+                    <div class="card-footer">
+                        <nav aria-label="Navegação das detecções">
+                            <ul class="pagination justify-content-center mb-0">
+                                {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=1">
+                                        <i class="fas fa-angle-double-left"></i>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                                        <i class="fas fa-angle-left"></i>
+                                    </a>
+                                </li>
+                                {% endif %}
+                                
+                                {% for num in page_obj.paginator.page_range %}
+                                {% if page_obj.number == num %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ num }}</span>
+                                </li>
+                                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                </li>
+                                {% endif %}
+                                {% endfor %}
+                                
+                                {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                                        <i class="fas fa-angle-right"></i>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">
+                                        <i class="fas fa-angle-double-right"></i>
+                                    </a>
+                                </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                    </div>
+                    {% endif %}
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-shield-alt fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">Nenhuma detecção recente</h5>
+                        <p class="text-muted">O sistema não detectou spam recentemente.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Performance Metrics -->
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-chart-line me-2"></i>
+                        Métricas de Performance
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h4 class="text-primary">{{ detection_rate|default:0 }}%</h4>
+                                <small class="text-muted">Taxa de Detecção</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h4 class="text-success">{{ precision|default:0 }}%</h4>
+                                <small class="text-muted">Precisão</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h4 class="text-info">{{ recall|default:0 }}%</h4>
+                                <small class="text-muted">Recall</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h4 class="text-warning">{{ f1_score|default:0 }}%</h4>
+                                <small class="text-muted">F1-Score</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <canvas id="detectionChart" width="400" height="200"></canvas>
+                        </div>
+                        <div class="col-md-6">
+                            <canvas id="methodChart" width="400" height="200"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Detection Details Modal -->
+<div class="modal fade" id="detectionDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Detalhes da Detecção
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="detectionDetailsContent">
+                <!-- Content loaded via AJAX -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Test Detection Modal -->
+<div class="modal fade" id="testDetectionModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-vial me-2"></i>
+                    Testar Detecção de Spam
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="testDetectionForm">
+                <div class="modal-body">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="testContent" class="form-label">Conteúdo do Comentário:</label>
+                        <textarea class="form-control" id="testContent" name="content" rows="4" placeholder="Digite o conteúdo do comentário para testar..." required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="testMethod" class="form-label">Método de Detecção:</label>
+                        <select class="form-select" id="testMethod" name="method">
+                            <option value="all">Todos os métodos</option>
+                            <option value="ml">Machine Learning</option>
+                            <option value="keyword">Palavras-chave</option>
+                            <option value="link">Análise de Links</option>
+                        </select>
+                    </div>
+                    <div id="testResults" class="d-none">
+                        <h6>Resultados:</h6>
+                        <div id="testResultsContent"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-vial me-1"></i>
+                        Testar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Toggle auto detection
+function toggleAutoDetection() {
+    const enabled = document.getElementById('autoDetection').checked;
+    
+    fetch('/comments/moderation/spam-detection/toggle/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+        },
+        body: JSON.stringify({ enabled: enabled })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert(`Detecção automática ${enabled ? 'ativada' : 'desativada'}!`, 'success');
+        } else {
+            showAlert('Erro ao alterar configuração.', 'danger');
+            document.getElementById('autoDetection').checked = !enabled;
+        }
+    });
+}
+
+// Refresh data
+function refreshData() {
+    location.reload();
+}
+
+// Train ML model
+function trainModel() {
+    if (confirm('Tem certeza de que deseja treinar o modelo? Este processo pode demorar alguns minutos.')) {
+        fetch('/comments/moderation/spam-detection/train/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showAlert('Treinamento do modelo iniciado!', 'success');
+            } else {
+                showAlert('Erro ao iniciar treinamento.', 'danger');
+            }
+        });
+    }
+}
+
+// Update rules
+function updateRules() {
+    fetch('/comments/moderation/spam-detection/update-rules/', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('Regras atualizadas com sucesso!', 'success');
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showAlert('Erro ao atualizar regras.', 'danger');
+        }
+    });
+}
+
+// Test detection
+function testDetection() {
+    const modal = new bootstrap.Modal(document.getElementById('testDetectionModal'));
+    modal.show();
+}
+
+// Test detection form submission
+document.getElementById('testDetectionForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    
+    fetch('/comments/moderation/spam-detection/test/', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById('testResults').classList.remove('d-none');
+            document.getElementById('testResultsContent').innerHTML = `
+                <div class="alert alert-${data.is_spam ? 'danger' : 'success'}">
+                    <strong>Resultado:</strong> ${data.is_spam ? 'SPAM DETECTADO' : 'Comentário Limpo'}<br>
+                    <strong>Confiança:</strong> ${data.confidence}%<br>
+                    <strong>Método:</strong> ${data.method}<br>
+                    ${data.reasons ? '<strong>Motivos:</strong> ' + data.reasons.join(', ') : ''}
+                </div>
+            `;
+        } else {
+            showAlert('Erro ao testar detecção.', 'danger');
+        }
+    });
+});
+
+// View detection details
+function viewDetectionDetails(detectionId) {
+    fetch(`/comments/moderation/spam-detection/${detectionId}/details/`)
+        .then(response => response.text())
+        .then(html => {
+            document.getElementById('detectionDetailsContent').innerHTML = html;
+            const modal = new bootstrap.Modal(document.getElementById('detectionDetailsModal'));
+            modal.show();
+        })
+        .catch(error => {
+            showAlert('Erro ao carregar detalhes: ' + error.message, 'danger');
+        });
+}
+
+// Comment actions
+function approveComment(commentId) {
+    if (confirm('Tem certeza de que deseja aprovar este comentário?')) {
+        fetch(`/comments/${commentId}/approve/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showAlert('Comentário aprovado!', 'success');
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                showAlert('Erro ao aprovar comentário.', 'danger');
+            }
+        });
+    }
+}
+
+function blockComment(commentId) {
+    if (confirm('Tem certeza de que deseja bloquear este comentário?')) {
+        fetch(`/comments/${commentId}/block/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showAlert('Comentário bloqueado!', 'success');
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                showAlert('Erro ao bloquear comentário.', 'danger');
+            }
+        });
+    }
+}
+
+function reportFalsePositive(detectionId) {
+    if (confirm('Tem certeza de que deseja reportar este como falso positivo?')) {
+        fetch(`/comments/moderation/spam-detection/${detectionId}/false-positive/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showAlert('Falso positivo reportado!', 'success');
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                showAlert('Erro ao reportar falso positivo.', 'danger');
+            }
+        });
+    }
+}
+
+// Filter detections
+function filterDetections() {
+    const filter = document.getElementById('detectionFilter').value;
+    const url = new URL(window.location);
+    url.searchParams.set('filter', filter);
+    window.location.href = url.toString();
+}
+
+// Export detections
+function exportDetections() {
+    window.open('/comments/moderation/spam-detection/export/', '_blank');
+}
+
+// Configuration functions
+function configureML() {
+    window.location.href = '/comments/moderation/spam-detection/ml-config/';
+}
+
+function manageKeywords() {
+    window.location.href = '/comments/moderation/spam-detection/keywords/';
+}
+
+function configureLinkAnalysis() {
+    window.location.href = '/comments/moderation/spam-detection/link-analysis/';
+}
+
+// Alert function
+function showAlert(message, type) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; max-width: 400px;';
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(alertDiv);
+    
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.remove();
+        }
+    }, 5000);
+}
+
+// Initialize charts
+document.addEventListener('DOMContentLoaded', function() {
+    // Detection trend chart
+    const detectionCtx = document.getElementById('detectionChart').getContext('2d');
+    new Chart(detectionCtx, {
+        type: 'line',
+        data: {
+            labels: {{ detection_chart_labels|safe }},
+            datasets: [{
+                label: 'Detecções',
+                data: {{ detection_chart_data|safe }},
+                borderColor: 'rgb(75, 192, 192)',
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Tendência de Detecções'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+    
+    // Method distribution chart
+    const methodCtx = document.getElementById('methodChart').getContext('2d');
+    new Chart(methodCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Machine Learning', 'Palavras-chave', 'Análise de Links', 'Outros'],
+            datasets: [{
+                data: {{ method_chart_data|safe }},
+                backgroundColor: [
+                    'rgba(54, 162, 235, 0.8)',
+                    'rgba(255, 206, 86, 0.8)',
+                    'rgba(75, 192, 192, 0.8)',
+                    'rgba(153, 102, 255, 0.8)'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Distribuição por Método'
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

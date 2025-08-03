@@ -1,0 +1,513 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Comentários Recentes - {{ block.super }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/comments.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row">
+        <div class="col-lg-12">
+            <!-- Page Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>
+                    <i class="fas fa-clock me-2 text-success"></i>
+                    Comentários Recentes
+                </h2>
+                <div>
+                    <a href="{% url 'comments:comment_list' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-list me-1"></i>Todos os Comentários
+                    </a>
+                    <a href="{% url 'comments:popular' %}" class="btn btn-outline-danger ms-2">
+                        <i class="fas fa-fire me-1"></i>Populares
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Filter Options -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-3">
+                            <label for="hours" class="form-label">Últimas horas:</label>
+                            <select class="form-select" id="hours" name="hours">
+                                <option value="1" {% if request.GET.hours == '1' %}selected{% endif %}>Última hora</option>
+                                <option value="6" {% if request.GET.hours == '6' %}selected{% endif %}>Últimas 6 horas</option>
+                                <option value="24" {% if request.GET.hours == '24' %}selected{% endif %}>Últimas 24 horas</option>
+                                <option value="72" {% if request.GET.hours == '72' %}selected{% endif %}>Últimos 3 dias</option>
+                                <option value="168" {% if request.GET.hours == '168' %}selected{% endif %}>Última semana</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="status" class="form-label">Status:</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="">Todos</option>
+                                <option value="approved" {% if request.GET.status == 'approved' %}selected{% endif %}>Aprovados</option>
+                                <option value="pending" {% if request.GET.status == 'pending' %}selected{% endif %}>Pendentes</option>
+                                <option value="flagged" {% if request.GET.status == 'flagged' %}selected{% endif %}>Sinalizados</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="content_type" class="form-label">Tipo de conteúdo:</label>
+                            <select class="form-select" id="content_type" name="content_type">
+                                <option value="">Todos</option>
+                                <option value="manga" {% if request.GET.content_type == 'manga' %}selected{% endif %}>Mangás</option>
+                                <option value="book" {% if request.GET.content_type == 'book' %}selected{% endif %}>Livros</option>
+                                <option value="audiobook" {% if request.GET.content_type == 'audiobook' %}selected{% endif %}>Audiobooks</option>
+                                <option value="article" {% if request.GET.content_type == 'article' %}selected{% endif %}>Artigos</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button type="submit" class="btn btn-success me-2">
+                                <i class="fas fa-filter me-1"></i>Filtrar
+                            </button>
+                            <a href="{% url 'comments:recent' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-1"></i>Limpar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Statistics Cards -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card text-center border-success">
+                        <div class="card-body">
+                            <i class="fas fa-clock fa-2x text-success mb-2"></i>
+                            <h4 class="text-success mb-1">{{ total_recent }}</h4>
+                            <small class="text-muted">Comentários Recentes</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center border-primary">
+                        <div class="card-body">
+                            <i class="fas fa-check-circle fa-2x text-primary mb-2"></i>
+                            <h4 class="text-primary mb-1">{{ approved_count }}</h4>
+                            <small class="text-muted">Aprovados</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center border-warning">
+                        <div class="card-body">
+                            <i class="fas fa-hourglass-half fa-2x text-warning mb-2"></i>
+                            <h4 class="text-warning mb-1">{{ pending_count }}</h4>
+                            <small class="text-muted">Pendentes</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center border-info">
+                        <div class="card-body">
+                            <i class="fas fa-users fa-2x text-info mb-2"></i>
+                            <h4 class="text-info mb-1">{{ active_users }}</h4>
+                            <small class="text-muted">Usuários Ativos</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Live Updates Toggle -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-0">
+                                <i class="fas fa-sync-alt me-2"></i>
+                                Atualizações em Tempo Real
+                            </h6>
+                            <small class="text-muted">Receba novos comentários automaticamente</small>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="liveUpdates" checked>
+                            <label class="form-check-label" for="liveUpdates">
+                                <span id="liveStatus">Ativo</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recent Comments List -->
+            {% if comments %}
+                <div id="comments-container">
+                    {% for comment in comments %}
+                        <div class="comment-item mb-3" data-comment-id="{{ comment.id }}" data-created="{{ comment.created_at|date:'c' }}">
+                            <div class="card shadow-sm border-start border-success border-3">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-start">
+                                        <div class="me-3">
+                                            {% if comment.user.avatar %}
+                                                <img src="{{ comment.user.avatar.url }}" alt="{{ comment.user.get_full_name }}" class="rounded-circle" width="45" height="45">
+                                            {% else %}
+                                                <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
+                                                    <i class="fas fa-user text-white"></i>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                                <div>
+                                                    <h6 class="mb-0">{{ comment.user.get_full_name|default:comment.user.username }}</h6>
+                                                    <small class="text-muted">
+                                                        <i class="fas fa-clock me-1"></i>
+                                                        <span class="time-ago" data-time="{{ comment.created_at|date:'c' }}">{{ comment.created_at|timesince }} atrás</span>
+                                                        {% if comment.is_new %}
+                                                            <span class="badge bg-success ms-2">Novo</span>
+                                                        {% endif %}
+                                                    </small>
+                                                </div>
+                                                <div class="d-flex gap-1">
+                                                    {% if comment.is_approved %}
+                                                        <span class="badge bg-success">Aprovado</span>
+                                                    {% else %}
+                                                        <span class="badge bg-warning">Pendente</span>
+                                                    {% endif %}
+                                                    {% if comment.is_flagged %}
+                                                        <span class="badge bg-danger">Sinalizado</span>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                            
+                                            <p class="mb-2">{{ comment.content|linebreaks|truncatewords:50 }}</p>
+                                            
+                                            <!-- Content Object Info -->
+                                            {% if comment.content_object %}
+                                                <div class="bg-light rounded p-2 mb-2">
+                                                    <small class="text-muted">
+                                                        <strong>Em:</strong> 
+                                                        <a href="{{ comment.content_object.get_absolute_url }}" class="text-decoration-none">
+                                                            {{ comment.content_object.title|default:comment.content_object|truncatechars:60 }}
+                                                        </a>
+                                                        <span class="badge bg-secondary ms-1">{{ comment.content_type.model|capfirst }}</span>
+                                                    </small>
+                                                </div>
+                                            {% endif %}
+                                            
+                                            <!-- Quick Stats -->
+                                            <div class="d-flex align-items-center gap-3 mb-2">
+                                                <small class="text-muted">
+                                                    <i class="fas fa-thumbs-up me-1"></i>
+                                                    {{ comment.likes_count|default:0 }}
+                                                </small>
+                                                <small class="text-muted">
+                                                    <i class="fas fa-comments me-1"></i>
+                                                    {{ comment.replies_count|default:0 }}
+                                                </small>
+                                                {% if comment.views_count %}
+                                                    <small class="text-muted">
+                                                        <i class="fas fa-eye me-1"></i>
+                                                        {{ comment.views_count }}
+                                                    </small>
+                                                {% endif %}
+                                            </div>
+                                            
+                                            <!-- Action Buttons -->
+                                            <div class="d-flex gap-2">
+                                                <a href="{% url 'comments:comment_detail' comment.id %}" class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-eye me-1"></i>Ver
+                                                </a>
+                                                {% if comment.content_object %}
+                                                    <a href="{{ comment.content_object.get_absolute_url }}" class="btn btn-sm btn-outline-secondary">
+                                                        <i class="fas fa-external-link-alt me-1"></i>Ir ao Conteúdo
+                                                    </a>
+                                                {% endif %}
+                                                {% if user.is_staff %}
+                                                    {% if not comment.is_approved %}
+                                                        <button class="btn btn-sm btn-outline-success" onclick="approveComment({{ comment.id }})">
+                                                            <i class="fas fa-check me-1"></i>Aprovar
+                                                        </button>
+                                                    {% endif %}
+                                                    <button class="btn btn-sm btn-outline-danger" onclick="flagComment({{ comment.id }})">
+                                                        <i class="fas fa-flag me-1"></i>Sinalizar
+                                                    </button>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+                
+                <!-- Load More Button -->
+                {% if has_more %}
+                    <div class="text-center mt-4">
+                        <button class="btn btn-outline-success" id="load-more-btn" data-offset="{{ comments|length }}">
+                            <i class="fas fa-plus me-1"></i>
+                            Carregar Mais Comentários
+                        </button>
+                    </div>
+                {% endif %}
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-clock fa-3x text-muted mb-3"></i>
+                    <h4 class="text-muted">Nenhum comentário recente</h4>
+                    <p class="text-muted">Não há comentários no período selecionado.</p>
+                    <a href="{% url 'comments:comment_list' %}" class="btn btn-primary">
+                        <i class="fas fa-list me-1"></i>Ver Todos os Comentários
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- New Comment Notification Template -->
+<div id="new-comment-notification" class="toast position-fixed top-0 end-0 m-3" style="z-index: 1050; display: none;">
+    <div class="toast-header bg-success text-white">
+        <i class="fas fa-comment me-2"></i>
+        <strong class="me-auto">Novo Comentário</strong>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+    </div>
+    <div class="toast-body">
+        <span id="notification-content"></span>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let liveUpdatesEnabled = true;
+let lastCommentTime = null;
+let updateInterval = null;
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Set initial last comment time
+    const comments = document.querySelectorAll('.comment-item');
+    if (comments.length > 0) {
+        lastCommentTime = comments[0].dataset.created;
+    }
+    
+    // Start live updates
+    startLiveUpdates();
+    
+    // Update time ago every minute
+    setInterval(updateTimeAgo, 60000);
+    
+    // Live updates toggle
+    const liveToggle = document.getElementById('liveUpdates');
+    liveToggle.addEventListener('change', function() {
+        liveUpdatesEnabled = this.checked;
+        const status = document.getElementById('liveStatus');
+        
+        if (liveUpdatesEnabled) {
+            status.textContent = 'Ativo';
+            startLiveUpdates();
+        } else {
+            status.textContent = 'Inativo';
+            stopLiveUpdates();
+        }
+    });
+    
+    // Load more button
+    const loadMoreBtn = document.getElementById('load-more-btn');
+    if (loadMoreBtn) {
+        loadMoreBtn.addEventListener('click', loadMoreComments);
+    }
+    
+    // Auto-submit form on filter change
+    const filterSelects = document.querySelectorAll('#hours, #status, #content_type');
+    filterSelects.forEach(select => {
+        select.addEventListener('change', function() {
+            this.form.submit();
+        });
+    });
+});
+
+// Start live updates
+function startLiveUpdates() {
+    if (updateInterval) clearInterval(updateInterval);
+    updateInterval = setInterval(checkForNewComments, 30000); // Check every 30 seconds
+}
+
+// Stop live updates
+function stopLiveUpdates() {
+    if (updateInterval) {
+        clearInterval(updateInterval);
+        updateInterval = null;
+    }
+}
+
+// Check for new comments
+function checkForNewComments() {
+    if (!liveUpdatesEnabled) return;
+    
+    const params = new URLSearchParams(window.location.search);
+    if (lastCommentTime) {
+        params.set('since', lastCommentTime);
+    }
+    
+    fetch(`${window.location.pathname}?${params.toString()}&ajax=1`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.new_comments && data.new_comments.length > 0) {
+                addNewComments(data.new_comments);
+                showNewCommentNotification(data.new_comments.length);
+            }
+        })
+        .catch(error => console.error('Error checking for new comments:', error));
+}
+
+// Add new comments to the list
+function addNewComments(newComments) {
+    const container = document.getElementById('comments-container');
+    
+    newComments.forEach(comment => {
+        const commentHtml = renderCommentItem(comment, true);
+        container.insertAdjacentHTML('afterbegin', commentHtml);
+        
+        // Update last comment time
+        if (!lastCommentTime || comment.created_at > lastCommentTime) {
+            lastCommentTime = comment.created_at;
+        }
+    });
+    
+    // Animate new comments
+    const newItems = container.querySelectorAll('.comment-item[data-new="true"]');
+    newItems.forEach(item => {
+        item.style.opacity = '0';
+        item.style.transform = 'translateY(-20px)';
+        setTimeout(() => {
+            item.style.transition = 'all 0.5s ease';
+            item.style.opacity = '1';
+            item.style.transform = 'translateY(0)';
+            item.removeAttribute('data-new');
+        }, 100);
+    });
+}
+
+// Show new comment notification
+function showNewCommentNotification(count) {
+    const notification = document.getElementById('new-comment-notification');
+    const content = document.getElementById('notification-content');
+    
+    content.textContent = `${count} novo${count > 1 ? 's' : ''} comentário${count > 1 ? 's' : ''} adicionado${count > 1 ? 's' : ''}`;
+    
+    notification.style.display = 'block';
+    setTimeout(() => {
+        notification.style.display = 'none';
+    }, 5000);
+}
+
+// Update time ago displays
+function updateTimeAgo() {
+    const timeElements = document.querySelectorAll('.time-ago');
+    timeElements.forEach(element => {
+        const time = new Date(element.dataset.time);
+        const now = new Date();
+        const diff = Math.floor((now - time) / 1000);
+        
+        let timeAgo;
+        if (diff < 60) {
+            timeAgo = 'agora mesmo';
+        } else if (diff < 3600) {
+            const minutes = Math.floor(diff / 60);
+            timeAgo = `${minutes} minuto${minutes > 1 ? 's' : ''} atrás`;
+        } else if (diff < 86400) {
+            const hours = Math.floor(diff / 3600);
+            timeAgo = `${hours} hora${hours > 1 ? 's' : ''} atrás`;
+        } else {
+            const days = Math.floor(diff / 86400);
+            timeAgo = `${days} dia${days > 1 ? 's' : ''} atrás`;
+        }
+        
+        element.textContent = timeAgo;
+    });
+}
+
+// Load more comments
+function loadMoreComments() {
+    const btn = document.getElementById('load-more-btn');
+    const offset = parseInt(btn.dataset.offset);
+    
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Carregando...';
+    
+    const params = new URLSearchParams(window.location.search);
+    params.set('offset', offset);
+    params.set('ajax', '1');
+    
+    fetch(`${window.location.pathname}?${params.toString()}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.comments && data.comments.length > 0) {
+                const container = document.getElementById('comments-container');
+                data.comments.forEach(comment => {
+                    const commentHtml = renderCommentItem(comment);
+                    container.insertAdjacentHTML('beforeend', commentHtml);
+                });
+                
+                btn.dataset.offset = offset + data.comments.length;
+                
+                if (!data.has_more) {
+                    btn.style.display = 'none';
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error loading more comments:', error);
+            alert('Erro ao carregar mais comentários.');
+        })
+        .finally(() => {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-plus me-1"></i>Carregar Mais Comentários';
+        });
+}
+
+// Render comment item (simplified version)
+function renderCommentItem(comment, isNew = false) {
+    // This would be a more complex function in a real implementation
+    // For now, just return a basic structure
+    return `<div class="comment-item mb-3" data-comment-id="${comment.id}" data-created="${comment.created_at}" ${isNew ? 'data-new="true"' : ''}>
+        <!-- Comment content would be rendered here -->
+    </div>`;
+}
+
+// Staff actions
+function approveComment(commentId) {
+    if (confirm('Aprovar este comentário?')) {
+        fetch(`/comments/${commentId}/approve/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Erro ao aprovar comentário.');
+            }
+        });
+    }
+}
+
+function flagComment(commentId) {
+    if (confirm('Sinalizar este comentário?')) {
+        fetch(`/comments/${commentId}/flag/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Erro ao sinalizar comentário.');
+            }
+        });
+    }
+}
+</script>
+{% endblock %}

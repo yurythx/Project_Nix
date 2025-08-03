@@ -6,7 +6,13 @@ from django.core.validators import MinLengthValidator
 class Tag(models.Model):
     """Modelo para tags de artigos"""
     
-    name = models.CharField(max_length=100, unique=False)
+    name = models.CharField(
+        'nome',
+        max_length=100,
+        unique=True,
+        validators=[MinLengthValidator(2)],
+        help_text='Nome da tag'
+    )
     slug = models.SlugField(
         'slug',
         max_length=50,

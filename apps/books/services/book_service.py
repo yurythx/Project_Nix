@@ -1,10 +1,11 @@
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Union
 from django.db.models import QuerySet
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ObjectDoesNotExist
 from apps.books.interfaces.services import IBookService
 from apps.books.repositories.book_repository import BookRepository
 from apps.books.models.book import Book, BookProgress, BookFavorite
+from apps.books.models.category import Category
 
 User = get_user_model()
 
@@ -27,11 +28,26 @@ class BookService(IBookService):
         self.repository = repository or BookRepository()
     
     def get_all_books(self, limit: Optional[int] = None) -> QuerySet:
-        """Obtém todos os livros"""
-        books = self.repository.get_all()
+        """Obtém todos os livros públicos"""
+        books = self.repository.get_public_books()
         if limit:
             books = books[:limit]
         return books
+    
+    def get_featured_books(self, limit: Optional[int] = None) -> QuerySet:
+        """Obtém livros em destaque"""
+        books = self.repository.get_featured_books()
+        if limit:
+            books = books[:limit]
+        return books
+    
+    def get_books_by_category(self, category: Union[str, Category]) -> QuerySet:
+        """Obtém livros por categoria"""
+        return self.repository.get_by_category(category)
+    
+    def increment_book_views(self, book: Book) -> None:
+        """Incrementa visualizações do livro"""
+        self.repository.increment_views(book)
     
     def get_book_by_slug(self, slug: str):
         """Obtém livro por slug"""
@@ -41,8 +57,8 @@ class BookService(IBookService):
             return None
     
     def search_books(self, query: str) -> QuerySet:
-        """Busca livros por título"""
-        return self.repository.search_by_title(query)
+        """Busca livros por título ou autor"""
+        return self.repository.search_books(query)
     
     def create_book(self, book_data: Dict[str, Any], created_by: User):
         """Cria um novo livro"""
@@ -103,4 +119,4 @@ class BookService(IBookService):
             return False  # Desfavoritado
         except BookFavorite.DoesNotExist:
             BookFavorite.objects.create(book_id=book_id, user=user)
-            return True  # Favoritado 
+            return True  # Favoritado

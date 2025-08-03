@@ -110,7 +110,7 @@ window.initEpubViewer = function(epubUrl, bookSlug, userIsAuthenticated) {
         // Cria container do TOC
         var tocContainer = document.createElement('div');
         tocContainer.id = 'epub-toc';
-        tocContainer.style = 'margin-bottom: 1rem; overflow-x: auto; white-space: nowrap;';
+        tocContainer.style.cssText = 'margin-bottom: 1rem; overflow-x: auto; white-space: nowrap;';
         // Botão TOC mobile
         var tocToggle = document.createElement('button');
         tocToggle.textContent = 'Sumário';
@@ -122,7 +122,7 @@ window.initEpubViewer = function(epubUrl, bookSlug, userIsAuthenticated) {
         // Lista de capítulos
         var ul = document.createElement('ul');
         ul.className = 'nav nav-pills flex-nowrap mb-2';
-        ul.style = 'overflow-x: auto;';
+        ul.style.cssText = 'overflow-x: auto;';
         tocList.forEach(function(item, idx) {
             var li = document.createElement('li');
             li.className = 'nav-item';
@@ -142,8 +142,8 @@ window.initEpubViewer = function(epubUrl, bookSlug, userIsAuthenticated) {
         tocContainer.appendChild(ul);
         reader.parentNode.insertBefore(tocContainer, reader);
         // Estilo TOC
-        var style = document.createElement('style');
-        style.textContent = `
+        var epubTocStyleElement = document.createElement('style');
+epubTocStyleElement.textContent = `
             #epub-toc { background: #f8f9fa; border-radius: 0.5rem; padding: 0.5rem 0.5rem 0 0.5rem; }
             #epub-toc ul { margin-bottom: 0; }
             #epub-toc .nav-link { max-width: 180px; }
@@ -153,6 +153,6 @@ window.initEpubViewer = function(epubUrl, bookSlug, userIsAuthenticated) {
                 #epub-toc.show-toc { display: block; position: absolute; z-index: 10; background: #fff; width: 90vw; left: 5vw; top: 60px; box-shadow: 0 4px 16px rgba(0,0,0,0.15); }
             }
         `;
-        document.head.appendChild(style);
+        document.head.appendChild(epubTocStyleElement);
     });
-}; 
+};

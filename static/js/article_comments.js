@@ -265,4 +265,17 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeLoadMoreComments();
 });
 
-export { initializeCommentForm, initializeReplyForms, initializeLazyLoadReplies, initializeLoadMoreComments, initializeTOC, showLoading, hideLoading, animateFadeIn, setAriaLive, insertReplyHTML, getCookie }; 
+// Funções disponíveis globalmente
+window.ArticleComments = {
+    initializeCommentForm,
+    initializeReplyForms,
+    initializeLazyLoadReplies,
+    initializeLoadMoreComments,
+    initializeTOC,
+    showLoading,
+    hideLoading,
+    animateFadeIn,
+    setAriaLive,
+    insertReplyHTML,
+    getCookie
+};

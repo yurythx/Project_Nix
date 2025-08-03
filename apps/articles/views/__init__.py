@@ -13,16 +13,7 @@ from .article_views import (
     CategoryListView,
     EditorOrAdminRequiredMixin,
 )
-from .comment_views import (
-    CommentCreateView,
-    ReplyCreateView,
-    CommentListView,
-    CommentModerationView,
-    CommentModerationActionView,
-    CommentStatsView,
-    LoadMoreCommentsView,
-    LoadRepliesView,
-)
+# Views de comentários migradas para apps.comments.views
 
 __all__ = [
     'BaseArticleView',
@@ -36,13 +27,4 @@ __all__ = [
     'CategoryListView',
     'EditorOrAdminRequiredMixin',
 ]
-__all__ += [
-    'CommentCreateView',
-    'ReplyCreateView',
-    'CommentListView',
-    'CommentModerationView',
-    'CommentModerationActionView',
-    'CommentStatsView',
-    'LoadMoreCommentsView',
-    'LoadRepliesView',
-]
+# Classes de comentários removidas - migradas para sistema global

@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'books/css/book-list.css' %}">
+{% endblock %}
+
+{% block title %}{{ page_title }} - Project Nix{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h2 mb-1 text-sans text-body">
+                        <i class="fas fa-tags me-2 text-theme-primary"></i>{{ page_title }}
+                    </h1>
+                    <p class="text-theme-secondary mb-0 text-body">{{ page_description }}</p>
+                </div>
+                <div>
+                    <a href="{% url 'books:book_list' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-book me-2"></i>Ver Todos os Livros
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        {% if categories %}
+            {% for category in categories %}
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="card h-100 shadow-sm border-0 category-card">
+                        <div class="card-body d-flex flex-column">
+                            <div class="text-center mb-3">
+                                {% if category.icon %}
+                                    <i class="{{ category.icon }} fa-3x text-theme-primary mb-3"></i>
+                                {% else %}
+                                    <i class="fas fa-folder fa-3x text-theme-primary mb-3"></i>
+                                {% endif %}
+                            </div>
+                            
+                            <h5 class="card-title text-center mb-3">
+                                <a href="{% url 'books:book_category' category_slug=category.slug %}" 
+                                   class="text-decoration-none text-body">
+                                    {{ category.name }}
+                                </a>
+                            </h5>
+                            
+                            {% if category.description %}
+                                <p class="card-text text-theme-secondary text-center flex-grow-1">
+                                    {{ category.description|truncatewords:15 }}
+                                </p>
+                            {% endif %}
+                            
+                            <div class="text-center mt-auto">
+                                <span class="badge bg-theme-primary">
+                                    {{ category.books_count|default:0 }} livro{{ category.books_count|pluralize }}
+                                </span>
+                            </div>
+                            
+                            <div class="text-center mt-3">
+                                <a href="{% url 'books:book_category' category_slug=category.slug %}" 
+                                   class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-eye me-1"></i>Ver Livros
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-12">
+                <div class="text-center py-5">
+                    <i class="fas fa-tags fa-4x text-theme-secondary mb-3"></i>
+                    <h3 class="text-theme-secondary">Nenhuma categoria encontrada</h3>
+                    <p class="text-theme-secondary">Ainda não há categorias disponíveis.</p>
+                    <a href="{% url 'books:book_list' %}" class="btn btn-primary">
+                        <i class="fas fa-book me-2"></i>Ver Todos os Livros
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Paginação -->
+    {% if is_paginated %}
+        <div class="row mt-4">
+            <div class="col-12">
+                <nav aria-label="Navegação de páginas">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1">
+                                    <i class="fas fa-angle-double-left"></i>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                                    <i class="fas fa-angle-left"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+
+                        <li class="page-item active">
+                            <span class="page-link">
+                                {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+                            </span>
+                        </li>
+
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                                    <i class="fas fa-angle-right"></i>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">
+                                    <i class="fas fa-angle-double-right"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+.category-card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.category-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
+}
+
+.category-card .card-title a:hover {
+    color: var(--bs-primary) !important;
+}
+</style>
+{% endblock %}

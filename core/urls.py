@@ -37,6 +37,7 @@ urlpatterns = [
     path('livros/', include('apps.books.urls')),
     path('mangas/', include('apps.mangas.urls')),
     path('audiolivros/', include('apps.audiobooks.urls')),
+    path('comentarios/', include('apps.comments.urls')),
     path('tinymce/', include('tinymce.urls')),
 
     # API REST

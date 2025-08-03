@@ -279,8 +279,16 @@ class Article(models.Model):
 
     @property
     def comment_count(self):
-        """Retorna número de comentários aprovados"""
-        return self.comments.filter(is_approved=True).count()
+        """Retorna número de comentários aprovados usando sistema global"""
+        from django.contrib.contenttypes.models import ContentType
+        from apps.comments.models.comment import Comment
+        
+        content_type = ContentType.objects.get_for_model(self)
+        return Comment.objects.filter(
+            content_type=content_type,
+            object_id=self.id,
+            status='approved'
+        ).count()
 
     def can_be_commented(self):
         """Verifica se o artigo pode receber comentários"""

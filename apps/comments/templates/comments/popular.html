@@ -1,0 +1,299 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Comentários Populares - {{ block.super }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/comments.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row">
+        <div class="col-lg-12">
+            <!-- Page Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>
+                    <i class="fas fa-fire me-2 text-danger"></i>
+                    Comentários Populares
+                </h2>
+                <div>
+                    <a href="{% url 'comments:comment_list' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-list me-1"></i>Todos os Comentários
+                    </a>
+                    <a href="{% url 'comments:recent' %}" class="btn btn-outline-success ms-2">
+                        <i class="fas fa-clock me-1"></i>Recentes
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Filter Options -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-3">
+                            <label for="period" class="form-label">Período:</label>
+                            <select class="form-select" id="period" name="period">
+                                <option value="week" {% if request.GET.period == 'week' %}selected{% endif %}>Última semana</option>
+                                <option value="month" {% if request.GET.period == 'month' %}selected{% endif %}>Último mês</option>
+                                <option value="year" {% if request.GET.period == 'year' %}selected{% endif %}>Último ano</option>
+                                <option value="all" {% if request.GET.period == 'all' %}selected{% endif %}>Todo o período</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="min_likes" class="form-label">Mínimo de curtidas:</label>
+                            <input type="number" class="form-control" id="min_likes" name="min_likes" value="{{ request.GET.min_likes|default:5 }}" min="1">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="content_type" class="form-label">Tipo de conteúdo:</label>
+                            <select class="form-select" id="content_type" name="content_type">
+                                <option value="">Todos</option>
+                                <option value="manga" {% if request.GET.content_type == 'manga' %}selected{% endif %}>Mangás</option>
+                                <option value="book" {% if request.GET.content_type == 'book' %}selected{% endif %}>Livros</option>
+                                <option value="audiobook" {% if request.GET.content_type == 'audiobook' %}selected{% endif %}>Audiobooks</option>
+                                <option value="article" {% if request.GET.content_type == 'article' %}selected{% endif %}>Artigos</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary me-2">
+                                <i class="fas fa-filter me-1"></i>Filtrar
+                            </button>
+                            <a href="{% url 'comments:popular' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-1"></i>Limpar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Statistics Cards -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card text-center border-danger">
+                        <div class="card-body">
+                            <i class="fas fa-fire fa-2x text-danger mb-2"></i>
+                            <h4 class="text-danger mb-1">{{ total_popular }}</h4>
+                            <small class="text-muted">Comentários Populares</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center border-success">
+                        <div class="card-body">
+                            <i class="fas fa-thumbs-up fa-2x text-success mb-2"></i>
+                            <h4 class="text-success mb-1">{{ total_likes }}</h4>
+                            <small class="text-muted">Total de Curtidas</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center border-info">
+                        <div class="card-body">
+                            <i class="fas fa-comments fa-2x text-info mb-2"></i>
+                            <h4 class="text-info mb-1">{{ total_replies }}</h4>
+                            <small class="text-muted">Total de Respostas</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center border-warning">
+                        <div class="card-body">
+                            <i class="fas fa-users fa-2x text-warning mb-2"></i>
+                            <h4 class="text-warning mb-1">{{ unique_users }}</h4>
+                            <small class="text-muted">Usuários Únicos</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Popular Comments List -->
+            {% if comments %}
+                <div class="row">
+                    {% for comment in comments %}
+                        <div class="col-12 mb-4">
+                            <div class="card shadow-sm border-start border-danger border-3">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-start">
+                                        <div class="me-3">
+                                            {% if comment.user.avatar %}
+                                                <img src="{{ comment.user.avatar.url }}" alt="{{ comment.user.get_full_name }}" class="rounded-circle" width="50" height="50">
+                                            {% else %}
+                                                <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                                                    <i class="fas fa-user text-white"></i>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                                <div>
+                                                    <h6 class="mb-0 fw-bold">{{ comment.user.get_full_name|default:comment.user.username }}</h6>
+                                                    <small class="text-muted">
+                                                        <i class="fas fa-clock me-1"></i>
+                                                        {{ comment.created_at|date:"d/m/Y H:i" }}
+                                                        {% if comment.updated_at != comment.created_at %}
+                                                            • <i class="fas fa-edit me-1"></i>Editado em {{ comment.updated_at|date:"d/m/Y H:i" }}
+                                                        {% endif %}
+                                                    </small>
+                                                </div>
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <span class="badge bg-danger">
+                                                        <i class="fas fa-fire me-1"></i>
+                                                        Popular
+                                                    </span>
+                                                    {% if comment.is_approved %}
+                                                        <span class="badge bg-success">Aprovado</span>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                            
+                                            <p class="mb-3">{{ comment.content|linebreaks }}</p>
+                                            
+                                            <!-- Content Object Info -->
+                                            {% if comment.content_object %}
+                                                <div class="bg-light rounded p-2 mb-3">
+                                                    <small class="text-muted">
+                                                        <strong>Comentário em:</strong> 
+                                                        <a href="{{ comment.content_object.get_absolute_url }}" class="text-decoration-none fw-bold">
+                                                            {{ comment.content_object.title|default:comment.content_object }}
+                                                        </a>
+                                                        <span class="badge bg-secondary ms-2">{{ comment.content_type.model|capfirst }}</span>
+                                                    </small>
+                                                </div>
+                                            {% endif %}
+                                            
+                                            <!-- Engagement Stats -->
+                                            <div class="d-flex align-items-center gap-4 mb-3">
+                                                <div class="d-flex align-items-center text-success">
+                                                    <i class="fas fa-thumbs-up me-1"></i>
+                                                    <span class="fw-bold">{{ comment.likes_count|default:0 }}</span>
+                                                    <small class="ms-1">curtida{{ comment.likes_count|pluralize }}</small>
+                                                </div>
+                                                <div class="d-flex align-items-center text-info">
+                                                    <i class="fas fa-comments me-1"></i>
+                                                    <span class="fw-bold">{{ comment.replies_count|default:0 }}</span>
+                                                    <small class="ms-1">resposta{{ comment.replies_count|pluralize }}</small>
+                                                </div>
+                                                {% if comment.views_count %}
+                                                    <div class="d-flex align-items-center text-muted">
+                                                        <i class="fas fa-eye me-1"></i>
+                                                        <span class="fw-bold">{{ comment.views_count }}</span>
+                                                        <small class="ms-1">visualização{{ comment.views_count|pluralize:"ões" }}</small>
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                            
+                                            <!-- Action Buttons -->
+                                            <div class="d-flex gap-2">
+                                                <a href="{% url 'comments:comment_detail' comment.id %}" class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-eye me-1"></i>Ver Detalhes
+                                                </a>
+                                                <a href="{% url 'comments:comment_thread' comment.id %}" class="btn btn-sm btn-outline-info">
+                                                    <i class="fas fa-comments me-1"></i>Ver Thread
+                                                </a>
+                                                {% if comment.content_object %}
+                                                    <a href="{{ comment.content_object.get_absolute_url }}" class="btn btn-sm btn-outline-secondary">
+                                                        <i class="fas fa-external-link-alt me-1"></i>Ver Conteúdo
+                                                    </a>
+                                                {% endif %}
+                                                {% if user.is_authenticated %}
+                                                    <button class="btn btn-sm btn-outline-success" onclick="likeComment({{ comment.id }})">
+                                                        <i class="fas fa-thumbs-up me-1"></i>Curtir
+                                                    </button>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+                
+                <!-- Pagination -->
+                {% if is_paginated %}
+                    <nav aria-label="Navegação de comentários populares">
+                        <ul class="pagination justify-content-center">
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page=1">
+                                        <i class="fas fa-angle-double-left"></i>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.previous_page_number }}">
+                                        <i class="fas fa-angle-left"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                            
+                            <li class="page-item active">
+                                <span class="page-link">{{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+                            </li>
+                            
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.next_page_number }}">
+                                        <i class="fas fa-angle-right"></i>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.paginator.num_pages }}">
+                                        <i class="fas fa-angle-double-right"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                {% endif %}
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-fire fa-3x text-muted mb-3"></i>
+                    <h4 class="text-muted">Nenhum comentário popular encontrado</h4>
+                    <p class="text-muted">Ajuste os filtros ou tente um período diferente.</p>
+                    <a href="{% url 'comments:comment_list' %}" class="btn btn-primary">
+                        <i class="fas fa-list me-1"></i>Ver Todos os Comentários
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Like comment functionality
+function likeComment(commentId) {
+    fetch(`/comments/${commentId}/like/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update like count in the UI
+            location.reload(); // Simple reload for now
+        } else {
+            alert('Erro ao curtir comentário.');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Erro ao curtir comentário.');
+    });
+}
+
+// Auto-submit form on filter change
+document.addEventListener('DOMContentLoaded', function() {
+    const filterSelects = document.querySelectorAll('#period, #content_type');
+    filterSelects.forEach(select => {
+        select.addEventListener('change', function() {
+            this.form.submit();
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -3,6 +3,8 @@ from django.db import models
 from django.utils.text import slugify
 from django.urls import reverse
 
+from apps.audiobooks.models.category import Category
+
 class VideoAudio(models.Model):
     # Informações básicas
     title = models.CharField('Título', max_length=200)
@@ -26,20 +28,15 @@ class VideoAudio(models.Model):
                                  help_text='Link para vídeo externo (YouTube, Vimeo, etc.)')
     
     # Categorização
-    CATEGORY_CHOICES = [
-        ('podcast', 'Podcast'),
-        ('audiobook', 'Áudio Livro'),
-        ('lecture', 'Aula/Palestra'),
-        ('documentary', 'Documentário'),
-        ('other', 'Outro'),
-    ]
-    category = models.CharField('Categoria', max_length=20, 
-                              choices=CATEGORY_CHOICES, 
-                              default='other')
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL, 
+                               verbose_name='Categoria',
+                               related_name='videos',
+                               null=True, blank=True)
     
     # Controle
     is_featured = models.BooleanField('Destaque', default=False)
     is_public = models.BooleanField('Público', default=True)
+    views = models.PositiveIntegerField('Visualizações', default=0)
     created_at = models.DateTimeField('Criado em', auto_now_add=True)
     updated_at = models.DateTimeField('Atualizado em', auto_now=True)
 
@@ -52,6 +49,7 @@ class VideoAudio(models.Model):
             models.Index(fields=['title']),
             models.Index(fields=['category']),
             models.Index(fields=['created_at']),
+            models.Index(fields=['views']),
         ]
 
     def save(self, *args, **kwargs):

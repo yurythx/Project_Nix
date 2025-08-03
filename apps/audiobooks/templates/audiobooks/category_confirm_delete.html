@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans 'Excluir' %} {{ category.name }} | {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'audiobooks:video_list' %}">{% trans 'Audiobooks' %}</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'audiobooks:category_list' %}">{% trans 'Categorias' %}</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'audiobooks:category_detail' category.slug %}">{{ category.name }}</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{% trans 'Excluir' %}</li>
+        </ol>
+    </nav>
+    
+    <div class="card border-danger">
+        <div class="card-header bg-danger text-white">
+            <h1 class="h3 mb-0">{% trans 'Confirmar exclusão' %}</h1>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-warning">
+                <h4 class="alert-heading"><i class="fas fa-exclamation-triangle"></i> {% trans 'Atenção!' %}</h4>
+                <p>{% trans 'Você está prestes a excluir a categoria:' %} <strong>{{ category.name }}</strong></p>
+                
+                {% if category.videos.exists %}
+                <hr>
+                <p class="mb-0">{% trans 'Esta categoria possui' %} <strong>{{ category.videos.count }}</strong> {% trans 'vídeos associados.' %}</p>
+                <p>{% trans 'Ao excluir esta categoria, os vídeos associados ficarão sem categoria.' %}</p>
+                {% endif %}
+            </div>
+            
+            <form method="post">
+                {% csrf_token %}
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'audiobooks:category_detail' category.slug %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times"></i> {% trans 'Cancelar' %}
+                    </a>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash"></i> {% trans 'Sim, excluir categoria' %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

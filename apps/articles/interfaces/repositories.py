@@ -64,6 +64,31 @@ class IArticleRepository(ABC):
     def increment_view_count(self, article_id: int) -> None:
         """Incrementa contador de visualizações"""
         pass
+    
+    @abstractmethod
+    def get_related_articles(self, article, limit: int = 3) -> QuerySet:
+        """Obtém artigos relacionados"""
+        pass
+    
+    @abstractmethod
+    def list_all(self, filters: Dict[str, Any] = None) -> QuerySet:
+        """Lista todos os artigos com filtros opcionais"""
+        pass
+    
+    @abstractmethod
+    def exists_by_slug(self, slug: str, exclude_id: int = None) -> bool:
+        """Verifica se existe artigo com o slug"""
+        pass
+    
+    @abstractmethod
+    def publish_article(self, article_id: int):
+        """Publica um artigo"""
+        pass
+    
+    @abstractmethod
+    def unpublish_article(self, article_id: int):
+        """Despublica um artigo"""
+        pass
 
 class ICategoryRepository(ABC):
     """Interface para repositório de categorias"""
@@ -146,50 +171,4 @@ class ITagRepository(ABC):
         """Obtém tags em destaque"""
         pass
 
-class ICommentRepository(ABC):
-    """Interface para repositório de comentários"""
-    
-    @abstractmethod
-    def create(self, comment_data: Dict[str, Any]):
-        """Cria um novo comentário"""
-        pass
-    
-    @abstractmethod
-    def get_by_id(self, comment_id: int):
-        """Obtém comentário por ID"""
-        pass
-    
-    @abstractmethod
-    def update(self, comment_id: int, comment_data: Dict[str, Any]):
-        """Atualiza comentário"""
-        pass
-    
-    @abstractmethod
-    def delete(self, comment_id: int) -> bool:
-        """Deleta comentário"""
-        pass
-    
-    @abstractmethod
-    def get_by_article(self, article_id: int) -> QuerySet:
-        """Obtém comentários de um artigo"""
-        pass
-    
-    @abstractmethod
-    def get_pending_approval(self) -> QuerySet:
-        """Obtém comentários pendentes de aprovação"""
-        pass
-    
-    @abstractmethod
-    def get_by_user(self, user_id: int) -> QuerySet:
-        """Obtém comentários de um usuário"""
-        pass
-    
-    @abstractmethod
-    def approve(self, comment_id: int) -> bool:
-        """Aprova comentário"""
-        pass
-    
-    @abstractmethod
-    def mark_as_spam(self, comment_id: int) -> bool:
-        """Marca comentário como spam"""
-        pass
+# ICommentRepository removido - migrado para apps.comments

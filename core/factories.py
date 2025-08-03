@@ -37,10 +37,7 @@ try:
     from apps.books.services.book_service import BookService
 except ImportError:
     BookService = None
-try:
-    from apps.audiobooks.services.audiobook_service import AudiobookService
-except ImportError:
-    AudiobookService = None
+# AudiobookService removido - não há modelo Audiobook
 try:
     from apps.mangas.services.manga_service_simple import SimpleMangaService as MangaService
 except ImportError:
@@ -93,10 +90,7 @@ try:
     from apps.books.repositories.book_repository import BookRepository
 except ImportError:
     BookRepository = None
-try:
-    from apps.audiobooks.repositories.audiobook_repository import AudiobookRepository
-except ImportError:
-    AudiobookRepository = None
+# AudiobookRepository removido - não há modelo Audiobook
 try:
     from apps.mangas.repositories.manga_repository import MangaRepository
 except ImportError:
@@ -120,10 +114,7 @@ try:
     from apps.books.interfaces.services import IBookService
 except ImportError:
     IBookService = None
-try:
-    from apps.audiobooks.interfaces.services import IAudiobookService
-except ImportError:
-    IAudiobookService = None
+# IAudiobookService removido - não há modelo Audiobook
 try:
     from apps.mangas.interfaces.services import IMangaService
 except ImportError:
@@ -398,17 +389,7 @@ class ServiceFactory:
             self._services_cache[cache_key] = service_class(repository=book_repo)
         return self._services_cache[cache_key]
 
-    def create_audiobook_service(self, audiobook_repository: AudiobookRepository = None) -> IAudiobookService:
-        """Cria AudiobookService com dependências injetadas"""
-        if not IAudiobookService or not AudiobookService:
-            raise ImportError("AudiobookService não está disponível")
-        
-        cache_key = f"audiobook_service_{id(audiobook_repository)}"
-        if cache_key not in self._services_cache:
-            audiobook_repo = audiobook_repository or AudiobookRepository()
-            service_class = self._get_implementation_class('IAudiobookService', AudiobookService)
-            self._services_cache[cache_key] = service_class(repository=audiobook_repo)
-        return self._services_cache[cache_key]
+# create_audiobook_service removido - não há modelo Audiobook
 
     def create_manga_service(self, manga_repository: MangaRepository = None) -> IMangaService:
         """Cria MangaService com dependências injetadas"""
@@ -432,4 +413,4 @@ class ServiceFactory:
 
 
 # Instância global do factory
-service_factory = ServiceFactory() 
+service_factory = ServiceFactory()

@@ -11,7 +11,7 @@ class ArticleDetailManager {
     init() {
         this.setupReadingProgress();
         this.setupSocialSharing();
-        this.setupCommentSystem();
+        // Sistema de comentários gerenciado por apps.comments
         this.setupPrintFunction();
         this.setupFontSizeControls();
     }
@@ -96,68 +96,8 @@ class ArticleDetailManager {
         }
     }
 
-    /**
-     * Configura sistema de comentários
-     */
-    setupCommentSystem() {
-        const commentForm = document.querySelector('#comment-form');
-        if (!commentForm) return;
-
-        commentForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const formData = new FormData(commentForm);
-            const submitButton = commentForm.querySelector('button[type="submit"]');
-            const originalText = submitButton.textContent;
-            
-            // Estado de loading
-            submitButton.disabled = true;
-            submitButton.textContent = 'Enviando...';
-            
-            try {
-                const response = await fetch(commentForm.action, {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                    }
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    this.showToast('Comentário enviado com sucesso!');
-                    commentForm.reset();
-                    
-                    // Recarrega seção de comentários se necessário
-                    if (data.html) {
-                        const commentsSection = document.querySelector('#comments-section');
-                        if (commentsSection) {
-                            commentsSection.innerHTML = data.html;
-                        }
-                    }
-                } else {
-                    this.showToast('Erro ao enviar comentário. Tente novamente.', 'error');
-                }
-            } catch (error) {
-                console.error('Erro ao enviar comentário:', error);
-                this.showToast('Erro ao enviar comentário. Tente novamente.', 'error');
-            } finally {
-                submitButton.disabled = false;
-                submitButton.textContent = originalText;
-            }
-        });
-
-        // Botões de resposta
-        const replyButtons = document.querySelectorAll('[data-reply]');
-        replyButtons.forEach(button => {
-            button.addEventListener('click', (e) => {
-                e.preventDefault();
-                const commentId = button.dataset.reply;
-                this.showReplyForm(commentId);
-            });
-        });
-    }
+    // Sistema de comentários migrado para apps.comments
+    // Use article_comments.js para funcionalidades de comentários
 
     /**
      * Configura função de impressão
@@ -218,46 +158,7 @@ class ArticleDetailManager {
         }
     }
 
-    /**
-     * Mostra formulário de resposta para comentário
-     */
-    showReplyForm(commentId) {
-        // Remove formulários de resposta existentes
-        const existingForms = document.querySelectorAll('.reply-form');
-        existingForms.forEach(form => form.remove());
-        
-        // Cria novo formulário de resposta
-        const replyForm = document.createElement('div');
-        replyForm.className = 'reply-form mt-3';
-        replyForm.innerHTML = `
-            <form class="comment-reply-form">
-                <input type="hidden" name="parent_id" value="${commentId}">
-                <div class="mb-3">
-                    <textarea name="content" class="form-control" rows="3" placeholder="Escreva sua resposta..." required></textarea>
-                </div>
-                <div class="d-flex gap-2">
-                    <button type="submit" class="btn btn-primary btn-sm">Responder</button>
-                    <button type="button" class="btn btn-secondary btn-sm cancel-reply">Cancelar</button>
-                </div>
-            </form>
-        `;
-        
-        // Adiciona após o comentário
-        const comment = document.querySelector(`[data-comment-id="${commentId}"]`);
-        if (comment) {
-            comment.appendChild(replyForm);
-            
-            // Foca no textarea
-            const textarea = replyForm.querySelector('textarea');
-            textarea.focus();
-            
-            // Botão cancelar
-            const cancelButton = replyForm.querySelector('.cancel-reply');
-            cancelButton.addEventListener('click', () => {
-                replyForm.remove();
-            });
-        }
-    }
+    // Método showReplyForm removido - funcionalidade migrada para apps.comments
 
     /**
      * Mostra toast de notificação
@@ -295,8 +196,8 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // CSS para elementos criados dinamicamente
-const style = document.createElement('style');
-style.textContent = `
+const articleDetailStyleElement = document.createElement('style');
+articleDetailStyleElement.textContent = `
     .reading-progress {
         position: fixed;
         top: 0;
@@ -346,4 +247,4 @@ style.textContent = `
         padding: 1rem;
     }
 `;
-document.head.appendChild(style);
+document.head.appendChild(articleDetailStyleElement);

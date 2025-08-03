@@ -10,7 +10,6 @@ document.addEventListener('DOMContentLoaded', function() {
     initializePopovers();
     initializeAlerts();
     initializeSearch();
-    initializeUnifiedNavigation();
     initializeImageErrorHandling();
     initializeScrollEffects();
 

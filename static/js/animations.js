@@ -316,9 +316,9 @@ const rippleCSS = `
 `;
 
 // Inject ripple CSS
-const style = document.createElement('style');
-style.textContent = rippleCSS;
-document.head.appendChild(style);
+const rippleStyleElement = document.createElement('style');
+rippleStyleElement.textContent = rippleCSS;
+document.head.appendChild(rippleStyleElement);
 
 // Initialize animation controller
 document.addEventListener('DOMContentLoaded', () => {

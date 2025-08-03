@@ -60,12 +60,32 @@ class Volume(SlugMixin, TimestampMixin, models.Model):
         return f"{volume_str}: {self.title}" if self.title else volume_str
     
     def save(self, *args, **kwargs):
-        """Gera o slug automaticamente se não existir."""
-        if not self.slug or self._state.adding:
+        """Gera o slug automaticamente se não existir ou se o número do volume ou mangá mudar."""
+        # Verifica se é uma nova instância ou se houve mudanças relevantes
+        is_new = self._state.adding
+        
+        # Para instâncias existentes, verifica se houve mudanças no número ou no mangá
+        needs_new_slug = False
+        if not is_new and hasattr(self, 'pk') and self.pk:
+            try:
+                old_instance = self.__class__.objects.get(pk=self.pk)
+                if old_instance.number != self.number or old_instance.manga_id != self.manga_id:
+                    needs_new_slug = True
+            except self.__class__.DoesNotExist:
+                pass
+        
+        # Gera um novo slug se necessário
+        if not self.slug or not self.slug.strip() or is_new or needs_new_slug:
+            # Cria um slug base com o número do volume
             base_slug = f"volume-{self.number}"
-            if self.manga and hasattr(self.manga, 'slug'):
+            
+            # Adiciona o slug do mangá se disponível
+            if self.manga and hasattr(self.manga, 'slug') and self.manga.slug:
                 base_slug = f"{self.manga.slug}-{base_slug}"
-            self.slug = self.generate_unique_slug(base_slug)
+            
+            # Gera um slug único
+            self.slug = self.generate_unique_slug(base_slug, max_length=255)
+        
         super().save(*args, **kwargs)
     
     def get_absolute_url(self):

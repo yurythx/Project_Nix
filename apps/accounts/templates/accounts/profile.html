@@ -101,7 +101,8 @@
                         <div class="col-6">
                             <div class="profile-stats-item">
                                 <h5 class="text-success mb-1 text-sans text-body">
-                                    {{ profile_user.comments.count }}
+                                    {% load comments_tags %}
+                                    {% get_user_comment_count profile_user %}
                                 </h5>
                                 <small class="text-secondary">Comentários</small>
                             </div>

@@ -1,0 +1,201 @@
+{% load static %}
+{% load humanize %}
+
+<div class="comment-item" data-comment-id="{{ comment.uuid }}" data-depth="{{ comment.depth }}">
+    <div class="comment-content">
+        <div class="comment-header">
+            <div class="comment-author">
+                {% if comment.author.avatar %}
+                    <img src="{{ comment.author.avatar.url }}" alt="{{ comment.author.username }}" class="author-avatar">
+                {% else %}
+                    <div class="author-avatar-placeholder">
+                        {{ comment.author.username|first|upper }}
+                    </div>
+                {% endif %}
+                <div class="author-info">
+                    <span class="author-name">{{ comment.author.username }}</span>
+                    {% if comment.author.is_staff %}
+                        <span class="staff-badge">Staff</span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="comment-meta">
+                <time datetime="{{ comment.created_at|date:'c' }}" class="comment-date">
+                    {{ comment.created_at|naturaltime }}
+                </time>
+                {% if comment.is_edited %}
+                    <span class="edited-indicator" title="Comentário editado">✏️</span>
+                {% endif %}
+                {% if comment.is_pinned %}
+                    <span class="pinned-indicator" title="Comentário fixado">📌</span>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="comment-body">
+            <div class="comment-text">
+                {{ comment.content|linebreaks }}
+            </div>
+        </div>
+        
+        <div class="comment-actions">
+            <div class="comment-reactions">
+                <button class="reaction-btn like-btn {% if user_reaction == 'like' %}active{% endif %}" 
+                        data-action="like" data-comment-id="{{ comment.uuid }}">
+                    <span class="reaction-icon">👍</span>
+                    <span class="reaction-count">{{ comment.likes_count }}</span>
+                </button>
+                
+                <button class="reaction-btn dislike-btn {% if user_reaction == 'dislike' %}active{% endif %}" 
+                        data-action="dislike" data-comment-id="{{ comment.uuid }}">
+                    <span class="reaction-icon">👎</span>
+                    <span class="reaction-count">{{ comment.dislikes_count }}</span>
+                </button>
+            </div>
+            
+            <div class="comment-controls">
+                {% if comment.can_have_replies %}
+                    <button class="reply-btn" data-comment-id="{{ comment.uuid }}">
+                        💬 Responder
+                    </button>
+                {% endif %}
+                
+                {% if user.is_authenticated %}
+                    {% if comment.author == user and comment.can_be_edited_by:user %}
+                        <button class="edit-btn" data-comment-id="{{ comment.uuid }}">
+                            ✏️ Editar
+                        </button>
+                    {% endif %}
+                    
+                    {% if comment.can_be_deleted_by:user %}
+                        <button class="delete-btn" data-comment-id="{{ comment.uuid }}">
+                            🗑️ Deletar
+                        </button>
+                    {% endif %}
+                    
+                    {% if user != comment.author %}
+                        <button class="report-btn" data-comment-id="{{ comment.uuid }}">
+                            🚩 Denunciar
+                        </button>
+                    {% endif %}
+                    
+                    {% if user.is_staff %}
+                        <div class="staff-actions">
+                            {% if not comment.is_pinned %}
+                                <button class="pin-btn" data-comment-id="{{ comment.uuid }}">
+                                    📌 Fixar
+                                </button>
+                            {% else %}
+                                <button class="unpin-btn" data-comment-id="{{ comment.uuid }}">
+                                    📌 Desfixar
+                                </button>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Reply Form (hidden by default) -->
+        <div class="reply-form-container" id="reply-form-{{ comment.uuid }}" style="display: none;">
+            <form class="reply-form" data-parent-id="{{ comment.uuid }}">
+                {% csrf_token %}
+                <div class="form-group">
+                    <textarea name="content" rows="3" class="form-control" 
+                             placeholder="Escreva sua resposta..." required></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary btn-sm">Responder</button>
+                    <button type="button" class="btn btn-secondary btn-sm cancel-reply">Cancelar</button>
+                </div>
+            </form>
+        </div>
+        
+        <!-- Edit Form (hidden by default) -->
+        <div class="edit-form-container" id="edit-form-{{ comment.uuid }}" style="display: none;">
+            <form class="edit-form" data-comment-id="{{ comment.uuid }}">
+                {% csrf_token %}
+                <div class="form-group">
+                    <textarea name="content" rows="4" class="form-control" required>{{ comment.content }}</textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary btn-sm">Salvar</button>
+                    <button type="button" class="btn btn-secondary btn-sm cancel-edit">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Replies -->
+    {% if comment.replies_count > 0 %}
+        <div class="comment-replies" id="replies-{{ comment.uuid }}">
+            {% for reply in comment.replies.all %}
+                {% if reply.status == 'approved' %}
+                    {% include "comments/comment_item.html" with comment=reply %}
+                {% endif %}
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
+
+<!-- Modals -->
+{% if user.is_authenticated %}
+<!-- Report Modal -->
+<div class="modal fade" id="reportModal-{{ comment.uuid }}" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Denunciar Comentário</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form class="report-form" data-comment-id="{{ comment.uuid }}">
+                <div class="modal-body">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="reason">Motivo da denúncia:</label>
+                        <select name="reason" class="form-control" required>
+                            <option value="">Selecione um motivo</option>
+                            <option value="spam">Spam</option>
+                            <option value="inappropriate">Conteúdo Inapropriado</option>
+                            <option value="harassment">Assédio</option>
+                            <option value="spoiler">Spoiler sem Aviso</option>
+                            <option value="other">Outro</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="description">Descrição (opcional):</label>
+                        <textarea name="description" rows="3" class="form-control" 
+                                 placeholder="Descreva o problema..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger">Denunciar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal-{{ comment.uuid }}" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Exclusão</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Tem certeza que deseja deletar este comentário?</p>
+                <p><small class="text-muted">Esta ação não pode ser desfeita.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger confirm-delete" 
+                        data-comment-id="{{ comment.uuid }}">Deletar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}

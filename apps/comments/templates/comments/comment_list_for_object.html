@@ -1,0 +1,51 @@
+{% load static %}
+
+<div class="comments-list">
+    {% for comment in comments %}
+        <div class="comment-item mb-4" id="comment-{{ comment.uuid }}">
+            <div class="d-flex">
+                <!-- Avatar -->
+                <div class="flex-shrink-0 me-3">
+                    {% if comment.author.avatar %}
+                        <img src="{{ comment.author.avatar.url }}" class="rounded-circle" width="48" height="48" alt="{{ comment.author.username }}">
+                    {% else %}
+                        <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                            <i class="fas fa-user text-white"></i>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Comment Content -->
+                <div class="flex-grow-1">
+                    <div class="comment-header mb-2">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-1">
+                                    {{ comment.author.username }}
+                                    {% if comment.author.is_staff %}
+                                        <span class="badge bg-primary ms-1">Staff</span>
+                                    {% endif %}
+                                </h6>
+                                <small class="text-muted">
+                                    <i class="fas fa-clock"></i>
+                                    {{ comment.created_at|date:"d/m/Y H:i" }}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Comment Text -->
+                    <div class="comment-content mb-3">
+                        {{ comment.content|linebreaks }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <div class="text-center py-5">
+            <i class="fas fa-comments fa-3x text-secondary mb-3"></i>
+            <h5 class="text-secondary">Nenhum comentário encontrado</h5>
+            <p class="text-secondary">Seja o primeiro a comentar!</p>
+        </div>
+    {% endfor %}
+</div>

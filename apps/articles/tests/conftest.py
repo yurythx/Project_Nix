@@ -26,18 +26,7 @@ def article_factory(user_factory):
         author = SubFactory(user_factory)
     return ArticleFactory
 
-@pytest.fixture
-def comment_factory(article_factory):
-    from apps.articles.models import Comment
-    class CommentFactory(factory.django.DjangoModelFactory):
-        class Meta:
-            model = Comment
-        article = SubFactory(article_factory)
-        name = Sequence(lambda n: f'Comentador {n}')
-        email = LazyAttribute(lambda o: f'{o.name.lower().replace(" ", "")}@example.com')
-        content = 'Comentário de teste'
-        is_approved = True
-    return CommentFactory
+# comment_factory removido - use as factories de apps.comments.tests
 
 @pytest.fixture(autouse=True)
 def enable_articles_module(db):
@@ -51,4 +40,4 @@ def enable_articles_module(db):
                 'status': 'active',
                 'module_type': 'feature',
             }
-        ) 
+        )

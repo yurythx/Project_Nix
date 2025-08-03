@@ -88,16 +88,7 @@ class TagOwnerOrStaffMixin(BaseOwnerOrStaffMixin):
         return getattr(obj, 'criado_por', None)
 
 
-class CommentOwnerOrStaffMixin(BaseOwnerOrStaffMixin):
-    """
-    Mixin que verifica se o usuário é o autor do comentário ou tem permissão de staff.
-    """
-    permission_denied_message = "🚫 Acesso negado! Você só pode editar ou excluir seus próprios comentários."
-    redirect_url = 'articles:article_list'
-    
-    def _get_owner(self, obj):
-        """Obtém o autor do comentário."""
-        return getattr(obj, 'author', None)
+# CommentOwnerOrStaffMixin removido - migrado para apps.comments
 
 
 class ArticleEditorOrAdminMixin(StaffOrSuperuserRequiredMixin):
@@ -113,4 +104,4 @@ class ArticleEditorOrAdminMixin(StaffOrSuperuserRequiredMixin):
     """
     permission_denied_message = "🚫 Acesso negado! Apenas editores ou administradores podem realizar esta ação."
     redirect_url = 'articles:article_list'
-    allowed_groups = ['administrador', 'admin', 'editor'] 
+    allowed_groups = ['administrador', 'admin', 'editor']

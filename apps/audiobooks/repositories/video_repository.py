@@ -1,16 +1,20 @@
-from typing import Any, Dict, Optional
-from django.db.models import Q
+from typing import Any, Dict, Optional, List
+from django.db.models import Q, Count, Avg
 from django.db.models.query import QuerySet
 from django.core.exceptions import ObjectDoesNotExist
+from django.utils.text import slugify
 
 from apps.audiobooks.interfaces.video_repository import VideoRepositoryInterface
-from apps.audiobooks.models import VideoAudio
+from apps.audiobooks.models import VideoAudio, VideoProgress, VideoFavorite
+from apps.audiobooks.models.category import Category
 
 class VideoRepository(VideoRepositoryInterface):
     """
     Implementação do repositório de vídeos
     
     Responsável por todas as operações de persistência relacionadas a vídeos.
+    Segue o princípio de Responsabilidade Única (S do SOLID) ao lidar apenas com
+    operações de acesso a dados para vídeos.
     """
     
     def get_all(self) -> QuerySet:
@@ -63,9 +67,15 @@ class VideoRepository(VideoRepositoryInterface):
         except VideoAudio.DoesNotExist:
             return False
     
-    def get_by_category(self, category: str) -> QuerySet:
+    def get_by_category(self, category) -> QuerySet:
         """Obtém vídeos por categoria"""
-        return VideoAudio.objects.filter(category=category, is_public=True)
+        # Aceita tanto string (slug) quanto objeto Category
+        if isinstance(category, Category):
+            return VideoAudio.objects.filter(category=category, is_public=True)
+        elif isinstance(category, str):
+            return VideoAudio.objects.filter(category__slug=category, is_public=True)
+        else:
+            return VideoAudio.objects.none()
     
     def get_featured(self, limit: int = 5) -> QuerySet:
         """Obtém vídeos em destaque"""
@@ -79,3 +89,66 @@ class VideoRepository(VideoRepositoryInterface):
         return VideoAudio.objects.filter(
             is_public=True
         ).order_by('-created_at')[:limit]
+    
+    def get_related_videos(self, video: VideoAudio, limit: int = 6) -> QuerySet:
+        """Obtém vídeos relacionados ao vídeo fornecido"""
+        # Busca por categoria e autor semelhantes
+        return VideoAudio.objects.filter(
+            Q(category=video.category) | Q(author=video.author),
+            is_public=True
+        ).exclude(id=video.id).order_by('-created_at')[:limit]
+    
+    def get_popular_videos(self, limit: int = 5) -> QuerySet:
+        """Obtém os vídeos mais populares baseado em visualizações"""
+        return VideoAudio.objects.filter(
+            is_public=True
+        ).order_by('-views')[:limit]
+    
+    def get_user_favorites(self, user_id: int) -> QuerySet:
+        """Obtém os vídeos favoritos de um usuário"""
+        return VideoAudio.objects.filter(
+            favorited_by__user_id=user_id,
+            is_public=True
+        ).order_by('-favorited_by__created_at')
+    
+    def get_user_progress(self, user_id: int) -> QuerySet:
+        """Obtém os vídeos com progresso de um usuário"""
+        return VideoAudio.objects.filter(
+            videoprogress__user_id=user_id,
+            is_public=True
+        ).order_by('-videoprogress__last_played')
+    
+    def get_video_stats(self, video_id: int) -> Dict[str, Any]:
+        """Obtém estatísticas de um vídeo"""
+        try:
+            video = VideoAudio.objects.get(pk=video_id)
+            favorites_count = VideoFavorite.objects.filter(video=video).count()
+            progress_count = VideoProgress.objects.filter(video=video).count()
+            completion_count = VideoProgress.objects.filter(video=video, is_completed=True).count()
+            
+            return {
+                'views': video.views,
+                'favorites': favorites_count,
+                'started': progress_count,
+                'completed': completion_count,
+                'completion_rate': (completion_count / progress_count * 100) if progress_count > 0 else 0
+            }
+        except VideoAudio.DoesNotExist:
+            return {}
+    
+    def toggle_favorite(self, user_id: int, video_id: int) -> bool:
+        """Adiciona ou remove um vídeo dos favoritos de um usuário"""
+        try:
+            video = VideoAudio.objects.get(pk=video_id)
+            favorite, created = VideoFavorite.objects.get_or_create(
+                user_id=user_id,
+                video=video
+            )
+            
+            if not created:
+                favorite.delete()
+                return False  # Removido dos favoritos
+            
+            return True  # Adicionado aos favoritos
+        except VideoAudio.DoesNotExist:
+            return False

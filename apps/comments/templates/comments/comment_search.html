@@ -1,0 +1,187 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Buscar Comentários - {{ block.super }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/comments.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row">
+        <div class="col-lg-12">
+            <!-- Page Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>
+                    <i class="fas fa-search me-2"></i>
+                    Buscar Comentários
+                </h2>
+                <a href="{% url 'comments:comment_list' %}" class="btn btn-outline-primary">
+                    <i class="fas fa-list me-1"></i>Todos os Comentários
+                </a>
+            </div>
+            
+            <!-- Search Form -->
+            <div class="card shadow mb-4">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-6">
+                            <label for="q" class="form-label">Buscar por:</label>
+                            <input type="text" class="form-control" id="q" name="q" value="{{ request.GET.q }}" placeholder="Digite sua busca...">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="status" class="form-label">Status:</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="">Todos</option>
+                                <option value="approved" {% if request.GET.status == 'approved' %}selected{% endif %}>Aprovados</option>
+                                <option value="pending" {% if request.GET.status == 'pending' %}selected{% endif %}>Pendentes</option>
+                                <option value="flagged" {% if request.GET.status == 'flagged' %}selected{% endif %}>Sinalizados</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="order" class="form-label">Ordenar por:</label>
+                            <select class="form-select" id="order" name="order">
+                                <option value="-created_at" {% if request.GET.order == '-created_at' %}selected{% endif %}>Mais recentes</option>
+                                <option value="created_at" {% if request.GET.order == 'created_at' %}selected{% endif %}>Mais antigos</option>
+                                <option value="user__username" {% if request.GET.order == 'user__username' %}selected{% endif %}>Por usuário</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search me-1"></i>Buscar
+                            </button>
+                            <a href="{% url 'comments:comment_search' %}" class="btn btn-outline-secondary ms-2">
+                                <i class="fas fa-times me-1"></i>Limpar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Search Results -->
+            {% if request.GET.q %}
+                <div class="mb-3">
+                    <h5>Resultados para: "{{ request.GET.q }}"</h5>
+                    <p class="text-muted">{{ comments|length }} comentário{{ comments|length|pluralize }} encontrado{{ comments|length|pluralize }}.</p>
+                </div>
+            {% endif %}
+            
+            <!-- Comments List -->
+            {% if comments %}
+                <div class="row">
+                    {% for comment in comments %}
+                        <div class="col-12 mb-3">
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-start">
+                                        <div class="me-3">
+                                            {% if comment.user.avatar %}
+                                                <img src="{{ comment.user.avatar.url }}" alt="{{ comment.user.get_full_name }}" class="rounded-circle" width="40" height="40">
+                                            {% else %}
+                                                <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                    <i class="fas fa-user text-white"></i>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                                <div>
+                                                    <h6 class="mb-0">{{ comment.user.get_full_name|default:comment.user.username }}</h6>
+                                                    <small class="text-muted">
+                                                        <i class="fas fa-clock me-1"></i>
+                                                        {{ comment.created_at|date:"d/m/Y H:i" }}
+                                                    </small>
+                                                </div>
+                                                <div class="d-flex gap-1">
+                                                    {% if comment.is_approved %}
+                                                        <span class="badge bg-success">Aprovado</span>
+                                                    {% else %}
+                                                        <span class="badge bg-warning">Pendente</span>
+                                                    {% endif %}
+                                                    {% if comment.is_flagged %}
+                                                        <span class="badge bg-danger">Sinalizado</span>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                            
+                                            <p class="mb-2">{{ comment.content|truncatewords:30 }}</p>
+                                            
+                                            {% if comment.content_object %}
+                                                <small class="text-muted">
+                                                    <strong>Em:</strong> 
+                                                    <a href="{{ comment.content_object.get_absolute_url }}" class="text-decoration-none">
+                                                        {{ comment.content_object.title|default:comment.content_object }}
+                                                    </a>
+                                                </small>
+                                            {% endif %}
+                                            
+                                            <div class="mt-2">
+                                                <a href="{% url 'comments:comment_detail' comment.id %}" class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-eye me-1"></i>Ver Detalhes
+                                                </a>
+                                                {% if user.is_staff or user == comment.user %}
+                                                    <a href="{% url 'comments:comment_edit' comment.id %}" class="btn btn-sm btn-outline-secondary ms-1">
+                                                        <i class="fas fa-edit me-1"></i>Editar
+                                                    </a>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+                
+                <!-- Pagination -->
+                {% if is_paginated %}
+                    <nav aria-label="Navegação de comentários">
+                        <ul class="pagination justify-content-center">
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page=1">
+                                        <i class="fas fa-angle-double-left"></i>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.previous_page_number }}">
+                                        <i class="fas fa-angle-left"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                            
+                            <li class="page-item active">
+                                <span class="page-link">{{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+                            </li>
+                            
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.next_page_number }}">
+                                        <i class="fas fa-angle-right"></i>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.paginator.num_pages }}">
+                                        <i class="fas fa-angle-double-right"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                {% endif %}
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                    <h4 class="text-muted">Nenhum comentário encontrado</h4>
+                    {% if request.GET.q %}
+                        <p class="text-muted">Tente usar termos diferentes ou remover alguns filtros.</p>
+                    {% else %}
+                        <p class="text-muted">Use o formulário acima para buscar comentários.</p>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

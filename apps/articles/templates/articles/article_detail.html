@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 {% load articles_tags %}
+{% load comments_tags %}
 
 {% block title %}{{ article.seo_title|default:article.title }} - {{ block.super }}{% endblock %}
 
@@ -26,6 +27,9 @@
 {% endblock %}
 
 {% block content %}
+{% get_content_type article as article_content_type %}
+{% get_comment_count article as global_comment_count %}
+
 <div class="container my-5">
     <div class="row">
         <div class="col-lg-8">
@@ -164,10 +168,10 @@
                         <i class="fas fa-comments"></i>
                         Comentários
                         <span class="badge bg-theme-secondary ms-2" id="comment-count">
-                            {{ article.comment_count }}
+                            {{ global_comment_count }}
                         </span>
                     </h3>
-                    <a href="{% url 'articles:comment_list' slug=article.slug %}" class="btn btn-outline-primary btn-sm">
+                    <a href="{% url 'comments:comments_for_object' content_type_id=article_content_type.id object_id=article.id %}" class="btn btn-outline-primary btn-sm">
                         <i class="fas fa-expand"></i>
                         Ver todos
                     </a>
@@ -183,7 +187,7 @@
                             </h5>
                         </div>
                         <div class="card-body">
-                            <form method="post" action="{% url 'articles:add_comment' slug=article.slug %}" id="comment-form">
+                            <form method="post" action="{% url 'comments:create_comment_for_object' content_type_id=article_content_type.id object_id=article.id %}" id="comment-form">
                                 {% csrf_token %}
 
                                 <div id="comment-feedback" aria-live="polite">
@@ -232,15 +236,6 @@
                                     </div>
                                 </div>
 
-                                {% if not user.is_authenticated %}
-                                <div class="form-floating mb-3">
-                                    <input type="url" class="form-control" name="website" id="id_website"
-                                           placeholder="Seu website (opcional)" aria-describedby="website-help">
-                                 
-                                    <div class="form-text" id="website-help">URL do seu site ou blog</div>
-                                </div>
-                                {% endif %}
-
                                 <div class="form-floating mb-3">
                                     <textarea class="form-control" name="content" id="id_content"
                                               placeholder="Escreva seu comentário..." rows="4" required aria-describedby="content-help"></textarea>
@@ -272,7 +267,7 @@
 
                 <!-- Comments List -->
                 <div id="comments-container">
-                    {% include 'articles/comments/comment_snippet.html' %}
+                    {% render_comments_for_object article %}
                 </div>
             </section>
             {% endif %}
@@ -346,5 +341,5 @@
 
 {% block extra_js %}
 <script src="{% static 'articles/js/article-detail.js' %}"></script>
-<script type="module" src="{% static 'js/article_comments_init.js' %}"></script>
+<script src="{% static 'js/article_comments.js' %}"></script>
 {% endblock %}

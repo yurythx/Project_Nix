@@ -1,0 +1,490 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Detalhes da Moderação - {{ block.super }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/comments.css' %}">
+<link rel="stylesheet" href="{% static 'css/moderation.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid my-4">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3">
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Detalhes da Moderação
+                    </h6>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="{% url 'comments:moderation_queue' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-arrow-left me-2"></i>
+                        Voltar à Fila
+                    </a>
+                    <a href="{% url 'comments:moderation_history' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-history me-2"></i>
+                        Histórico
+                    </a>
+                    <a href="{% url 'comments:moderation_stats' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-chart-bar me-2"></i>
+                        Estatísticas
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Quick Actions -->
+            <div class="card shadow-sm mt-3">
+                <div class="card-header bg-warning text-dark">
+                    <h6 class="mb-0">
+                        <i class="fas fa-bolt me-2"></i>
+                        Ações Rápidas
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        {% if comment.status == 'pending' %}
+                            <button class="btn btn-success" onclick="approveComment()">
+                                <i class="fas fa-check me-1"></i>Aprovar
+                            </button>
+                            <button class="btn btn-danger" onclick="rejectComment()">
+                                <i class="fas fa-times me-1"></i>Rejeitar
+                            </button>
+                        {% endif %}
+                        <button class="btn btn-warning" onclick="flagAsSpam()">
+                            <i class="fas fa-ban me-1"></i>Marcar como Spam
+                        </button>
+                        <button class="btn btn-info" onclick="editComment()">
+                            <i class="fas fa-edit me-1"></i>Editar
+                        </button>
+                        <button class="btn btn-secondary" onclick="addNote()">
+                            <i class="fas fa-sticky-note me-1"></i>Adicionar Nota
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-md-9">
+            <!-- Comment Details -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-comment me-2"></i>
+                            Detalhes do Comentário #{{ comment.id }}
+                        </h5>
+                        <div class="d-flex gap-2">
+                            {% if comment.status == 'approved' %}
+                                <span class="badge bg-success fs-6">Aprovado</span>
+                            {% elif comment.status == 'pending' %}
+                                <span class="badge bg-warning fs-6">Pendente</span>
+                            {% elif comment.status == 'rejected' %}
+                                <span class="badge bg-danger fs-6">Rejeitado</span>
+                            {% elif comment.status == 'spam' %}
+                                <span class="badge bg-dark fs-6">Spam</span>
+                            {% endif %}
+                            {% if comment.is_flagged %}
+                                <span class="badge bg-danger fs-6">Sinalizado</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <!-- Comment Content -->
+                            <div class="mb-4">
+                                <h6 class="text-muted mb-2">Conteúdo do Comentário:</h6>
+                                <div class="bg-light p-3 rounded">
+                                    <p class="mb-0">{{ comment.content|linebreaks }}</p>
+                                </div>
+                            </div>
+                            
+                            <!-- Content Object Info -->
+                            {% if comment.content_object %}
+                                <div class="mb-4">
+                                    <h6 class="text-muted mb-2">Comentário em:</h6>
+                                    <div class="card border-secondary">
+                                        <div class="card-body">
+                                            <h6 class="card-title">
+                                                <a href="{{ comment.content_object.get_absolute_url }}" class="text-decoration-none">
+                                                    {{ comment.content_object.title|default:comment.content_object }}
+                                                </a>
+                                            </h6>
+                                            <p class="card-text">
+                                                <span class="badge bg-secondary">{{ comment.content_type.model|capfirst }}</span>
+                                                {% if comment.content_object.author %}
+                                                    • Por: {{ comment.content_object.author }}
+                                                {% endif %}
+                                                {% if comment.content_object.created_at %}
+                                                    • {{ comment.content_object.created_at|date:"d/m/Y" }}
+                                                {% endif %}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                            
+                            <!-- Moderation Notes -->
+                            <div class="mb-4">
+                                <h6 class="text-muted mb-2">Notas de Moderação:</h6>
+                                {% if moderation_notes %}
+                                    {% for note in moderation_notes %}
+                                        <div class="card mb-2">
+                                            <div class="card-body py-2">
+                                                <div class="d-flex justify-content-between align-items-start">
+                                                    <div>
+                                                        <small class="text-muted">
+                                                            <strong>{{ note.moderator.get_full_name }}</strong>
+                                                            • {{ note.created_at|date:"d/m/Y H:i" }}
+                                                        </small>
+                                                        <p class="mb-0 mt-1">{{ note.content }}</p>
+                                                    </div>
+                                                    {% if note.moderator == user %}
+                                                        <button class="btn btn-sm btn-outline-danger" onclick="deleteNote({{ note.id }})">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <p class="text-muted fst-italic">Nenhuma nota de moderação.</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <!-- User Information -->
+                            <div class="card mb-3">
+                                <div class="card-header">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-user me-2"></i>
+                                        Informações do Usuário
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="text-center mb-3">
+                                        {% if comment.user.avatar %}
+                                            <img src="{{ comment.user.avatar.url }}" alt="{{ comment.user.get_full_name }}" class="rounded-circle mb-2" width="80" height="80">
+                                        {% else %}
+                                            <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2" style="width: 80px; height: 80px;">
+                                                <i class="fas fa-user fa-2x text-white"></i>
+                                            </div>
+                                        {% endif %}
+                                        <h6 class="mb-1">{{ comment.user.get_full_name|default:comment.user.username }}</h6>
+                                        <small class="text-muted">@{{ comment.user.username }}</small>
+                                    </div>
+                                    
+                                    <div class="row text-center">
+                                        <div class="col-6">
+                                            <div class="border-end">
+                                                <h6 class="text-primary mb-0">{{ user_stats.total_comments }}</h6>
+                                                <small class="text-muted">Comentários</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <h6 class="text-success mb-0">{{ user_stats.approved_comments }}</h6>
+                                            <small class="text-muted">Aprovados</small>
+                                        </div>
+                                    </div>
+                                    
+                                    <hr>
+                                    
+                                    <div class="small">
+                                        <p class="mb-1"><strong>Email:</strong> {{ comment.user.email }}</p>
+                                        <p class="mb-1"><strong>Membro desde:</strong> {{ comment.user.date_joined|date:"d/m/Y" }}</p>
+                                        <p class="mb-1"><strong>Último acesso:</strong> {{ comment.user.last_login|date:"d/m/Y H:i"|default:"Nunca" }}</p>
+                                        <p class="mb-0"><strong>Status:</strong> 
+                                            {% if comment.user.is_active %}
+                                                <span class="badge bg-success">Ativo</span>
+                                            {% else %}
+                                                <span class="badge bg-danger">Inativo</span>
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Comment Metadata -->
+                            <div class="card mb-3">
+                                <div class="card-header">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-info me-2"></i>
+                                        Metadados
+                                    </h6>
+                                </div>
+                                <div class="card-body small">
+                                    <p class="mb-2"><strong>ID:</strong> {{ comment.id }}</p>
+                                    <p class="mb-2"><strong>Criado em:</strong> {{ comment.created_at|date:"d/m/Y H:i:s" }}</p>
+                                    {% if comment.updated_at != comment.created_at %}
+                                        <p class="mb-2"><strong>Atualizado em:</strong> {{ comment.updated_at|date:"d/m/Y H:i:s" }}</p>
+                                    {% endif %}
+                                    <p class="mb-2"><strong>IP:</strong> {{ comment.ip_address|default:"N/A" }}</p>
+                                    <p class="mb-2"><strong>User Agent:</strong> 
+                                        <span class="text-muted">{{ comment.user_agent|truncatechars:50|default:"N/A" }}</span>
+                                    </p>
+                                    <p class="mb-2"><strong>Curtidas:</strong> {{ comment.likes_count|default:0 }}</p>
+                                    <p class="mb-2"><strong>Respostas:</strong> {{ comment.replies_count|default:0 }}</p>
+                                    <p class="mb-0"><strong>Denúncias:</strong> {{ comment.reports_count|default:0 }}</p>
+                                </div>
+                            </div>
+                            
+                            <!-- Moderation History -->
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-history me-2"></i>
+                                        Histórico de Moderação
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    {% if moderation_history %}
+                                        <div class="timeline">
+                                            {% for action in moderation_history %}
+                                                <div class="timeline-item mb-3">
+                                                    <div class="d-flex">
+                                                        <div class="flex-shrink-0">
+                                                            <div class="bg-{% if action.action == 'approved' %}success{% elif action.action == 'rejected' %}danger{% elif action.action == 'flagged' %}warning{% else %}secondary{% endif %} rounded-circle d-flex align-items-center justify-content-center" style="width: 30px; height: 30px;">
+                                                                <i class="fas fa-{% if action.action == 'approved' %}check{% elif action.action == 'rejected' %}times{% elif action.action == 'flagged' %}flag{% else %}edit{% endif %} text-white small"></i>
+                                                            </div>
+                                                        </div>
+                                                        <div class="flex-grow-1 ms-2">
+                                                            <div class="small">
+                                                                <strong>{{ action.get_action_display }}</strong>
+                                                                <br>
+                                                                <span class="text-muted">{{ action.moderator.get_full_name }} • {{ action.created_at|date:"d/m/Y H:i" }}</span>
+                                                                {% if action.reason %}
+                                                                    <br>
+                                                                    <em>{{ action.reason }}</em>
+                                                                {% endif %}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        <p class="text-muted fst-italic small">Nenhuma ação de moderação registrada.</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Note Modal -->
+<div class="modal fade" id="addNoteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-sticky-note me-2"></i>
+                    Adicionar Nota de Moderação
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="addNoteForm">
+                <div class="modal-body">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="noteContent" class="form-label">Nota:</label>
+                        <textarea class="form-control" id="noteContent" name="content" rows="4" placeholder="Digite sua nota de moderação..." required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i>Salvar Nota
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Comment Modal -->
+<div class="modal fade" id="editCommentModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-edit me-2"></i>
+                    Editar Comentário
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="editCommentForm">
+                <div class="modal-body">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="editContent" class="form-label">Conteúdo:</label>
+                        <textarea class="form-control" id="editContent" name="content" rows="6" required>{{ comment.content }}</textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editReason" class="form-label">Motivo da edição:</label>
+                        <input type="text" class="form-control" id="editReason" name="edit_reason" placeholder="Descreva o motivo da edição...">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i>Salvar Alterações
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Moderation actions
+function approveComment() {
+    if (confirm('Aprovar este comentário?')) {
+        fetch(`/comments/moderation/{{ comment.id }}/approve/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Erro ao aprovar comentário.');
+            }
+        });
+    }
+}
+
+function rejectComment() {
+    const reason = prompt('Motivo da rejeição (opcional):');
+    if (reason !== null) {
+        fetch(`/comments/moderation/{{ comment.id }}/reject/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ reason: reason })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Erro ao rejeitar comentário.');
+            }
+        });
+    }
+}
+
+function flagAsSpam() {
+    if (confirm('Marcar este comentário como spam?')) {
+        fetch(`/comments/moderation/{{ comment.id }}/spam/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Erro ao marcar como spam.');
+            }
+        });
+    }
+}
+
+// Modal functions
+function addNote() {
+    const modal = new bootstrap.Modal(document.getElementById('addNoteModal'));
+    modal.show();
+}
+
+function editComment() {
+    const modal = new bootstrap.Modal(document.getElementById('editCommentModal'));
+    modal.show();
+}
+
+// Form submissions
+document.getElementById('addNoteForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    
+    fetch(`/comments/moderation/{{ comment.id }}/add-note/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Erro ao adicionar nota.');
+        }
+    });
+});
+
+document.getElementById('editCommentForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    
+    fetch(`/comments/moderation/{{ comment.id }}/edit/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Erro ao editar comentário.');
+        }
+    });
+});
+
+// Delete note function
+function deleteNote(noteId) {
+    if (confirm('Excluir esta nota?')) {
+        fetch(`/comments/moderation/notes/${noteId}/delete/`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Erro ao excluir nota.');
+            }
+        });
+    }
+}
+</script>
+{% endblock %}

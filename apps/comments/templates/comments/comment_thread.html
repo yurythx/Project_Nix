@@ -1,0 +1,292 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Thread de Comentários - {{ block.super }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/comments.css' %}">
+<style>
+.comment-thread {
+    border-left: 3px solid #dee2e6;
+    padding-left: 1rem;
+    margin-left: 1rem;
+}
+.comment-level-1 { border-left-color: #007bff; }
+.comment-level-2 { border-left-color: #28a745; }
+.comment-level-3 { border-left-color: #ffc107; }
+.comment-level-4 { border-left-color: #dc3545; }
+.comment-level-5 { border-left-color: #6f42c1; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row">
+        <div class="col-lg-12">
+            <!-- Page Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>
+                    <i class="fas fa-comments me-2"></i>
+                    Thread de Comentários
+                </h2>
+                <div>
+                    <a href="{% url 'comments:comment_list' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-list me-1"></i>Todos os Comentários
+                    </a>
+                    {% if content_object %}
+                        <a href="{{ content_object.get_absolute_url }}" class="btn btn-outline-secondary ms-2">
+                            <i class="fas fa-arrow-left me-1"></i>Voltar ao Conteúdo
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Content Object Info -->
+            {% if content_object %}
+                <div class="card shadow-sm mb-4">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="me-3">
+                                <i class="fas fa-file-alt fa-2x text-primary"></i>
+                            </div>
+                            <div>
+                                <h5 class="mb-1">{{ content_object.title|default:content_object }}</h5>
+                                <p class="text-muted mb-0">
+                                    <small>
+                                        <i class="fas fa-tag me-1"></i>
+                                        {{ content_object|capfirst }}
+                                        {% if content_object.created_at %}
+                                            • <i class="fas fa-calendar me-1"></i>{{ content_object.created_at|date:"d/m/Y" }}
+                                        {% endif %}
+                                    </small>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+            
+            <!-- Thread Statistics -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h4 class="text-primary mb-1">{{ total_comments }}</h4>
+                            <small class="text-muted">Total de Comentários</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h4 class="text-success mb-1">{{ approved_comments }}</h4>
+                            <small class="text-muted">Aprovados</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h4 class="text-warning mb-1">{{ pending_comments }}</h4>
+                            <small class="text-muted">Pendentes</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h4 class="text-info mb-1">{{ thread_depth }}</h4>
+                            <small class="text-muted">Níveis de Resposta</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Add New Comment -->
+            {% if user.is_authenticated %}
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <i class="fas fa-plus me-2"></i>
+                            Adicionar Comentário
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <form method="post" action="{% url 'comments:comment_create' %}">
+                            {% csrf_token %}
+                            {% if content_object %}
+                                <input type="hidden" name="content_type" value="{{ content_type.id }}">
+                                <input type="hidden" name="object_id" value="{{ content_object.id }}">
+                            {% endif %}
+                            <div class="mb-3">
+                                <textarea class="form-control" name="content" rows="3" placeholder="Escreva seu comentário..." required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane me-1"></i>
+                                Enviar Comentário
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <a href="{% url 'accounts:login' %}" class="alert-link">Faça login</a> para participar da discussão.
+                </div>
+            {% endif %}
+            
+            <!-- Comments Thread -->
+            {% if comments %}
+                <div class="comments-thread">
+                    {% for comment in comments %}
+                        {% include 'comments/includes/comment_item_thread.html' with comment=comment level=comment.level %}
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-comments fa-3x text-muted mb-3"></i>
+                    <h4 class="text-muted">Nenhum comentário ainda</h4>
+                    <p class="text-muted">Seja o primeiro a comentar!</p>
+                </div>
+            {% endif %}
+            
+            <!-- Load More Comments -->
+            {% if has_more_comments %}
+                <div class="text-center mt-4">
+                    <button class="btn btn-outline-primary" id="load-more-comments" data-url="{% url 'comments:load_more_comments' %}" data-offset="{{ comments|length }}">
+                        <i class="fas fa-plus me-1"></i>
+                        Carregar Mais Comentários
+                    </button>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Comment Item Template for Thread -->
+<template id="comment-item-template">
+    <div class="comment-item mb-3" data-comment-id="{comment_id}">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex align-items-start">
+                    <div class="me-3">
+                        <img src="{user_avatar}" alt="{user_name}" class="rounded-circle" width="40" height="40">
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <h6 class="mb-0">{user_name}</h6>
+                                <small class="text-muted">
+                                    <i class="fas fa-clock me-1"></i>
+                                    {created_at}
+                                </small>
+                            </div>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-ellipsis-v"></i>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="#" onclick="replyToComment({comment_id})"><i class="fas fa-reply me-1"></i>Responder</a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="reportComment({comment_id})"><i class="fas fa-flag me-1"></i>Denunciar</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <p class="mb-2">{content}</p>
+                        
+                        <div class="d-flex align-items-center gap-3">
+                            <button class="btn btn-sm btn-outline-primary" onclick="likeComment({comment_id})">
+                                <i class="fas fa-thumbs-up me-1"></i>
+                                <span class="like-count">{likes_count}</span>
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="toggleReplies({comment_id})">
+                                <i class="fas fa-comments me-1"></i>
+                                <span class="replies-count">{replies_count}</span> resposta(s)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Load more comments functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const loadMoreBtn = document.getElementById('load-more-comments');
+    
+    if (loadMoreBtn) {
+        loadMoreBtn.addEventListener('click', function() {
+            const url = this.dataset.url;
+            const offset = this.dataset.offset;
+            
+            fetch(`${url}?offset=${offset}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.comments && data.comments.length > 0) {
+                        const commentsContainer = document.querySelector('.comments-thread');
+                        data.comments.forEach(comment => {
+                            const commentHtml = renderCommentItem(comment);
+                            commentsContainer.insertAdjacentHTML('beforeend', commentHtml);
+                        });
+                        
+                        // Update offset
+                        this.dataset.offset = parseInt(offset) + data.comments.length;
+                        
+                        // Hide button if no more comments
+                        if (!data.has_more) {
+                            this.style.display = 'none';
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading comments:', error);
+                    alert('Erro ao carregar comentários. Tente novamente.');
+                });
+        });
+    }
+});
+
+// Render comment item from template
+function renderCommentItem(comment) {
+    const template = document.getElementById('comment-item-template').innerHTML;
+    return template
+        .replace(/{comment_id}/g, comment.id)
+        .replace(/{user_avatar}/g, comment.user.avatar || '/static/img/default-avatar.png')
+        .replace(/{user_name}/g, comment.user.name)
+        .replace(/{created_at}/g, comment.created_at)
+        .replace(/{content}/g, comment.content)
+        .replace(/{likes_count}/g, comment.likes_count || 0)
+        .replace(/{replies_count}/g, comment.replies_count || 0);
+}
+
+// Reply to comment
+function replyToComment(commentId) {
+    // Implementation for reply functionality
+    console.log('Reply to comment:', commentId);
+}
+
+// Report comment
+function reportComment(commentId) {
+    if (confirm('Tem certeza que deseja denunciar este comentário?')) {
+        // Implementation for report functionality
+        console.log('Report comment:', commentId);
+    }
+}
+
+// Like comment
+function likeComment(commentId) {
+    // Implementation for like functionality
+    console.log('Like comment:', commentId);
+}
+
+// Toggle replies
+function toggleReplies(commentId) {
+    // Implementation for toggle replies functionality
+    console.log('Toggle replies for comment:', commentId);
+}
+</script>
+{% endblock %}

@@ -173,12 +173,13 @@ class ArticleService(IArticleService):
         :param category_slug: Slug da categoria
         :return: QuerySet de artigos da categoria
         """
-        from apps.articles.repositories.category_repository import DjangoCategoryRepository
+        from apps.articles.models.category import Category
         
-        category_repo = DjangoCategoryRepository()
-        category = category_repo.get_by_slug(category_slug)
-        
-        return self.article_repository.get_by_category(category.id)
+        try:
+            category = Category.objects.get(slug=category_slug, is_active=True)
+            return self.article_repository.get_by_category(category.id)
+        except Category.DoesNotExist:
+            return self.article_repository.get_published_articles().none()
     
     def get_articles_by_tag(self, tag_slug: str) -> QuerySet:
         """
@@ -186,12 +187,13 @@ class ArticleService(IArticleService):
         :param tag_slug: Slug da tag
         :return: QuerySet de artigos da tag
         """
-        from apps.articles.repositories.tag_repository import DjangoTagRepository
+        from apps.articles.models.tag import Tag
         
-        tag_repo = DjangoTagRepository()
-        tag = tag_repo.get_by_slug(tag_slug)
-        
-        return self.article_repository.get_by_tag(tag.id)
+        try:
+            tag = Tag.objects.get(slug=tag_slug)
+            return self.article_repository.get_by_tag(tag.id)
+        except Tag.DoesNotExist:
+            return self.article_repository.get_published_articles().none()
     
     def get_articles_by_author(self, author_id: int) -> QuerySet:
         """

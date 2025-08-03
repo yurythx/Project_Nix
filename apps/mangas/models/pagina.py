@@ -1,9 +1,10 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-from .base import TimestampMixin
+from django.utils.text import slugify
+from .base import TimestampMixin, SlugMixin
 # Removida a importação direta de Capitulo para evitar importação circular
 
-class Pagina(TimestampMixin, models.Model):
+class Pagina(TimestampMixin, SlugMixin, models.Model):
     """
     Modelo que representa uma página de um capítulo de mangá.
     """
@@ -47,6 +48,13 @@ class Pagina(TimestampMixin, models.Model):
         blank=True,
         help_text=_('Tipo MIME da imagem')
     )
+    slug = models.SlugField(
+        _('Slug'),
+        max_length=255,
+        blank=True,
+        help_text=_('Slug para URL amigável'),
+        db_index=True
+    )
 
     class Meta:
         app_label = 'mangas'
@@ -64,8 +72,9 @@ class Pagina(TimestampMixin, models.Model):
     
     def save(self, *args, **kwargs):
         """
-        Sobrescreve o método save para extrair metadados da imagem.
+        Sobrescreve o método save para extrair metadados da imagem e gerar slug.
         """
+        # Extrai metadados da imagem se necessário
         if self.image and (not self.width or not self.height or not self.file_size or not self.content_type):
             try:
                 from PIL import Image as PILImage
@@ -87,6 +96,32 @@ class Pagina(TimestampMixin, models.Model):
                 import logging
                 logger = logging.getLogger(__name__)
                 logger.error(f'Erro ao processar metadados da imagem: {str(e)}')
+        
+        # Verifica se é uma nova instância ou se houve mudanças relevantes
+        is_new = self._state.adding
+        
+        # Para instâncias existentes, verifica se houve mudanças no número ou no capítulo
+        needs_new_slug = False
+        if not is_new and hasattr(self, 'pk') and self.pk:
+            try:
+                old_instance = self.__class__.objects.get(pk=self.pk)
+                if old_instance.number != self.number or old_instance.capitulo_id != self.capitulo_id:
+                    needs_new_slug = True
+            except self.__class__.DoesNotExist:
+                pass
+        
+        # Gera um novo slug se necessário
+        if not self.slug or not self.slug.strip() or is_new or needs_new_slug:
+            # Tenta obter o slug do capítulo para criar um slug hierárquico
+            try:
+                capitulo_slug = self.capitulo.slug
+                base_slug = f"{capitulo_slug}-pagina-{self.number}"
+            except (AttributeError, Exception):
+                # Fallback se não conseguir obter o slug do capítulo
+                base_slug = f"pagina-{self.capitulo_id}-{self.number}"
+            
+            # Gera um slug único
+            self.slug = self.generate_unique_slug(base_slug, max_length=255)
         
         super().save(*args, **kwargs)
     

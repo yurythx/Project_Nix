@@ -74,15 +74,6 @@ class CategoryService(ICategoryService):
             status='published'
         ).order_by('-published_at')
     
-    def get_all_active_categories(self) -> QuerySet[Category]:
-        """
-        Retorna todas as categorias ativas
-        
-        Returns:
-            QuerySet de categorias ativas
-        """
-        return Category.objects.filter(is_active=True).order_by('name')
-    
     def get_active_categories(self) -> QuerySet[Category]:
         """
         Obtém categorias ativas (implementação exigida pela interface)

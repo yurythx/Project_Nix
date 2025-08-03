@@ -84,14 +84,13 @@ class ProfileService(IProfileService):
             except (LookupError, AttributeError):
                 pass
             
-            # Contar comentários se o app articles estiver disponível
+            # Contar comentários usando o sistema global
             try:
-                Comment = apps.get_model('articles', 'Comment')
-                # Tenta pelo campo 'user', se não existir tenta 'author'
-                if hasattr(Comment, 'user'):
-                    stats['total_comments'] = Comment.objects.filter(user=user).count()
-                elif hasattr(Comment, 'author'):
-                    stats['total_comments'] = Comment.objects.filter(author=user).count()
+                Comment = apps.get_model('comments', 'Comment')
+                stats['total_comments'] = Comment.objects.filter(
+                    author=user,
+                    status='approved'
+                ).count()
             except (LookupError, AttributeError):
                 pass
             
@@ -196,4 +195,4 @@ class ProfileService(IProfileService):
         :param user: Usuário
         :return: True se removido com sucesso
         """
-        return self.remove_avatar(user) 
+        return self.remove_avatar(user)

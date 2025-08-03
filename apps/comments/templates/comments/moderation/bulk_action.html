@@ -1,0 +1,548 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Ações em Massa - {{ block.super }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/comments.css' %}">
+<link rel="stylesheet" href="{% static 'css/moderation.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid my-4">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3">
+            <div class="card shadow-sm">
+                <div class="card-header bg-warning text-dark">
+                    <h6 class="mb-0">
+                        <i class="fas fa-tasks me-2"></i>
+                        Ações em Massa
+                    </h6>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="{% url 'comments:moderation_queue' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-arrow-left me-2"></i>
+                        Voltar à Fila
+                    </a>
+                    <a href="{% url 'comments:moderation_stats' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-chart-bar me-2"></i>
+                        Estatísticas
+                    </a>
+                    <a href="{% url 'comments:moderation_history' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-history me-2"></i>
+                        Histórico
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Quick Stats -->
+            <div class="card shadow-sm mt-3">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Estatísticas Rápidas
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-12 mb-2">
+                            <h5 class="text-primary mb-0">{{ selected_count }}</h5>
+                            <small class="text-muted">Selecionados</small>
+                        </div>
+                        <div class="col-6">
+                            <h6 class="text-warning mb-0">{{ pending_count }}</h6>
+                            <small class="text-muted">Pendentes</small>
+                        </div>
+                        <div class="col-6">
+                            <h6 class="text-danger mb-0">{{ flagged_count }}</h6>
+                            <small class="text-muted">Sinalizados</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-md-9">
+            <!-- Action Selection -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-cogs me-2"></i>
+                        Selecionar Ação
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form id="bulkActionForm" method="post">
+                        {% csrf_token %}
+                        
+                        <!-- Hidden field for selected comment IDs -->
+                        <input type="hidden" name="comment_ids" value="{{ comment_ids }}">
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="action" class="form-label">Ação:</label>
+                                    <select class="form-select" id="action" name="action" required>
+                                        <option value="">Selecione uma ação...</option>
+                                        <option value="approve">Aprovar Comentários</option>
+                                        <option value="reject">Rejeitar Comentários</option>
+                                        <option value="spam">Marcar como Spam</option>
+                                        <option value="delete">Excluir Comentários</option>
+                                        <option value="flag">Sinalizar Comentários</option>
+                                        <option value="unflag">Remover Sinalização</option>
+                                        <option value="change_status">Alterar Status</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3" id="statusField" style="display: none;">
+                                    <label for="new_status" class="form-label">Novo Status:</label>
+                                    <select class="form-select" id="new_status" name="new_status">
+                                        <option value="pending">Pendente</option>
+                                        <option value="approved">Aprovado</option>
+                                        <option value="rejected">Rejeitado</option>
+                                        <option value="spam">Spam</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="reason" class="form-label">Motivo (opcional):</label>
+                            <textarea class="form-control" id="reason" name="reason" rows="3" placeholder="Descreva o motivo desta ação em massa..."></textarea>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="send_notification" name="send_notification" checked>
+                                <label class="form-check-label" for="send_notification">
+                                    Enviar notificação aos usuários afetados
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-play me-1"></i>
+                                Executar Ação
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="previewAction()">
+                                <i class="fas fa-eye me-1"></i>
+                                Visualizar
+                            </button>
+                            <a href="{% url 'comments:moderation_queue' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-1"></i>
+                                Cancelar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Selected Comments Preview -->
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-list me-2"></i>
+                            Comentários Selecionados ({{ comments.count }})
+                        </h5>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-sm btn-outline-primary" onclick="selectAll()">
+                                <i class="fas fa-check-square me-1"></i>
+                                Selecionar Todos
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="deselectAll()">
+                                <i class="fas fa-square me-1"></i>
+                                Desmarcar Todos
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if comments %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th width="40">
+                                            <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll()">
+                                        </th>
+                                        <th>Comentário</th>
+                                        <th>Usuário</th>
+                                        <th>Status</th>
+                                        <th>Data</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for comment in comments %}
+                                        <tr>
+                                            <td>
+                                                <input type="checkbox" class="comment-checkbox" value="{{ comment.id }}" checked>
+                                            </td>
+                                            <td>
+                                                <div class="d-flex align-items-start">
+                                                    <div class="flex-grow-1">
+                                                        <p class="mb-1">{{ comment.content|truncatechars:100 }}</p>
+                                                        {% if comment.content_object %}
+                                                            <small class="text-muted">
+                                                                Em: <a href="{{ comment.content_object.get_absolute_url }}" class="text-decoration-none">
+                                                                    {{ comment.content_object.title|default:comment.content_object|truncatechars:50 }}
+                                                                </a>
+                                                            </small>
+                                                        {% endif %}
+                                                    </div>
+                                                    {% if comment.is_flagged %}
+                                                        <span class="badge bg-danger ms-2">Sinalizado</span>
+                                                    {% endif %}
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    {% if comment.user.avatar %}
+                                                        <img src="{{ comment.user.avatar.url }}" alt="{{ comment.user.get_full_name }}" class="rounded-circle me-2" width="32" height="32">
+                                                    {% else %}
+                                                        <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
+                                                            <i class="fas fa-user text-white small"></i>
+                                                        </div>
+                                                    {% endif %}
+                                                    <div>
+                                                        <div class="fw-bold">{{ comment.user.get_full_name|default:comment.user.username }}</div>
+                                                        <small class="text-muted">@{{ comment.user.username }}</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                {% if comment.status == 'approved' %}
+                                                    <span class="badge bg-success">Aprovado</span>
+                                                {% elif comment.status == 'pending' %}
+                                                    <span class="badge bg-warning">Pendente</span>
+                                                {% elif comment.status == 'rejected' %}
+                                                    <span class="badge bg-danger">Rejeitado</span>
+                                                {% elif comment.status == 'spam' %}
+                                                    <span class="badge bg-dark">Spam</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <div class="small">
+                                                    <div>{{ comment.created_at|date:"d/m/Y" }}</div>
+                                                    <div class="text-muted">{{ comment.created_at|time:"H:i" }}</div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm">
+                                                    <a href="{% url 'comments:moderation_detail' comment.id %}" class="btn btn-outline-primary" title="Ver Detalhes">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    <button class="btn btn-outline-danger" onclick="removeFromSelection({{ comment.id }})" title="Remover da Seleção">
+                                                        <i class="fas fa-times"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Pagination -->
+                        {% if is_paginated %}
+                            <nav aria-label="Navegação de comentários">
+                                <ul class="pagination justify-content-center">
+                                    {% if page_obj.has_previous %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page=1&{{ request.GET.urlencode }}">&laquo; Primeira</a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}&{{ request.GET.urlencode }}">Anterior</a>
+                                        </li>
+                                    {% endif %}
+                                    
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+                                    </li>
+                                    
+                                    {% if page_obj.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.next_page_number }}&{{ request.GET.urlencode }}">Próxima</a>
+                                        </li>
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}&{{ request.GET.urlencode }}">Última &raquo;</a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-comments fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">Nenhum comentário selecionado</h5>
+                            <p class="text-muted">Selecione comentários na fila de moderação para executar ações em massa.</p>
+                            <a href="{% url 'comments:moderation_queue' %}" class="btn btn-primary">
+                                <i class="fas fa-arrow-left me-1"></i>
+                                Voltar à Fila
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Confirmation Modal -->
+<div class="modal fade" id="confirmationModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle me-2 text-warning"></i>
+                    Confirmar Ação em Massa
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <strong>Atenção!</strong> Esta ação afetará <span id="affectedCount"></span> comentário(s) e não pode ser desfeita.
+                </div>
+                <p>Você está prestes a executar a seguinte ação:</p>
+                <div class="bg-light p-3 rounded">
+                    <strong>Ação:</strong> <span id="actionDescription"></span><br>
+                    <strong>Comentários afetados:</strong> <span id="commentCount"></span><br>
+                    <span id="reasonDisplay" style="display: none;">
+                        <strong>Motivo:</strong> <span id="reasonText"></span>
+                    </span>
+                </div>
+                <p class="mt-3">Tem certeza de que deseja continuar?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="confirmAction">
+                    <i class="fas fa-check me-1"></i>
+                    Confirmar Ação
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Preview Modal -->
+<div class="modal fade" id="previewModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-eye me-2"></i>
+                    Visualizar Ação
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="previewContent">
+                    <!-- Preview content will be loaded here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                <button type="button" class="btn btn-primary" onclick="executeFromPreview()">
+                    <i class="fas fa-play me-1"></i>
+                    Executar Ação
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Show/hide status field based on action selection
+document.getElementById('action').addEventListener('change', function() {
+    const statusField = document.getElementById('statusField');
+    if (this.value === 'change_status') {
+        statusField.style.display = 'block';
+    } else {
+        statusField.style.display = 'none';
+    }
+});
+
+// Form submission with confirmation
+document.getElementById('bulkActionForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    showConfirmationModal();
+});
+
+// Show confirmation modal
+function showConfirmationModal() {
+    const action = document.getElementById('action').value;
+    const reason = document.getElementById('reason').value;
+    const selectedComments = document.querySelectorAll('.comment-checkbox:checked');
+    
+    if (!action) {
+        alert('Por favor, selecione uma ação.');
+        return;
+    }
+    
+    if (selectedComments.length === 0) {
+        alert('Por favor, selecione pelo menos um comentário.');
+        return;
+    }
+    
+    // Update modal content
+    document.getElementById('affectedCount').textContent = selectedComments.length;
+    document.getElementById('commentCount').textContent = selectedComments.length;
+    document.getElementById('actionDescription').textContent = getActionDescription(action);
+    
+    if (reason) {
+        document.getElementById('reasonDisplay').style.display = 'block';
+        document.getElementById('reasonText').textContent = reason;
+    } else {
+        document.getElementById('reasonDisplay').style.display = 'none';
+    }
+    
+    const modal = new bootstrap.Modal(document.getElementById('confirmationModal'));
+    modal.show();
+}
+
+// Get action description
+function getActionDescription(action) {
+    const descriptions = {
+        'approve': 'Aprovar comentários',
+        'reject': 'Rejeitar comentários',
+        'spam': 'Marcar como spam',
+        'delete': 'Excluir comentários',
+        'flag': 'Sinalizar comentários',
+        'unflag': 'Remover sinalização',
+        'change_status': 'Alterar status'
+    };
+    return descriptions[action] || action;
+}
+
+// Confirm action execution
+document.getElementById('confirmAction').addEventListener('click', function() {
+    // Update comment IDs with currently selected
+    updateSelectedCommentIds();
+    
+    // Submit the form
+    document.getElementById('bulkActionForm').submit();
+});
+
+// Update selected comment IDs
+function updateSelectedCommentIds() {
+    const selectedComments = document.querySelectorAll('.comment-checkbox:checked');
+    const commentIds = Array.from(selectedComments).map(cb => cb.value);
+    document.querySelector('input[name="comment_ids"]').value = commentIds.join(',');
+}
+
+// Select/deselect functions
+function selectAll() {
+    document.querySelectorAll('.comment-checkbox').forEach(cb => cb.checked = true);
+    document.getElementById('selectAllCheckbox').checked = true;
+}
+
+function deselectAll() {
+    document.querySelectorAll('.comment-checkbox').forEach(cb => cb.checked = false);
+    document.getElementById('selectAllCheckbox').checked = false;
+}
+
+function toggleSelectAll() {
+    const selectAll = document.getElementById('selectAllCheckbox').checked;
+    document.querySelectorAll('.comment-checkbox').forEach(cb => cb.checked = selectAll);
+}
+
+// Remove from selection
+function removeFromSelection(commentId) {
+    const checkbox = document.querySelector(`.comment-checkbox[value="${commentId}"]`);
+    if (checkbox) {
+        checkbox.closest('tr').remove();
+    }
+}
+
+// Preview action
+function previewAction() {
+    const action = document.getElementById('action').value;
+    const selectedComments = document.querySelectorAll('.comment-checkbox:checked');
+    
+    if (!action) {
+        alert('Por favor, selecione uma ação.');
+        return;
+    }
+    
+    if (selectedComments.length === 0) {
+        alert('Por favor, selecione pelo menos um comentário.');
+        return;
+    }
+    
+    // Generate preview content
+    const previewContent = generatePreviewContent(action, selectedComments);
+    document.getElementById('previewContent').innerHTML = previewContent;
+    
+    const modal = new bootstrap.Modal(document.getElementById('previewModal'));
+    modal.show();
+}
+
+// Generate preview content
+function generatePreviewContent(action, selectedComments) {
+    const actionDescription = getActionDescription(action);
+    const count = selectedComments.length;
+    
+    let content = `
+        <div class="alert alert-info">
+            <h6><i class="fas fa-info-circle me-2"></i>Resumo da Ação</h6>
+            <p><strong>Ação:</strong> ${actionDescription}</p>
+            <p><strong>Comentários afetados:</strong> ${count}</p>
+        </div>
+        <h6>Comentários que serão afetados:</h6>
+        <div class="list-group">
+    `;
+    
+    selectedComments.forEach(cb => {
+        const row = cb.closest('tr');
+        const commentText = row.querySelector('td:nth-child(2) p').textContent;
+        const userName = row.querySelector('td:nth-child(3) .fw-bold').textContent;
+        const status = row.querySelector('td:nth-child(4) .badge').textContent;
+        
+        content += `
+            <div class="list-group-item">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div class="flex-grow-1">
+                        <p class="mb-1">${commentText}</p>
+                        <small class="text-muted">Por: ${userName} • Status atual: ${status}</small>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    content += '</div>';
+    
+    return content;
+}
+
+// Execute from preview
+function executeFromPreview() {
+    bootstrap.Modal.getInstance(document.getElementById('previewModal')).hide();
+    showConfirmationModal();
+}
+
+// Update comment count when checkboxes change
+document.addEventListener('change', function(e) {
+    if (e.target.classList.contains('comment-checkbox')) {
+        updateCommentCount();
+    }
+});
+
+function updateCommentCount() {
+    const selectedCount = document.querySelectorAll('.comment-checkbox:checked').length;
+    // Update any count displays if needed
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+    updateCommentCount();
+});
+</script>
+{% endblock %}

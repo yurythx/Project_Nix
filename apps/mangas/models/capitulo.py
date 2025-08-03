@@ -58,11 +58,26 @@ class Capitulo(SlugMixin, TimestampMixin, models.Model):
         """
         Sobrescreve o método save para gerar o slug automaticamente.
         """
-        if not self.slug:
+        # Verifica se é uma nova instância ou se houve mudanças relevantes
+        is_new = self._state.adding
+        
+        # Para instâncias existentes, verifica se houve mudanças no número ou no volume
+        needs_new_slug = False
+        if not is_new and hasattr(self, 'pk') and self.pk:
+            try:
+                old_instance = self.__class__.objects.get(pk=self.pk)
+                if old_instance.number != self.number or old_instance.volume_id != self.volume_id:
+                    needs_new_slug = True
+            except self.__class__.DoesNotExist:
+                pass
+        
+        # Gera um novo slug se necessário
+        if not self.slug or is_new or needs_new_slug:
             base_slug = f"{self.volume.manga.slug}-{self.volume.number}-{self.number}"
             if self.title:
                 base_slug += f"-{slugify(self.title)}"
-            self.slug = self.generate_unique_slug(base_slug)
+            self.slug = self.generate_unique_slug(base_slug, max_length=255)
+        
         super().save(*args, **kwargs)
 
     def get_absolute_url(self):
