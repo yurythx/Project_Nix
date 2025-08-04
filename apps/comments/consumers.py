@@ -46,17 +46,19 @@ class CommentConsumer(AsyncWebsocketConsumer):
     
     async def disconnect(self, close_code):
         """Desconecta usuário do WebSocket"""
-        # Remove de todos os grupos
-        await self.channel_layer.group_discard(
-            self.user_group,
-            self.channel_name
-        )
-        
-        for group_name in self.comment_groups:
+        # Remove de todos os grupos apenas se foram definidos
+        if hasattr(self, 'user_group'):
             await self.channel_layer.group_discard(
-                group_name,
+                self.user_group,
                 self.channel_name
             )
+        
+        if hasattr(self, 'comment_groups'):
+            for group_name in self.comment_groups:
+                await self.channel_layer.group_discard(
+                    group_name,
+                    self.channel_name
+                )
         
         logger.info(f'Usuário {self.user.username} desconectado do WebSocket')
     

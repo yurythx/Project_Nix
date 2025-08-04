@@ -8,6 +8,7 @@ from .email_config_service import DynamicEmailConfigService
 from .database_service import DatabaseService
 from .user_service import UserService
 from .group_service import GroupService
+from .backup_service import BackupService
 
 __all__ = [
     'ModuleService',
@@ -18,4 +19,5 @@ __all__ = [
     'DatabaseService',
     'UserService',
     'GroupService',
+    'BackupService',
 ]

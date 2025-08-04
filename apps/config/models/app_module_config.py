@@ -255,10 +255,10 @@ class AppModuleConfiguration(models.Model):
     
     def get_dependent_modules(self):
         """Retorna módulos que dependem deste"""
-        # Busca todos os módulos habilitados e filtra manualmente
+        # Busca TODOS os módulos (não apenas habilitados) e filtra manualmente
         # para compatibilidade com SQLite
         dependent_modules = []
-        for module in AppModuleConfiguration.objects.filter(is_enabled=True):
+        for module in AppModuleConfiguration.objects.all():
             if module.dependencies and self.app_name in module.dependencies:
                 dependent_modules.append(module)
 

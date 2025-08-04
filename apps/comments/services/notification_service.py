@@ -92,6 +92,26 @@ class NotificationService(INotificationService):
         return notification
     
     @transaction.atomic
+    def create_mention_notifications(self, comment: Comment) -> List[CommentNotification]:
+        """Cria notificações para menções"""
+        import re
+        
+        # Extrai menções do conteúdo (@username)
+        mentions = re.findall(r'@(\w+)', comment.content)
+        notifications = []
+        
+        for username in set(mentions):  # Remove duplicatas
+            try:
+                mentioned_user = User.objects.get(username=username)
+                notification = self.create_mention_notification(comment, mentioned_user)
+                if notification:
+                    notifications.append(notification)
+            except User.DoesNotExist:
+                continue
+        
+        return notifications
+    
+    @transaction.atomic
     def create_like_notification(self, comment: Comment, liker: User) -> Optional[CommentNotification]:
         """Cria notificação de curtida"""
         # Não notifica se curtiu próprio comentário
@@ -273,6 +293,10 @@ class NotificationService(INotificationService):
         )
         return preferences
     
+    def get_user_preferences(self, user: User) -> NotificationPreference:
+        """Busca preferências do usuário (alias para get_notification_preferences)"""
+        return self.get_notification_preferences(user)
+    
     @transaction.atomic
     def update_notification_preferences(self, user: User, **preferences) -> NotificationPreference:
         """Atualiza preferências de notificação"""
@@ -284,6 +308,10 @@ class NotificationService(INotificationService):
         
         user_preferences.save()
         return user_preferences
+    
+    def update_user_preferences(self, user: User, **kwargs) -> NotificationPreference:
+        """Atualiza preferências do usuário (alias para update_notification_preferences)"""
+        return self.update_notification_preferences(user, **kwargs)
     
     def send_digest_email(self, user: User, notifications: List[CommentNotification]) -> bool:
         """Envia email de resumo"""
@@ -408,6 +436,15 @@ class NotificationService(INotificationService):
         except Exception as e:
             print(f'Erro ao enviar notificação em tempo real: {e}')
     
+    def send_realtime_notification(self, notification: CommentNotification) -> bool:
+        """Envia notificação em tempo real (método público)"""
+        try:
+            self._send_realtime_notification(notification)
+            return True
+        except Exception as e:
+            print(f'Erro ao enviar notificação em tempo real: {e}')
+            return False
+    
     def _schedule_email_notification(self, notification: CommentNotification) -> None:
         """Agenda envio de email (implementação básica)"""
         # Em produção, usaria Celery ou similar
@@ -481,3 +518,31 @@ class NotificationService(INotificationService):
                 sent_count += 1
         
         return sent_count
+    
+    def send_digest_notifications(self, frequency: str) -> int:
+        """Envia resumo de notificações"""
+        if frequency == 'daily':
+            return self.send_daily_digests()
+        elif frequency == 'weekly':
+            return self.send_weekly_digests()
+        else:
+            return 0
+    
+    def process_notification_queue(self) -> int:
+        """Processa fila de notificações"""
+        # Processa emails pendentes
+        email_count = self.process_pending_emails()
+        
+        # Processa resumos diários se for o horário apropriado
+        digest_count = 0
+        current_hour = timezone.now().hour
+        
+        # Envia resumos diários às 8h
+        if current_hour == 8:
+            digest_count += self.send_daily_digests()
+        
+        # Envia resumos semanais às segundas-feiras às 8h
+        if timezone.now().weekday() == 0 and current_hour == 8:
+            digest_count += self.send_weekly_digests()
+        
+        return email_count + digest_count

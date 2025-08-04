@@ -88,7 +88,9 @@
     <section class="comments-section">
         <h2>💬 Sistema de Comentários</h2>
         
-        {% if article.allow_comments %}
+        {% load comments_tags %}
+        {% is_comments_enabled_for_app 'articles' as comments_enabled %}
+        {% if article.allow_comments and comments_enabled %}
             <div class="comment-form">
                 <h3>Deixe seu comentário</h3>
                 <form method="post" action="{% url 'comments:comment_create' %}">
@@ -122,8 +124,11 @@
             <!-- Lista de comentários -->
             <div class="comments-list">
                 <h3>Comentários</h3>
-                {% load comments_tags %}
                 {% render_comments_for_object article %}
+            </div>
+        {% elif article.allow_comments and not comments_enabled %}
+            <div style="background: #e7f3ff; padding: 15px; border-radius: 5px; border-left: 4px solid #007cba;">
+                <p style="margin: 0; color: #333;">ℹ️ O sistema de comentários está temporariamente desabilitado.</p>
             </div>
         {% else %}
             <p style="color: #666;">Comentários estão desabilitados para este artigo.</p>

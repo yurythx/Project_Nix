@@ -330,39 +330,39 @@
                         <h2 class="mb-4">Bem-vindo ao FireFlies!</h2>
                         <p class="lead">Este assistente irá ajudá-lo a configurar seu sistema em poucos passos simples.</p>
                         
-                        <div class="alert alert-info">
-                            <i class="fas fa-info-circle me-2"></i>
+                        <div class="config-alert config-alert-info">
+                            <i class="fas fa-info-circle config-icon"></i>
                             <strong>Dica:</strong> O wizard detectará automaticamente bancos de dados existentes e fará recomendações inteligentes.
                         </div>
 
-                        <div class="row mt-4">
-                            <div class="col-md-4">
-                                <div class="text-center">
-                                    <i class="fas fa-database fa-3x text-primary mb-3"></i>
+                        <div class="config-form-grid">
+                            <div class="config-form-column">
+                                <div class="config-text-center">
+                                    <i class="fas fa-database config-icon-large config-text-primary"></i>
                                     <h5>Banco de Dados</h5>
-                                    <p class="text-muted">Configure a conexão com seu banco de dados</p>
+                                    <p class="config-text-muted">Configure a conexão com seu banco de dados</p>
                                 </div>
                             </div>
-                            <div class="col-md-4">
-                                <div class="text-center">
-                                    <i class="fas fa-user-shield fa-3x text-success mb-3"></i>
+                            <div class="config-form-column">
+                                <div class="config-text-center">
+                                    <i class="fas fa-user-shield config-icon-large config-text-success"></i>
                                     <h5>Administrador</h5>
-                                    <p class="text-muted">Crie o usuário administrador do sistema</p>
+                                    <p class="config-text-muted">Crie o usuário administrador do sistema</p>
                                 </div>
                             </div>
-                            <div class="col-md-4">
-                                <div class="text-center">
-                                    <i class="fas fa-envelope fa-3x text-warning mb-3"></i>
+                            <div class="config-form-column">
+                                <div class="config-text-center">
+                                    <i class="fas fa-envelope config-icon-large config-text-warning"></i>
                                     <h5>Email</h5>
-                                    <p class="text-muted">Configure o sistema de email</p>
+                                    <p class="config-text-muted">Configure o sistema de email</p>
                                 </div>
                             </div>
                         </div>
 
                         <div class="wizard-actions">
                             <div></div>
-                            <button class="btn btn-primary" onclick="nextStep()">
-                                Começar <i class="fas fa-arrow-right ms-1"></i>
+                            <button class="config-btn config-btn-primary" onclick="nextStep()">
+                                Começar <i class="fas fa-arrow-right config-icon"></i>
                             </button>
                         </div>
                     </div>
@@ -371,52 +371,52 @@
                     <div class="step-content" id="step-2">
                         <h2 class="mb-4">Configuração do Banco de Dados</h2>
                         
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label class="form-label">Tipo de Banco</label>
-                                    <select class="form-control" id="database-type">
+                        <div class="config-form-grid">
+                            <div class="config-form-column">
+                                <div class="config-form-group">
+                                    <label class="config-form-label">Tipo de Banco</label>
+                                    <select class="config-form-control" id="database-type">
                                         <option value="sqlite">SQLite (Recomendado para desenvolvimento)</option>
                                         <option value="postgresql">PostgreSQL (Recomendado para produção)</option>
                                         <option value="mysql">MySQL</option>
                                     </select>
                                 </div>
                             </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label class="form-label">Nome do Banco</label>
-                                    <input type="text" class="form-control" id="database-name" placeholder="fireflies">
+                            <div class="config-form-column">
+                                <div class="config-form-group">
+                                    <label class="config-form-label">Nome do Banco</label>
+                                    <input type="text" class="config-form-control" id="database-name" placeholder="fireflies">
                                 </div>
                             </div>
                         </div>
                         
                         <!-- PostgreSQL/MySQL specific fields -->
                         <div id="network-fields" style="display: none;">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label class="form-label">Host</label>
-                                        <input type="text" class="form-control" id="database-host" placeholder="localhost">
+                            <div class="config-form-grid">
+                                <div class="config-form-column">
+                                    <div class="config-form-group">
+                                        <label class="config-form-label">Host</label>
+                                        <input type="text" class="config-form-control" id="database-host" placeholder="localhost">
                                     </div>
                                 </div>
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label class="form-label">Porta</label>
-                                        <input type="text" class="form-control" id="database-port" placeholder="5432">
+                                <div class="config-form-column">
+                                    <div class="config-form-group">
+                                        <label class="config-form-label">Porta</label>
+                                        <input type="text" class="config-form-control" id="database-port" placeholder="5432">
                                     </div>
                                 </div>
                             </div>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label class="form-label">Usuário</label>
-                                        <input type="text" class="form-control" id="database-user" placeholder="postgres">
+                            <div class="config-form-grid">
+                                <div class="config-form-column">
+                                    <div class="config-form-group">
+                                        <label class="config-form-label">Usuário</label>
+                                        <input type="text" class="config-form-control" id="database-user" placeholder="postgres">
                                     </div>
                                 </div>
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label class="form-label">Senha</label>
-                                        <input type="password" class="form-control" id="database-password">
+                                <div class="config-form-column">
+                                    <div class="config-form-group">
+                                        <label class="config-form-label">Senha</label>
+                                        <input type="password" class="config-form-control" id="database-password">
                                     </div>
                                 </div>
                             </div>
@@ -425,14 +425,14 @@
                         <div id="db-test-feedback" class="mt-2"></div>
 
                         <div class="wizard-actions">
-                            <button class="btn btn-secondary" onclick="prevStep()">
-                                <i class="fas fa-arrow-left me-1"></i>Anterior
+                            <button class="config-btn config-btn-secondary" onclick="prevStep()">
+                                <i class="fas fa-arrow-left config-icon"></i>Anterior
                             </button>
-                            <button class="btn btn-info" type="button" onclick="testDatabaseConnection()">
-                                <i class="fas fa-vial me-1"></i>Testar conexão
+                            <button class="config-btn config-btn-info" type="button" onclick="testDatabaseConnection()">
+                                <i class="fas fa-vial config-icon"></i>Testar conexão
                             </button>
-                            <button class="btn btn-primary" onclick="nextStep()">
-                                Próximo <i class="fas fa-arrow-right ms-1"></i>
+                            <button class="config-btn config-btn-primary" onclick="nextStep()">
+                                Próximo <i class="fas fa-arrow-right config-icon"></i>
                             </button>
                         </div>
                     </div>
@@ -442,42 +442,42 @@
                         <h2 class="mb-4">Usuário Administrador</h2>
                         <p class="lead">Crie o usuário administrador do sistema.</p>
                         
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label class="form-label">Nome de Usuário</label>
-                                    <input type="text" class="form-control" id="admin-username" placeholder="admin">
+                        <div class="config-form-grid">
+                            <div class="config-form-column">
+                                <div class="config-form-group">
+                                    <label class="config-form-label">Nome de Usuário</label>
+                                    <input type="text" class="config-form-control" id="admin-username" placeholder="admin">
                                 </div>
                             </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label class="form-label">Email</label>
-                                    <input type="email" class="form-control" id="admin-email" placeholder="admin@exemplo.com">
+                            <div class="config-form-column">
+                                <div class="config-form-group">
+                                    <label class="config-form-label">Email</label>
+                                    <input type="email" class="config-form-control" id="admin-email" placeholder="admin@exemplo.com">
                                 </div>
                             </div>
                         </div>
                         
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label class="form-label">Senha</label>
-                                    <input type="password" class="form-control" id="admin-password" placeholder="Senha forte">
+                        <div class="config-form-grid">
+                            <div class="config-form-column">
+                                <div class="config-form-group">
+                                    <label class="config-form-label">Senha</label>
+                                    <input type="password" class="config-form-control" id="admin-password" placeholder="Senha forte">
                                 </div>
                             </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label class="form-label">Confirmar Senha</label>
-                                    <input type="password" class="form-control" id="admin-password-confirm" placeholder="Confirme a senha">
+                            <div class="config-form-column">
+                                <div class="config-form-group">
+                                    <label class="config-form-label">Confirmar Senha</label>
+                                    <input type="password" class="config-form-control" id="admin-password-confirm" placeholder="Confirme a senha">
                                 </div>
                             </div>
                         </div>
 
                         <div class="wizard-actions">
-                            <button class="btn btn-secondary" onclick="prevStep()">
-                                <i class="fas fa-arrow-left me-1"></i>Anterior
+                            <button class="config-btn config-btn-secondary" onclick="prevStep()">
+                                <i class="fas fa-arrow-left config-icon"></i>Anterior
                             </button>
-                            <button class="btn btn-primary" onclick="nextStep()">
-                                Próximo <i class="fas fa-arrow-right ms-1"></i>
+                            <button class="config-btn config-btn-primary" onclick="nextStep()">
+                                Próximo <i class="fas fa-arrow-right config-icon"></i>
                             </button>
                         </div>
                     </div>
@@ -487,42 +487,42 @@
                         <h2 class="mb-4">Configuração de Email</h2>
                         <p class="lead">Configure o sistema de email para notificações.</p>
                         
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label class="form-label">Servidor SMTP</label>
-                                    <input type="text" class="form-control" id="email-host" placeholder="smtp.gmail.com">
+                        <div class="config-form-grid">
+                            <div class="config-form-column">
+                                <div class="config-form-group">
+                                    <label class="config-form-label">Servidor SMTP</label>
+                                    <input type="text" class="config-form-control" id="email-host" placeholder="smtp.gmail.com">
                                 </div>
                             </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label class="form-label">Porta</label>
-                                    <input type="text" class="form-control" id="email-port" placeholder="587">
+                            <div class="config-form-column">
+                                <div class="config-form-group">
+                                    <label class="config-form-label">Porta</label>
+                                    <input type="text" class="config-form-control" id="email-port" placeholder="587">
                                 </div>
                             </div>
                         </div>
                         
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label class="form-label">Email</label>
-                                    <input type="email" class="form-control" id="email-address" placeholder="seu@email.com">
+                        <div class="config-form-grid">
+                            <div class="config-form-column">
+                                <div class="config-form-group">
+                                    <label class="config-form-label">Email</label>
+                                    <input type="email" class="config-form-control" id="email-address" placeholder="seu@email.com">
                                 </div>
                             </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label class="form-label">Senha</label>
-                                    <input type="password" class="form-control" id="email-password" placeholder="Senha do email">
+                            <div class="config-form-column">
+                                <div class="config-form-group">
+                                    <label class="config-form-label">Senha</label>
+                                    <input type="password" class="config-form-control" id="email-password" placeholder="Senha do email">
                                 </div>
                             </div>
                         </div>
 
                         <div class="wizard-actions">
-                            <button class="btn btn-secondary" onclick="prevStep()">
-                                <i class="fas fa-arrow-left me-1"></i>Anterior
+                            <button class="config-btn config-btn-secondary" onclick="prevStep()">
+                                <i class="fas fa-arrow-left config-icon"></i>Anterior
                             </button>
-                            <button class="btn btn-primary" onclick="nextStep()">
-                                Próximo <i class="fas fa-arrow-right ms-1"></i>
+                            <button class="config-btn config-btn-primary" onclick="nextStep()">
+                                Próximo <i class="fas fa-arrow-right config-icon"></i>
                             </button>
                         </div>
                     </div>
@@ -532,18 +532,18 @@
                         <h2 class="mb-4">Configurações de Segurança</h2>
                         <p class="lead">Configure as opções de segurança do sistema.</p>
                         
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label class="form-label">Chave Secreta</label>
-                                    <input type="text" class="form-control" id="secret-key" placeholder="Chave secreta do Django">
-                                    <small class="form-text text-muted">Deixe em branco para gerar automaticamente</small>
+                        <div class="config-form-grid">
+                            <div class="config-form-column">
+                                <div class="config-form-group">
+                                    <label class="config-form-label">Chave Secreta</label>
+                                    <input type="text" class="config-form-control" id="secret-key" placeholder="Chave secreta do Django">
+                                    <small class="config-form-text config-text-muted">Deixe em branco para gerar automaticamente</small>
                                 </div>
                             </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label class="form-label">Debug Mode</label>
-                                    <select class="form-control" id="debug-mode">
+                            <div class="config-form-column">
+                                <div class="config-form-group">
+                                    <label class="config-form-label">Debug Mode</label>
+                                    <select class="config-form-control" id="debug-mode">
                                         <option value="True">Ativado (Desenvolvimento)</option>
                                         <option value="False">Desativado (Produção)</option>
                                     </select>
@@ -552,11 +552,11 @@
                         </div>
 
                         <div class="wizard-actions">
-                            <button class="btn btn-secondary" onclick="prevStep()">
-                                <i class="fas fa-arrow-left me-1"></i>Anterior
+                            <button class="config-btn config-btn-secondary" onclick="prevStep()">
+                                <i class="fas fa-arrow-left config-icon"></i>Anterior
                             </button>
-                            <button class="btn btn-primary" onclick="nextStep()">
-                                Próximo <i class="fas fa-arrow-right ms-1"></i>
+                            <button class="config-btn config-btn-primary" onclick="nextStep()">
+                                Próximo <i class="fas fa-arrow-right config-icon"></i>
                             </button>
                         </div>
                     </div>
@@ -571,11 +571,11 @@
                         </div>
 
                         <div class="wizard-actions">
-                            <button class="btn btn-secondary" onclick="prevStep()">
-                                <i class="fas fa-arrow-left me-1"></i>Anterior
+                            <button class="config-btn config-btn-secondary" onclick="prevStep()">
+                                <i class="fas fa-arrow-left config-icon"></i>Anterior
                             </button>
-                            <button class="btn btn-success" onclick="finalizeSetup()" id="finalize-btn">
-                                <i class="fas fa-check me-1"></i>Finalizar Configuração
+                            <button class="config-btn config-btn-success" onclick="finalizeSetup()" id="finalize-btn">
+                                <i class="fas fa-check config-icon"></i>Finalizar Configuração
                             </button>
                         </div>
                     </div>
@@ -725,16 +725,16 @@
             const summaryContainer = document.getElementById('finalize-summary');
             if (summaryContainer) {
                 summaryContainer.innerHTML = `
-                    <div class="alert alert-info">
-                        <h5><i class="fas fa-info-circle me-2"></i>Resumo da Configuração</h5>
-                        <div class="row">
-                            <div class="col-md-6">
+                    <div class="config-alert config-alert-info">
+                        <h5><i class="fas fa-info-circle config-icon"></i>Resumo da Configuração</h5>
+                        <div class="config-form-grid">
+                            <div class="config-form-column">
                                 <strong>Banco de Dados:</strong> ${setupData.database.type.toUpperCase()}<br>
                                 <strong>Nome:</strong> ${setupData.database.name}<br>
                                 ${setupData.database.host ? `<strong>Host:</strong> ${setupData.database.host}<br>` : ''}
                                 ${setupData.database.port ? `<strong>Porta:</strong> ${setupData.database.port}<br>` : ''}
                             </div>
-                            <div class="col-md-6">
+                            <div class="config-form-column">
                                 <strong>Admin:</strong> ${setupData.admin.username}<br>
                                 <strong>Email:</strong> ${setupData.admin.email}<br>
                                 <strong>Debug:</strong> ${setupData.security.debug_mode}<br>
@@ -749,7 +749,7 @@
             const finalizeBtn = document.getElementById('finalize-btn');
             if (finalizeBtn) {
                 finalizeBtn.disabled = true;
-                finalizeBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Finalizando...';
+                finalizeBtn.innerHTML = '<i class="fas fa-spinner fa-spin config-icon"></i>Finalizando...';
             }
             
             // Get CSRF token
@@ -788,7 +788,7 @@
                     alert('Erro ao finalizar configuração: ' + (data.error || 'Erro desconhecido'));
                     if (finalizeBtn) {
                         finalizeBtn.disabled = false;
-                        finalizeBtn.innerHTML = '<i class="fas fa-check me-1"></i>Finalizar Configuração';
+                        finalizeBtn.innerHTML = '<i class="fas fa-check config-icon"></i>Finalizar Configuração';
                     }
                 }
             })
@@ -797,7 +797,7 @@
                 alert('Erro ao finalizar configuração. Tente novamente.');
                 if (finalizeBtn) {
                     finalizeBtn.disabled = false;
-                    finalizeBtn.innerHTML = '<i class="fas fa-check me-1"></i>Finalizar Configuração';
+                    finalizeBtn.innerHTML = '<i class="fas fa-check config-icon"></i>Finalizar Configuração';
                 }
             });
         }
@@ -829,8 +829,8 @@
             const btn = event.target;
             const feedback = document.getElementById('db-test-feedback');
             btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Testando...';
-            feedback.innerHTML = '<span class="text-info"><i class="fas fa-spinner fa-spin me-1"></i>Testando conexão...</span>';
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin config-icon"></i>Testando...';
+            feedback.innerHTML = '<span class="config-text-info"><i class="fas fa-spinner fa-spin config-icon"></i>Testando conexão...</span>';
 
             fetch('/config/setup-wizard/api/test-db/', {
                 method: 'POST',
@@ -843,15 +843,15 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    feedback.innerHTML = '<span class="text-success"><i class="fas fa-check-circle me-1"></i>Conexão bem-sucedida!</span>';
+                    feedback.innerHTML = '<span class="config-text-success"><i class="fas fa-check-circle config-icon"></i>Conexão bem-sucedida!</span>';
                 } else {
-                    feedback.innerHTML = `<span class="text-danger"><i class="fas fa-times-circle me-1"></i>Falha na conexão: ${data.error || 'Erro desconhecido'}</span>`;
+                    feedback.innerHTML = `<span class="config-text-danger"><i class="fas fa-times-circle config-icon"></i>Falha na conexão: ${data.error || 'Erro desconhecido'}</span>`;
                 }
                 btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-vial me-1"></i>Testar conexão';
+                btn.innerHTML = '<i class="fas fa-vial config-icon"></i>Testar conexão';
             })
             .catch(error => {
-                feedback.innerHTML = '<span class="text-danger"><i class="fas fa-times-circle me-1"></i>Erro ao testar conexão.</span>';
+                feedback.innerHTML = '<span class="config-text-danger"><i class="fas fa-times-circle config-icon"></i>Erro ao testar conexão.</span>';
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fas fa-vial me-1"></i>Testar conexão';
             });

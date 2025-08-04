@@ -1,17 +1,25 @@
 {% extends 'config/base_config_page.html' %}
 {% block content %}
-<div class="container my-5">
-    <h2>Restaurar Arquivos de Mídia</h2>
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        <div class="mb-3">
-            <label for="id_media_file" class="form-label">Arquivo de Backup (.tar.gz)</label>
-            <input type="file" class="form-control" id="id_media_file" name="media_file" accept=".tar.gz" required>
+<div class="config-container">
+    <div class="config-page-header">
+        <h2 class="config-page-title">Restaurar Arquivos de Mídia</h2>
+    </div>
+    
+    <div class="config-content-card">
+        <div class="config-content-body">
+            <form method="post" enctype="multipart/form-data" class="config-form">
+                {% csrf_token %}
+                <div class="config-form-group">
+                    <label for="id_media_file" class="config-form-label">Arquivo de Backup (.tar.gz)</label>
+                    <input type="file" class="config-form-control" id="id_media_file" name="media_file" accept=".tar.gz" required>
+                </div>
+                <button type="submit" class="config-btn config-btn-primary">Restaurar Mídia</button>
+            </form>
         </div>
-        <button type="submit" class="btn btn-primary">Restaurar Mídia</button>
-    </form>
-    <div class="alert alert-warning mt-4">
+    </div>
+    
+    <div class="config-alert config-alert-warning">
         <strong>Atenção:</strong> Esta ação irá sobrescrever todos os arquivos atuais da pasta de mídia!
     </div>
 </div>
-{% endblock %} 
+{% endblock %}

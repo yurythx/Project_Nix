@@ -1,13 +1,70 @@
 {% extends 'config/base_config.html' %}
+{% load crispy_forms_tags %}
+
+{% block config_title %}Variáveis de Ambiente{% endblock %}
 
 {% block config_content %}
-<!-- Conteúdo da página de variáveis de ambiente -->
-<div class="container my-5">
-    <h1 class="h3 mb-4">Variáveis de Ambiente</h1>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit" class="btn btn-primary">Salvar</button>
-    </form>
+<!-- Cabeçalho da Página -->
+<div class="config-page-header">
+    <div class="config-page-title-section">
+        <h1 class="config-page-title">
+            <i class="fas fa-code config-page-icon" aria-hidden="true"></i>
+            Variáveis de Ambiente
+        </h1>
+    </div>
 </div>
-{% endblock %} 
+
+<!-- Formulário de Configuração -->
+<div class="config-content-card">
+    <div class="config-content-header">
+        <h5 class="config-content-title">
+            <i class="fas fa-file-code" aria-hidden="true"></i>
+            Editor do Arquivo .env
+        </h5>
+    </div>
+    <div class="config-content-body">
+        <div class="config-alert config-alert-info">
+            <i class="fas fa-info-circle" aria-hidden="true"></i>
+            <strong>Editor do arquivo .env:</strong> Edite diretamente as variáveis de ambiente do sistema.
+            As alterações serão aplicadas imediatamente após salvar.
+        </div>
+        
+        <form method="post" class="config-form">
+            {% csrf_token %}
+            {% if form.as_crispy %}
+                {{ form|crispy }}
+            {% else %}
+                {{ form.as_p }}
+            {% endif %}
+            
+            <div class="config-alert config-alert-warning">
+                <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
+                <strong>Atenção:</strong> Alterar variáveis de ambiente pode afetar o funcionamento do sistema.
+                Faça backup antes de alterar e teste em ambiente de desenvolvimento primeiro.
+            </div>
+            
+            <div class="config-form-actions">
+                <button type="submit" class="config-btn config-btn-primary">
+                    <i class="fas fa-save" aria-hidden="true"></i>
+                    <span>Salvar Arquivo .env</span>
+                </button>
+                <button type="button" class="config-btn config-btn-secondary" onclick="makeBackup()">
+                    <i class="fas fa-download" aria-hidden="true"></i>
+                    <span>Fazer Backup</span>
+                </button>
+                <button type="reset" class="config-btn config-btn-outline">
+                    <i class="fas fa-undo" aria-hidden="true"></i>
+                    <span>Restaurar</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function makeBackup() {
+    // Implementar funcionalidade de backup
+    alert('Funcionalidade de backup será implementada em breve.');
+}
+</script>
+{% endblock %}

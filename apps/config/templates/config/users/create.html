@@ -1,15 +1,52 @@
 {% extends 'config/base_config.html' %}
 {% load crispy_forms_tags %}
+
 {% block config_title %}Novo Usuário{% endblock %}
+
 {% block config_content %}
-<!-- Criação de usuário -->
-<div class="container my-5">
-    <h1 class="h3 mb-4">Novo Usuário</h1>
-    {% block page_content %}
-        <form method="post" novalidate>
+<!-- Cabeçalho da Página -->
+<div class="config-page-header">
+    <div class="config-page-title-section">
+        <h1 class="config-page-title">
+            <i class="fas fa-user-plus config-page-icon" aria-hidden="true"></i>
+            Novo Usuário
+        </h1>
+        <p class="config-page-subtitle">Adicione um novo usuário ao sistema</p>
+    </div>
+    <div class="config-page-actions">
+        <a href="{% url 'config:user_list' %}" class="config-btn config-btn-secondary">
+            <i class="fas fa-arrow-left" aria-hidden="true"></i>
+            <span>Voltar</span>
+        </a>
+    </div>
+</div>
+
+<!-- Formulário de Criação -->
+<div class="config-content-card">
+    <div class="config-content-header">
+        <h5 class="config-content-title">
+            <i class="fas fa-user-cog" aria-hidden="true"></i>
+            Informações do Usuário
+        </h5>
+    </div>
+    <div class="config-content-body">
+        {% block page_content %}
+        <form method="post" class="config-form" novalidate>
             {% csrf_token %}
             {{ form|crispy }}
+            
+            <div class="config-form-actions">
+                <button type="submit" class="config-btn config-btn-primary">
+                    <i class="fas fa-user-plus" aria-hidden="true"></i>
+                    Criar Usuário
+                </button>
+                <a href="{% url 'config:user_list' %}" class="config-btn config-btn-secondary">
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                    Cancelar
+                </a>
+            </div>
         </form>
-    {% endblock %}
+        {% endblock %}
+    </div>
 </div>
 {% endblock %}

@@ -190,201 +190,210 @@
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid">
+<div class="config-container">
     <!-- Header -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <h1 class="h2 mb-0">
-                <i class="fas fa-shield-alt text-primary"></i>
-                Dashboard de Permissões
-            </h1>
-            <p class="text-muted">Monitoramento e gerenciamento do sistema de permissões</p>
-        </div>
+    <div class="config-page-header">
+        <h1 class="config-page-title">
+            <i class="fas fa-shield-alt"></i>
+            Dashboard de Permissões
+        </h1>
+        <p class="config-page-subtitle">Monitoramento e gerenciamento do sistema de permissões</p>
     </div>
 
     <!-- Quick Actions -->
-    <div class="quick-actions">
-        <a href="{% url 'config:user_permissions' %}" class="action-btn">
+    <div class="config-action-grid">
+        <a href="{% url 'config:user_permissions' %}" class="config-action-card">
             <i class="fas fa-users"></i>
             <span>Gerenciar Usuários</span>
         </a>
-        <a href="{% url 'config:group_permissions' %}" class="action-btn">
+        <a href="{% url 'config:group_permissions' %}" class="config-action-card">
             <i class="fas fa-layer-group"></i>
             <span>Gerenciar Grupos</span>
         </a>
-        <a href="{% url 'config:cache_management' %}" class="action-btn">
+        <a href="{% url 'config:cache_management' %}" class="config-action-card">
             <i class="fas fa-database"></i>
             <span>Gerenciar Cache</span>
         </a>
-        <a href="{% url 'config:permission_analytics' %}" class="action-btn">
+        <a href="{% url 'config:permission_analytics' %}" class="config-action-card">
             <i class="fas fa-chart-line"></i>
             <span>Analytics</span>
         </a>
     </div>
 
     <!-- Statistics Cards -->
-    <div class="stats-grid">
-        <div class="dashboard-card">
-            <h3><i class="fas fa-users"></i> Total de Usuários</h3>
-            <div class="number">{{ total_users }}</div>
-            <div class="change">
-                <i class="fas fa-arrow-up"></i> +{{ active_users }} ativos
+    <div class="config-stats-grid">
+        <div class="config-stat-card config-stat-primary">
+            <div class="config-stat-content">
+                <div class="config-stat-info">
+                    <div class="config-stat-label"><i class="fas fa-users"></i> Total de Usuários</div>
+                    <div class="config-stat-value">{{ total_users }}</div>
+                </div>
+                <div class="config-stat-change">
+                    <i class="fas fa-arrow-up"></i> +{{ active_users }} ativos
+                </div>
             </div>
         </div>
         
-        <div class="dashboard-card">
-            <h3><i class="fas fa-layer-group"></i> Grupos</h3>
-            <div class="number">{{ total_groups }}</div>
-            <div class="change">
-                <i class="fas fa-users"></i> {{ group_stats|length }} com membros
+        <div class="config-stat-card config-stat-info">
+            <div class="config-stat-content">
+                <div class="config-stat-info">
+                    <div class="config-stat-label"><i class="fas fa-layer-group"></i> Grupos</div>
+                    <div class="config-stat-value">{{ total_groups }}</div>
+                </div>
+                <div class="config-stat-change">
+                    <i class="fas fa-users"></i> {{ group_stats|length }} com membros
+                </div>
             </div>
         </div>
         
-        <div class="dashboard-card">
-            <h3><i class="fas fa-user-shield"></i> Staff</h3>
-            <div class="number">{{ staff_users }}</div>
-            <div class="change">
-                <i class="fas fa-crown"></i> {{ superusers }} superusuários
+        <div class="config-stat-card config-stat-warning">
+            <div class="config-stat-content">
+                <div class="config-stat-info">
+                    <div class="config-stat-label"><i class="fas fa-user-shield"></i> Staff</div>
+                    <div class="config-stat-value">{{ staff_users }}</div>
+                </div>
+                <div class="config-stat-change">
+                    <i class="fas fa-crown"></i> {{ superusers }} superusuários
+                </div>
             </div>
         </div>
         
-        <div class="dashboard-card">
-            <h3><i class="fas fa-tachometer-alt"></i> Performance</h3>
-            <div class="number">{{ permission_activity.cache_hit_rate|floatformat:1 }}%</div>
-            <div class="change">
-                <i class="fas fa-clock"></i> {{ permission_activity.avg_response_time|floatformat:3 }}s
+        <div class="config-stat-card config-stat-success">
+            <div class="config-stat-content">
+                <div class="config-stat-info">
+                    <div class="config-stat-label"><i class="fas fa-tachometer-alt"></i> Performance</div>
+                    <div class="config-stat-value">{{ permission_activity.cache_hit_rate|floatformat:1 }}%</div>
+                </div>
+                <div class="config-stat-change">
+                    <i class="fas fa-clock"></i> {{ permission_activity.avg_response_time|floatformat:3 }}s
+                </div>
             </div>
         </div>
     </div>
 
-    <div class="row">
+    <div class="config-grid">
         <!-- Cache Statistics -->
-        <div class="col-lg-4">
-            <div class="cache-stats">
-                <h4 class="chart-title">
-                    <i class="fas fa-database text-primary"></i>
-                    Estatísticas do Cache
-                </h4>
-                
-                <div class="cache-stat-item">
-                    <span class="cache-stat-label">Backend</span>
-                    <span class="cache-stat-value">{{ cache_stats.backend|default:"Unknown" }}</span>
+        <div class="config-grid-third">
+            <div class="config-content-card">
+                <div class="config-content-header">
+                    <h4 class="config-content-title">
+                        <i class="fas fa-database"></i>
+                        Estatísticas do Cache
+                    </h4>
                 </div>
+                <div class="config-content-body">
                 
-                <div class="cache-stat-item">
-                    <span class="cache-stat-label">TTL Padrão</span>
-                    <span class="cache-stat-value">{{ cache_stats.default_ttl|default:300 }}s</span>
-                </div>
-                
-                <div class="cache-stat-item">
-                    <span class="cache-stat-label">Prefixos</span>
-                    <span class="cache-stat-value">{{ cache_stats.prefixes|length }}</span>
-                </div>
-                
-                <div class="cache-stat-item">
-                    <span class="cache-stat-label">Hit Rate</span>
-                    <span class="cache-stat-value">{{ permission_activity.cache_hit_rate|floatformat:1 }}%</span>
+                    <div class="config-info-item">
+                        <span class="config-info-label">Backend</span>
+                        <span class="config-info-value">{{ cache_stats.backend|default:"Unknown" }}</span>
+                    </div>
+                    
+                    <div class="config-info-item">
+                        <span class="config-info-label">TTL Padrão</span>
+                        <span class="config-info-value">{{ cache_stats.default_ttl|default:300 }}s</span>
+                    </div>
+                    
+                    <div class="config-info-item">
+                        <span class="config-info-label">Prefixos</span>
+                        <span class="config-info-value">{{ cache_stats.prefixes|length }}</span>
+                    </div>
+                    
+                    <div class="config-info-item">
+                        <span class="config-info-label">Hit Rate</span>
+                        <span class="config-info-value">{{ permission_activity.cache_hit_rate|floatformat:1 }}%</span>
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- Recent Users -->
-        <div class="col-lg-8">
-            <div class="activity-list">
-                <h4 class="chart-title">
-                    <i class="fas fa-user-plus text-primary"></i>
-                    Usuários Recentes
-                </h4>
+        <div class="config-grid-two-thirds">
+            <div class="config-content-card">
+                <div class="config-content-header">
+                    <h4 class="config-content-title">
+                        <i class="fas fa-user-plus"></i>
+                        Usuários Recentes
+                    </h4>
+                </div>
+                <div class="config-content-body">
                 
-                {% for user in recent_users %}
-                <div class="activity-item">
-                    <div class="activity-info">
-                        <h4>{{ user.username }}</h4>
-                        <p>{{ user.email }} • Registrado em {{ user.date_joined|date:"d/m/Y H:i" }}</p>
+                    {% for user in recent_users %}
+                    <div class="config-activity-item">
+                        <div class="config-activity-info">
+                            <h4 class="config-activity-title">{{ user.username }}</h4>
+                            <p class="config-activity-desc">{{ user.email }} • Registrado em {{ user.date_joined|date:"d/m/Y H:i" }}</p>
+                        </div>
+                        <div class="config-badge {% if user.is_active %}config-badge-success{% else %}config-badge-warning{% endif %}">
+                            {% if user.is_active %}Ativo{% else %}Inativo{% endif %}
+                        </div>
                     </div>
-                    <div class="activity-status {% if user.is_active %}status-success{% else %}status-warning{% endif %}">
-                        {% if user.is_active %}Ativo{% else %}Inativo{% endif %}
+                    {% empty %}
+                    <div class="config-empty-state">
+                        <i class="fas fa-users config-empty-icon"></i>
+                        <p class="config-empty-text">Nenhum usuário recente</p>
                     </div>
+                    {% endfor %}
                 </div>
-                {% empty %}
-                <div class="text-center text-muted py-4">
-                    <i class="fas fa-users fa-3x mb-3"></i>
-                    <p>Nenhum usuário recente</p>
-                </div>
-                {% endfor %}
             </div>
         </div>
     </div>
 
     <!-- Permission Activity -->
-    <div class="row mt-4">
-        <div class="col-12">
-            <div class="chart-container">
-                <h4 class="chart-title">
-                    <i class="fas fa-chart-bar text-primary"></i>
-                    Atividade de Permissões (Hoje)
-                </h4>
-                
-                <div class="row">
-                    <div class="col-md-3">
-                        <div class="text-center">
-                            <div class="h3 text-primary">{{ permission_activity.total_checks_today }}</div>
-                            <small class="text-muted">Verificações</small>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="text-center">
-                            <div class="h3 text-success">{{ permission_activity.total_checks_today|add:"-"|add:permission_activity.denied_access_today }}</div>
-                            <small class="text-muted">Permitidas</small>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="text-center">
-                            <div class="h3 text-danger">{{ permission_activity.denied_access_today }}</div>
-                            <small class="text-muted">Negadas</small>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="text-center">
-                            <div class="h3 text-info">{{ permission_activity.avg_response_time|floatformat:3 }}s</div>
-                            <small class="text-muted">Tempo Médio</small>
-                        </div>
-                    </div>
+    <div class="config-content-card">
+        <div class="config-content-header">
+            <h4 class="config-content-title">
+                <i class="fas fa-chart-bar"></i>
+                Atividade de Permissões (Hoje)
+            </h4>
+        </div>
+        <div class="config-content-body">
+            <div class="config-stats-grid">
+                <div class="config-metric-card config-metric-primary">
+                    <div class="config-metric-value">{{ permission_activity.total_checks_today }}</div>
+                    <div class="config-metric-label">Verificações</div>
+                </div>
+                <div class="config-metric-card config-metric-success">
+                    <div class="config-metric-value">{{ permission_activity.total_checks_today|add:"-"|add:permission_activity.denied_access_today }}</div>
+                    <div class="config-metric-label">Permitidas</div>
+                </div>
+                <div class="config-metric-card config-metric-danger">
+                    <div class="config-metric-value">{{ permission_activity.denied_access_today }}</div>
+                    <div class="config-metric-label">Negadas</div>
+                </div>
+                <div class="config-metric-card config-metric-info">
+                    <div class="config-metric-value">{{ permission_activity.avg_response_time|floatformat:3 }}s</div>
+                    <div class="config-metric-label">Tempo Médio</div>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Top Groups -->
-    <div class="row mt-4">
-        <div class="col-12">
-            <div class="chart-container">
-                <h4 class="chart-title">
-                    <i class="fas fa-layer-group text-primary"></i>
-                    Grupos Mais Populares
-                </h4>
-                
-                <div class="row">
-                    {% for group in group_stats %}
-                    <div class="col-md-4 mb-3">
-                        <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded">
-                            <div>
-                                <strong>{{ group.name }}</strong>
-                                <br>
-                                <small class="text-muted">{{ group.user_count }} membros</small>
-                            </div>
-                            <div class="text-primary">
-                                <i class="fas fa-users"></i>
-                            </div>
-                        </div>
+    <div class="config-content-card">
+        <div class="config-content-header">
+            <h4 class="config-content-title">
+                <i class="fas fa-layer-group"></i>
+                Grupos Mais Populares
+            </h4>
+        </div>
+        <div class="config-content-body">
+            <div class="config-group-grid">
+                {% for group in group_stats %}
+                <div class="config-group-item">
+                    <div class="config-group-info">
+                        <div class="config-group-name">{{ group.name }}</div>
+                        <div class="config-group-count">{{ group.user_count }} membros</div>
                     </div>
-                    {% empty %}
-                    <div class="col-12 text-center text-muted py-4">
-                        <i class="fas fa-layer-group fa-3x mb-3"></i>
-                        <p>Nenhum grupo encontrado</p>
+                    <div class="config-group-icon">
+                        <i class="fas fa-users"></i>
                     </div>
-                    {% endfor %}
                 </div>
+                {% empty %}
+                <div class="config-empty-state">
+                    <i class="fas fa-layer-group config-empty-icon"></i>
+                    <p class="config-empty-text">Nenhum grupo encontrado</p>
+                </div>
+                {% endfor %}
             </div>
         </div>
     </div>
@@ -402,7 +411,7 @@ setInterval(function() {
 // Animações suaves
 document.addEventListener('DOMContentLoaded', function() {
     // Anima os cards ao carregar
-    const cards = document.querySelectorAll('.dashboard-card');
+    const cards = document.querySelectorAll('.config-stat-card, .config-content-card');
     cards.forEach((card, index) => {
         setTimeout(() => {
             card.style.opacity = '0';
@@ -417,4 +426,4 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
-{% endblock %} 
+{% endblock %}

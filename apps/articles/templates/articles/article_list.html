@@ -156,7 +156,7 @@
                 </div>
             </div>
             {% if articles %}
-                <div class="row g-4">
+                <div id="articles-container" class="row g-4">
                     {% for article in articles %}
                     <div class="col-lg-6 col-md-6 col-12">
                         <article class="card h-100 shadow-sm article-card">
@@ -260,7 +260,7 @@
                 </nav>
                 {% endif %}
             {% else %}
-                <div class="text-center py-5">
+                <div id="articles-container" class="text-center py-5">
                     <i class="fas fa-newspaper fa-5x text-theme-secondary mb-3"></i>
                     <h3 class="text-theme-secondary text-sans text-body">
                         {% if search_query %}

@@ -1,5 +1,5 @@
 from django.urls import path
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render
 from apps.config.views import (
     ConfigDashboardView,
     UserListView,
@@ -113,6 +113,7 @@ urlpatterns = [
     path('modules/<str:app_name>/update/', ModuleUpdateView.as_view(), name='module_update'),
     path('modules/<str:app_name>/enable/', ModuleEnableView.as_view(), name='module_enable'),
     path('modules/<str:app_name>/disable/', ModuleDisableView.as_view(), name='module_disable'),
+    path('modules/<str:app_name>/test/', ModuleTestView.as_view(), name='module_test'),
     path('modules/<str:app_name>/delete/', ModuleDeleteView.as_view(), name='module_delete'),
 
     # APIs dos Módulos

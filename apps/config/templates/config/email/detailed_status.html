@@ -1,55 +1,55 @@
-<div class="row">
-    <div class="col-12">
-        <h5 class="mb-4">
-            <i class="fas fa-info-circle me-2"></i>Status Detalhado do Sistema de Email
+<div class="config-container">
+    <div class="config-content">
+        <h5 class="config-page-title">
+            <i class="fas fa-info-circle config-icon"></i>Status Detalhado do Sistema de Email
         </h5>
         
         <!-- Status Geral -->
-        <div class="card mb-4">
-            <div class="card-header">
-                <h6 class="mb-0">
-                    <i class="fas fa-check-circle me-2"></i>Status Geral
+        <div class="config-content-card">
+            <div class="config-content-header">
+                <h6 class="config-content-title">
+                    <i class="fas fa-check-circle config-icon"></i>Status Geral
                 </h6>
             </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="mb-3">
+            <div class="config-content-body">
+                <div class="config-form-grid">
+                    <div class="config-form-column">
+                        <div class="config-form-group">
                             <strong>Configuração:</strong>
                             {% if email_configured %}
-                                <span class="badge bg-success ms-2">Ativa</span>
+                                <span class="config-badge config-badge-success">Ativa</span>
                             {% else %}
-                                <span class="badge bg-warning ms-2">Pendente</span>
+                                <span class="config-badge config-badge-warning">Pendente</span>
                             {% endif %}
                         </div>
-                        <div class="mb-3">
+                        <div class="config-form-group">
                             <strong>Backend:</strong>
-                            <code class="ms-2">{{ current_backend }}</code>
+                            <code class="config-code">{{ current_backend }}</code>
                         </div>
-                        <div class="mb-3">
+                        <div class="config-form-group">
                             <strong>Arquivo .env:</strong>
                             {% if env_file_exists %}
-                                <span class="badge bg-success ms-2">Existe</span>
+                                <span class="config-badge config-badge-success">Existe</span>
                             {% else %}
-                                <span class="badge bg-warning ms-2">Não encontrado</span>
+                                <span class="config-badge config-badge-warning">Não encontrado</span>
                             {% endif %}
                         </div>
                     </div>
-                    <div class="col-md-6">
-                        <div class="mb-3">
+                    <div class="config-form-column">
+                        <div class="config-form-group">
                             <strong>Settings carregadas:</strong>
                             {% if settings_loaded %}
-                                <span class="badge bg-success ms-2">Sim</span>
+                                <span class="config-badge config-badge-success">Sim</span>
                             {% else %}
-                                <span class="badge bg-warning ms-2">Não</span>
+                                <span class="config-badge config-badge-warning">Não</span>
                             {% endif %}
                         </div>
-                        <div class="mb-3">
+                        <div class="config-form-group">
                             <strong>Conexão DB:</strong>
                             {% if database_connection %}
-                                <span class="badge bg-success ms-2">OK</span>
+                                <span class="config-badge config-badge-success">OK</span>
                             {% else %}
-                                <span class="badge bg-danger ms-2">Erro</span>
+                                <span class="config-badge config-badge-danger">Erro</span>
                             {% endif %}
                         </div>
                     </div>
@@ -58,73 +58,73 @@
         </div>
         
         <!-- Configuração Atual -->
-        <div class="card mb-4">
-            <div class="card-header">
-                <h6 class="mb-0">
-                    <i class="fas fa-cog me-2"></i>Configuração Atual
+        <div class="config-content-card">
+            <div class="config-content-header">
+                <h6 class="config-content-title">
+                    <i class="fas fa-cog config-icon"></i>Configuração Atual
                 </h6>
             </div>
-            <div class="card-body">
+            <div class="config-content-body">
                 {% if email_config %}
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-2">
+                    <div class="config-form-grid">
+                        <div class="config-form-column">
+                            <div class="config-form-item">
                                 <strong>Servidor:</strong>
-                                <span class="ms-2">{{ email_config.EMAIL_HOST|default:"Não configurado" }}</span>
+                                <span class="config-form-value">{{ email_config.EMAIL_HOST|default:"Não configurado" }}</span>
                             </div>
-                            <div class="mb-2">
+                            <div class="config-form-item">
                                 <strong>Porta:</strong>
-                                <span class="ms-2">{{ email_config.EMAIL_PORT|default:"N/A" }}</span>
+                                <span class="config-form-value">{{ email_config.EMAIL_PORT|default:"N/A" }}</span>
                             </div>
-                            <div class="mb-2">
+                            <div class="config-form-item">
                                 <strong>Usuário:</strong>
-                                <span class="ms-2">{{ email_config.EMAIL_HOST_USER|default:"Não configurado" }}</span>
+                                <span class="config-form-value">{{ email_config.EMAIL_HOST_USER|default:"Não configurado" }}</span>
                             </div>
-                            <div class="mb-2">
+                            <div class="config-form-item">
                                 <strong>Senha:</strong>
-                                <span class="ms-2">
+                                <span class="config-form-value">
                                     {% if email_config.EMAIL_HOST_PASSWORD %}
-                                        <i class="fas fa-lock text-success"></i> Configurada
+                                        <i class="fas fa-lock config-text-success"></i> Configurada
                                     {% else %}
-                                        <i class="fas fa-unlock text-warning"></i> Não configurada
+                                        <i class="fas fa-unlock config-text-warning"></i> Não configurada
                                     {% endif %}
                                 </span>
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <div class="mb-2">
+                        <div class="config-form-column">
+                            <div class="config-form-item">
                                 <strong>Email Padrão:</strong>
-                                <span class="ms-2">{{ email_config.DEFAULT_FROM_EMAIL|default:"Não configurado" }}</span>
+                                <span class="config-form-value">{{ email_config.DEFAULT_FROM_EMAIL|default:"Não configurado" }}</span>
                             </div>
-                            <div class="mb-2">
+                            <div class="config-form-item">
                                 <strong>TLS:</strong>
-                                <span class="ms-2">
+                                <span class="config-form-value">
                                     {% if email_config.EMAIL_USE_TLS %}
-                                        <i class="fas fa-check text-success"></i> Ativo
+                                        <i class="fas fa-check config-text-success"></i> Ativo
                                     {% else %}
-                                        <i class="fas fa-times text-warning"></i> Inativo
+                                        <i class="fas fa-times config-text-warning"></i> Inativo
                                     {% endif %}
                                 </span>
                             </div>
-                            <div class="mb-2">
+                            <div class="config-form-item">
                                 <strong>SSL:</strong>
-                                <span class="ms-2">
+                                <span class="config-form-value">
                                     {% if email_config.EMAIL_USE_SSL %}
-                                        <i class="fas fa-check text-success"></i> Ativo
+                                        <i class="fas fa-check config-text-success"></i> Ativo
                                     {% else %}
-                                        <i class="fas fa-times text-warning"></i> Inativo
+                                        <i class="fas fa-times config-text-warning"></i> Inativo
                                     {% endif %}
                                 </span>
                             </div>
-                            <div class="mb-2">
+                            <div class="config-form-item">
                                 <strong>Timeout:</strong>
-                                <span class="ms-2">{{ email_config.EMAIL_TIMEOUT|default:"30" }}s</span>
+                                <span class="config-form-value">{{ email_config.EMAIL_TIMEOUT|default:"30" }}s</span>
                             </div>
                         </div>
                     </div>
                 {% else %}
-                    <div class="alert alert-warning">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
+                    <div class="config-alert config-alert-warning">
+                        <i class="fas fa-exclamation-triangle config-icon"></i>
                         Nenhuma configuração de email encontrada.
                     </div>
                 {% endif %}
@@ -132,46 +132,46 @@
         </div>
         
         <!-- Informações do Sistema -->
-        <div class="card mb-4">
-            <div class="card-header">
-                <h6 class="mb-0">
-                    <i class="fas fa-server me-2"></i>Informações do Sistema
+        <div class="config-content-card">
+            <div class="config-content-header">
+                <h6 class="config-content-title">
+                    <i class="fas fa-server config-icon"></i>Informações do Sistema
                 </h6>
             </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="mb-2">
+            <div class="config-content-body">
+                <div class="config-form-grid">
+                    <div class="config-form-column">
+                        <div class="config-form-item">
                             <strong>Django Version:</strong>
-                            <span class="ms-2">{{ system_info.django_version|default:"N/A" }}</span>
+                            <span class="config-form-value">{{ system_info.django_version|default:"N/A" }}</span>
                         </div>
-                        <div class="mb-2">
+                        <div class="config-form-item">
                             <strong>Python Version:</strong>
-                            <span class="ms-2">{{ system_info.python_version|default:"N/A" }}</span>
+                            <span class="config-form-value">{{ system_info.python_version|default:"N/A" }}</span>
                         </div>
-                        <div class="mb-2">
+                        <div class="config-form-item">
                             <strong>Database:</strong>
-                            <span class="ms-2">{{ system_info.database|default:"N/A" }}</span>
+                            <span class="config-form-value">{{ system_info.database|default:"N/A" }}</span>
                         </div>
                     </div>
-                    <div class="col-md-6">
-                        <div class="mb-2">
+                    <div class="config-form-column">
+                        <div class="config-form-item">
                             <strong>Environment:</strong>
-                            <span class="ms-2">{{ system_info.environment|default:"N/A" }}</span>
+                            <span class="config-form-value">{{ system_info.environment|default:"N/A" }}</span>
                         </div>
-                        <div class="mb-2">
+                        <div class="config-form-item">
                             <strong>Debug:</strong>
-                            <span class="ms-2">
+                            <span class="config-form-value">
                                 {% if system_info.debug %}
-                                    <span class="badge bg-warning">Ativo</span>
+                                    <span class="config-badge config-badge-warning">Ativo</span>
                                 {% else %}
-                                    <span class="badge bg-success">Inativo</span>
+                                    <span class="config-badge config-badge-success">Inativo</span>
                                 {% endif %}
                             </span>
                         </div>
-                        <div class="mb-2">
+                        <div class="config-form-item">
                             <strong>Timezone:</strong>
-                            <span class="ms-2">{{ system_info.timezone|default:"N/A" }}</span>
+                            <span class="config-form-value">{{ system_info.timezone|default:"N/A" }}</span>
                         </div>
                     </div>
                 </div>
@@ -179,28 +179,28 @@
         </div>
         
         <!-- Ações -->
-        <div class="card">
-            <div class="card-header">
-                <h6 class="mb-0">
-                    <i class="fas fa-tools me-2"></i>Ações Disponíveis
+        <div class="config-content-card">
+            <div class="config-content-header">
+                <h6 class="config-content-title">
+                    <i class="fas fa-tools config-icon"></i>Ações Disponíveis
                 </h6>
             </div>
-            <div class="card-body">
-                <div class="d-grid gap-2 d-md-flex">
-                    <button type="button" class="btn btn-outline-primary" onclick="testConnection()">
-                        <i class="fas fa-plug me-2"></i>Testar Conexão
+            <div class="config-content-body">
+                <div class="config-form-actions">
+                    <button type="button" class="config-btn config-btn-outline-primary" onclick="testConnection()">
+                        <i class="fas fa-plug config-icon"></i>Testar Conexão
                     </button>
-                    <button type="button" class="btn btn-outline-warning" onclick="syncConfig()">
-                        <i class="fas fa-sync me-2"></i>Sincronizar Config
+                    <button type="button" class="config-btn config-btn-outline-warning" onclick="syncConfig()">
+                        <i class="fas fa-sync config-icon"></i>Sincronizar Config
                     </button>
-                    <a href="{% url 'config:email_config' %}" class="btn btn-outline-info">
-                        <i class="fas fa-cog me-2"></i>Editar Configuração
+                    <a href="{% url 'config:email_config' %}" class="config-btn config-btn-outline-info">
+                        <i class="fas fa-cog config-icon"></i>Editar Configuração
                     </a>
-                    <a href="{% url 'config:email_test' %}" class="btn btn-outline-success">
-                        <i class="fas fa-paper-plane me-2"></i>Testar Email
+                    <a href="{% url 'config:email_test' %}" class="config-btn config-btn-outline-success">
+                        <i class="fas fa-paper-plane config-icon"></i>Testar Email
                     </a>
                 </div>
             </div>
         </div>
     </div>
-</div> 
+</div>

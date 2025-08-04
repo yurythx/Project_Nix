@@ -28,7 +28,7 @@ class WebSocketService(IWebSocketService):
     def __init__(self):
         self.channel_layer = get_channel_layer()
     
-    def send_to_user(self, user: User, message_type: str, data: Dict[str, Any]) -> bool:
+    def send_to_user(self, user: User, message: Dict[str, Any]) -> bool:
         """Envia mensagem para usuário específico"""
         if not self.channel_layer:
             logger.warning('Channel layer não configurado')
@@ -36,19 +36,18 @@ class WebSocketService(IWebSocketService):
         
         try:
             group_name = f'user_{user.id}'
-            message = {
+            websocket_message = {
                 'type': 'send_message',
-                'message_type': message_type,
-                'data': data,
+                'message': message,
                 'timestamp': self._get_timestamp()
             }
             
             async_to_sync(self.channel_layer.group_send)(
                 group_name,
-                message
+                websocket_message
             )
             
-            logger.info(f'Mensagem enviada para usuário {user.id}: {message_type}')
+            logger.info(f'Mensagem enviada para usuário {user.id}')
             return True
             
         except Exception as e:
@@ -134,7 +133,11 @@ class WebSocketService(IWebSocketService):
                     'moderator': self._serialize_user(moderator) if moderator else {'username': 'Sistema'},
                 }
                 
-                self.send_to_user(comment.author, 'moderation_update', author_data)
+                message = {
+                    'type': 'moderation_update',
+                    'data': author_data
+                }
+                self.send_to_user(comment.author, message)
             
             # Envia para o grupo de comentários (para atualizar visualização)
             content_type = comment.content_type
@@ -217,11 +220,14 @@ class WebSocketService(IWebSocketService):
     def send_notification_count_update(self, user: User, unread_count: int) -> bool:
         """Envia atualização de contagem de notificações"""
         try:
-            data = {
-                'unread_count': unread_count,
+            message = {
+                'type': 'notification_count_update',
+                'data': {
+                    'unread_count': unread_count,
+                }
             }
             
-            return self.send_to_user(user, 'notification_count_update', data)
+            return self.send_to_user(user, message)
             
         except Exception as e:
             logger.error(f'Erro ao enviar contagem de notificações para usuário {user.id}: {e}')
@@ -316,8 +322,13 @@ class WebSocketService(IWebSocketService):
         """Envia notificação para múltiplos usuários"""
         sent_count = 0
         
+        message = {
+            'type': message_type,
+            'data': data
+        }
+        
         for user in users:
-            if self.send_to_user(user, message_type, data):
+            if self.send_to_user(user, message):
                 sent_count += 1
         
         return sent_count
@@ -398,3 +409,81 @@ class WebSocketService(IWebSocketService):
             'active_rooms': 0,
             'messages_sent_today': 0,
         }
+    
+    def add_user_to_group(self, user: User, group_name: str) -> bool:
+        """Adiciona usuário ao grupo"""
+        if not self.channel_layer:
+            logger.warning('Channel layer não configurado')
+            return False
+        
+        try:
+            # Em implementação real, isso seria feito no consumer WebSocket
+            # Por enquanto, apenas logamos a ação
+            logger.info(f'Usuário {user.id} adicionado ao grupo {group_name}')
+            return True
+            
+        except Exception as e:
+            logger.error(f'Erro ao adicionar usuário {user.id} ao grupo {group_name}: {e}')
+            return False
+    
+    def remove_user_from_group(self, user: User, group_name: str) -> bool:
+        """Remove usuário do grupo"""
+        if not self.channel_layer:
+            logger.warning('Channel layer não configurado')
+            return False
+        
+        try:
+            # Em implementação real, isso seria feito no consumer WebSocket
+            # Por enquanto, apenas logamos a ação
+            logger.info(f'Usuário {user.id} removido do grupo {group_name}')
+            return True
+            
+        except Exception as e:
+            logger.error(f'Erro ao remover usuário {user.id} do grupo {group_name}: {e}')
+            return False
+    
+    def broadcast_notification(self, notification: 'CommentNotification') -> bool:
+        """Transmite notificação"""
+        try:
+            message = {
+                'type': 'notification',
+                'data': {
+                    'id': notification.id,
+                    'notification_type': notification.notification_type,
+                    'title': notification.title,
+                    'message': notification.message,
+                    'sender': self._serialize_user(notification.sender) if notification.sender else {'username': 'Sistema'},
+                    'comment_id': notification.comment.id if notification.comment else None,
+                    'created_at': notification.created_at.isoformat(),
+                    'is_read': notification.is_read,
+                }
+            }
+            
+            return self.send_to_user(notification.recipient, message)
+            
+        except Exception as e:
+            logger.error(f'Erro ao transmitir notificação {notification.id}: {e}')
+            return False
+    
+    def get_online_users(self, group_name: str) -> List[User]:
+        """Busca usuários online no grupo"""
+        try:
+            # Em implementação real, manteria lista de usuários conectados
+            # Por enquanto, retorna lista vazia
+            logger.info(f'Buscando usuários online no grupo {group_name}')
+            return []
+            
+        except Exception as e:
+            logger.error(f'Erro ao buscar usuários online no grupo {group_name}: {e}')
+            return []
+    
+    def get_group_name_for_object(self, content_object: Any) -> str:
+        """Gera nome do grupo para objeto"""
+        try:
+            from django.contrib.contenttypes.models import ContentType
+            content_type = ContentType.objects.get_for_model(content_object)
+            return f'comments_{content_type.app_label}_{content_type.model}_{content_object.id}'
+            
+        except Exception as e:
+            logger.error(f'Erro ao gerar nome do grupo para objeto: {e}')
+            return ''

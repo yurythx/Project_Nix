@@ -1,39 +1,154 @@
 {% extends 'config/base_config.html' %}
+{% load config_extras %}
+
+{% block page_title %}Usuários{% endblock %}
+{% block page_icon %}fas fa-users{% endblock %}
 
 {% block config_content %}
-<!-- Listagem de usuários -->
-<div class="container my-5">
-    <h1 class="h3 mb-4">Usuários do Sistema</h1>
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Email</th>
-                <th>Nome</th>
-                <th>Username</th>
-                <th>Status</th>
-                <th>Ações</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for user in users %}
-            <tr>
-                <td>{{ user.email }}</td>
-                <td>{{ user.get_full_name|default:user.username }}</td>
-                <td>{{ user.username }}</td>
-                <td>
-                    {% if user.is_active %}<span class="badge bg-success">Ativo</span>{% else %}<span class="badge bg-danger">Inativo</span>{% endif %}
-                    {% if user.is_staff %}<span class="badge bg-info">Staff</span>{% endif %}
-                    {% if user.is_superuser %}<span class="badge bg-warning text-dark">Superuser</span>{% endif %}
-                </td>
-                <td>
-                    <a href="{% url 'config:user_update' user.slug %}" class="btn btn-sm btn-outline-primary">Editar</a>
-                    <a href="{% url 'config:user_delete' user.slug %}" class="btn btn-sm btn-outline-danger">Excluir</a>
-                </td>
-            </tr>
-            {% empty %}
-            <tr><td colspan="5" class="text-center text-muted">Nenhum usuário encontrado.</td></tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<div class="config-page">
+    <!-- Cabeçalho da Página -->
+    <div class="config-page-header">
+        <div class="config-page-title-section">
+            <h1 class="config-page-title">
+                <i class="fas fa-users config-page-icon" aria-hidden="true"></i>
+                Gerenciar Usuários
+            </h1>
+            <p class="config-page-subtitle">Visualizar e gerenciar todos os usuários do sistema</p>
+        </div>
+        <div class="config-page-actions">
+            <a href="{% url 'config:user_create' %}" class="config-btn config-btn-primary">
+                <i class="fas fa-plus" aria-hidden="true"></i>
+                <span>Novo Usuário</span>
+            </a>
+        </div>
+    </div>
+    
+    <!-- Conteúdo da Página -->
+    <div class="config-page-content">
+        <div class="config-table-card">
+            <div class="config-table-responsive">
+                <table class="config-table">
+                    <thead class="config-table-header">
+                        <tr>
+                            <th scope="col"><i class="fas fa-envelope" aria-hidden="true"></i> Email</th>
+                            <th scope="col"><i class="fas fa-user" aria-hidden="true"></i> Nome</th>
+                            <th scope="col"><i class="fas fa-at" aria-hidden="true"></i> Username</th>
+                            <th scope="col"><i class="fas fa-toggle-on" aria-hidden="true"></i> Status</th>
+                            <th scope="col"><i class="fas fa-cogs" aria-hidden="true"></i> Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody class="config-table-body">
+                        {% for user in users %}
+                            <tr class="config-table-row">
+                                <td class="config-table-cell">{{ user.email }}</td>
+                                <td class="config-table-cell">{{ user.get_full_name|default:"—" }}</td>
+                                <td class="config-table-cell">{{ user.username }}</td>
+                                <td class="config-table-cell">
+                                    <div class="config-badges-group">
+                                        {% if user.is_active %}
+                                            <span class="config-badge config-badge-success">
+                                                <i class="fas fa-check-circle" aria-hidden="true"></i> Ativo
+                                            </span>
+                                        {% else %}
+                                            <span class="config-badge config-badge-secondary">
+                                                <i class="fas fa-times-circle" aria-hidden="true"></i> Inativo
+                                            </span>
+                                        {% endif %}
+                                        {% if user.is_staff %}
+                                            <span class="config-badge config-badge-warning">
+                                                <i class="fas fa-user-tie" aria-hidden="true"></i> Staff
+                                            </span>
+                                        {% endif %}
+                                        {% if user.is_superuser %}
+                                            <span class="config-badge config-badge-danger">
+                                                <i class="fas fa-crown" aria-hidden="true"></i> Superuser
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td class="config-table-cell">
+                                    <div class="config-actions-group">
+                                        <a href="{% url 'config:user_edit' user.pk %}" class="config-btn config-btn-primary config-btn-sm" title="Editar">
+                                            <i class="fas fa-edit" aria-hidden="true"></i>
+                                        </a>
+                                        {% if not user.is_superuser or request.user.is_superuser %}
+                                        <button type="button" class="config-btn config-btn-danger config-btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal{{ user.pk }}" title="Excluir">
+                                            <i class="fas fa-trash" aria-hidden="true"></i>
+                                        </button>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr class="config-table-row">
+                                <td colspan="5" class="config-table-cell config-table-empty">
+                                    Nenhum usuário encontrado.
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Layout responsivo para mobile -->
+            <div class="config-mobile-cards">
+                {% for user in users %}
+                <div class="config-mobile-card">
+                    <div class="config-mobile-header">
+                        <span class="config-mobile-title">{{ user.email }}</span>
+                        <div class="config-mobile-actions">
+                            <a href="{% url 'config:user_edit' user.pk %}" class="config-btn config-btn-primary config-btn-sm" title="Editar">
+                                <i class="fas fa-edit" aria-hidden="true"></i>
+                            </a>
+                            {% if not user.is_superuser or request.user.is_superuser %}
+                            <button type="button" class="config-btn config-btn-danger config-btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal{{ user.pk }}" title="Excluir">
+                                <i class="fas fa-trash" aria-hidden="true"></i>
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="config-mobile-body">
+                        <div class="config-mobile-field">
+                            <span class="config-mobile-label">Nome:</span>
+                            <span class="config-mobile-value">{{ user.get_full_name|default:"—" }}</span>
+                        </div>
+                        <div class="config-mobile-field">
+                            <span class="config-mobile-label">Username:</span>
+                            <span class="config-mobile-value">{{ user.username }}</span>
+                        </div>
+                        <div class="config-mobile-field">
+                            <span class="config-mobile-label">Status:</span>
+                            <div class="config-badges-group">
+                                {% if user.is_active %}
+                                    <span class="config-badge config-badge-success">
+                                        <i class="fas fa-check-circle" aria-hidden="true"></i> Ativo
+                                    </span>
+                                {% else %}
+                                    <span class="config-badge config-badge-secondary">
+                                        <i class="fas fa-times-circle" aria-hidden="true"></i> Inativo
+                                    </span>
+                                {% endif %}
+                                {% if user.is_staff %}
+                                    <span class="config-badge config-badge-warning">
+                                        <i class="fas fa-user-tie" aria-hidden="true"></i> Staff
+                                    </span>
+                                {% endif %}
+                                {% if user.is_superuser %}
+                                    <span class="config-badge config-badge-danger">
+                                        <i class="fas fa-crown" aria-hidden="true"></i> Superuser
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="config-mobile-empty">
+                    Nenhum usuário encontrado.
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}

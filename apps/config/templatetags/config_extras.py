@@ -3,6 +3,7 @@ import json
 import pprint as pp
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
+from apps.config.services.module_service import ModuleService
 
 register = template.Library()
 
@@ -278,3 +279,15 @@ def env_backup_row(backup):
         format_html('{} bytes', backup.get('size', 0)),
         datetime.datetime.fromtimestamp(backup.get('modified', 0)).strftime('%d/%m/%Y %H:%M:%S'),
     ]
+
+
+@register.simple_tag
+def has_modules_configured():
+    """Verifica se há módulos configurados no sistema, independentemente de estarem habilitados"""
+    try:
+        module_service = ModuleService()
+        # Verifica se há pelo menos um módulo configurado no banco
+        from apps.config.models.app_module_config import AppModuleConfiguration
+        return AppModuleConfiguration.objects.exists()
+    except Exception:
+        return False

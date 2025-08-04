@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Tuple
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
 from django.db.models import QuerySet
@@ -439,5 +439,85 @@ class IDatabaseService(ABC):
         :param config_id: ID da configuração
         :param user: Usuário que está trocando
         :return: Tupla (sucesso, mensagem, configuração)
+        """
+        pass
+
+
+class IBackupService(ABC):
+    """Interface para serviços de backup e restauração"""
+    
+    @abstractmethod
+    def create_database_backup(self, user: Optional[User] = None) -> Tuple[bool, str, Optional[str]]:
+        """
+        Cria backup do banco de dados
+        :param user: Usuário que está criando o backup
+        :return: Tupla (sucesso, mensagem, caminho do arquivo)
+        """
+        pass
+    
+    @abstractmethod
+    def create_media_backup(self, user: Optional[User] = None) -> Tuple[bool, str, Optional[str]]:
+        """
+        Cria backup dos arquivos de mídia
+        :param user: Usuário que está criando o backup
+        :return: Tupla (sucesso, mensagem, caminho do arquivo)
+        """
+        pass
+    
+    @abstractmethod
+    def create_configuration_backup(self, user: Optional[User] = None) -> Tuple[bool, str, Optional[str]]:
+        """
+        Cria backup das configurações do sistema
+        :param user: Usuário que está criando o backup
+        :return: Tupla (sucesso, mensagem, caminho do arquivo)
+        """
+        pass
+    
+    @abstractmethod
+    def restore_database_backup(self, backup_path: str, user: Optional[User] = None) -> Tuple[bool, str]:
+        """
+        Restaura backup do banco de dados
+        :param backup_path: Caminho do arquivo de backup
+        :param user: Usuário que está restaurando
+        :return: Tupla (sucesso, mensagem)
+        """
+        pass
+    
+    @abstractmethod
+    def restore_media_backup(self, backup_path: str, user: Optional[User] = None) -> Tuple[bool, str]:
+        """
+        Restaura backup dos arquivos de mídia
+        :param backup_path: Caminho do arquivo de backup
+        :param user: Usuário que está restaurando
+        :return: Tupla (sucesso, mensagem)
+        """
+        pass
+    
+    @abstractmethod
+    def restore_configuration_backup(self, backup_path: str, user: Optional[User] = None) -> Tuple[bool, str]:
+        """
+        Restaura backup das configurações
+        :param backup_path: Caminho do arquivo de backup
+        :param user: Usuário que está restaurando
+        :return: Tupla (sucesso, mensagem)
+        """
+        pass
+    
+    @abstractmethod
+    def list_backups(self, backup_type: str = 'all') -> List[Dict[str, Any]]:
+        """
+        Lista backups disponíveis
+        :param backup_type: Tipo de backup ('database', 'media', 'configuration', 'all')
+        :return: Lista de backups com metadados
+        """
+        pass
+    
+    @abstractmethod
+    def delete_backup(self, backup_path: str, user: Optional[User] = None) -> Tuple[bool, str]:
+        """
+        Deleta um arquivo de backup
+        :param backup_path: Caminho do arquivo de backup
+        :param user: Usuário que está deletando
+        :return: Tupla (sucesso, mensagem)
         """
         pass

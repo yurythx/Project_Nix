@@ -1,10 +1,10 @@
 {% load config_extras %}
 
-<!-- Sidebar Navigation (conteúdo puro, sem <nav> nem classes de grid) -->
-<div class="position-sticky pt-3">
+<!-- Sidebar Navigation Otimizada -->
+<nav class="position-sticky pt-3" role="navigation" aria-label="Menu de configurações">
     <!-- Dashboard -->
     <div class="sidebar-section">
-        <ul class="nav flex-column">
+        <ul class="sidebar-nav">
             {% sidebar_item 'dashboard' 'fas fa-tachometer-alt' 'Dashboard' 'Dashboard principal com métricas do sistema' %}
         </ul>
     </div>
@@ -12,11 +12,11 @@
     <!-- Gerenciamento de Usuários -->
     <div class="sidebar-section">
         {% get_config_stats as stats %}
-        <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted text-sans">
-            <span><i class="fas fa-users me-2"></i>Usuários & Permissões</span>
-            <small class="badge bg-django-green">{{ stats.active_users }}/{{ stats.total_users }}</small>
+        <h6 class="sidebar-heading">
+            <span><i class="fas fa-users config-icon"></i>Usuários & Permissões</span>
+            <span class="config-badge config-badge-success">{{ stats.active_users }}/{{ stats.total_users }}</span>
         </h6>
-        <ul class="nav flex-column">
+        <ul class="sidebar-nav">
             {% sidebar_item 'user_list' 'fas fa-users' 'Gerenciar Usuários' 'Visualizar e gerenciar todos os usuários' %}
             {% sidebar_item 'user_create' 'fas fa-user-plus' 'Novo Usuário' 'Criar novo usuário no sistema' %}
         </ul>
@@ -24,11 +24,11 @@
 
     <!-- Configurações de Email -->
     <div class="sidebar-section">
-        <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted text-sans">
-            <span><i class="fas fa-envelope me-2"></i>Email</span>
-            <small class="badge bg-info">{{ stats.email_configs }}</small>
+        <h6 class="sidebar-heading">
+            <span><i class="fas fa-envelope config-icon"></i>Email</span>
+            <span class="config-badge config-badge-info">{{ stats.email_configs }}</span>
         </h6>
-        <ul class="nav flex-column">
+        <ul class="sidebar-nav">
             {% sidebar_item 'email_config' 'fas fa-cog' 'Configurações' 'Configurar servidor de email' %}
             {% sidebar_item 'email_test' 'fas fa-paper-plane' 'Teste de Envio' 'Testar envio de emails' %}
         </ul>
@@ -36,21 +36,21 @@
 
     <!-- Módulos do Sistema -->
     <div class="sidebar-section">
-        <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted text-sans">
-            <span><i class="fas fa-puzzle-piece me-2"></i>Módulos</span>
-            <small class="badge bg-success">{{ stats.active_modules }}/{{ stats.total_modules }}</small>
+        <h6 class="sidebar-heading">
+            <span><i class="fas fa-puzzle-piece config-icon"></i>Módulos</span>
+            <span class="config-badge config-badge-success">{{ stats.active_modules }}/{{ stats.total_modules }}</span>
         </h6>
-        <ul class="nav flex-column">
+        <ul class="sidebar-nav">
             {% sidebar_item 'module_list' 'fas fa-cubes' 'Gerenciar Módulos' 'Configurar e testar módulos do sistema' %}
         </ul>
     </div>
 
     <!-- Backup & Restauração -->
     <div class="sidebar-section">
-        <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted text-sans">
-            <span><i class="fas fa-database me-2"></i>Backup & Restauração</span>
+        <h6 class="sidebar-heading">
+            <span><i class="fas fa-database config-icon"></i>Backup & Restauração</span>
         </h6>
-        <ul class="nav flex-column">
+        <ul class="sidebar-nav">
             {% sidebar_item 'backup_database' 'fas fa-database' 'Backup Banco' 'Backup do banco de dados' %}
             {% sidebar_item 'backup_media' 'fas fa-folder-open' 'Backup Mídia' 'Backup da mídia do site' %}
         </ul>
@@ -59,12 +59,12 @@
     <!-- Moderação de Comentários -->
     {% if request.user.is_staff or request.user.is_superuser %}
     <div class="sidebar-section">
-        <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted text-sans">
-            <span><i class="fas fa-comments me-2"></i>Comentários</span>
+        <h6 class="sidebar-heading">
+            <span><i class="fas fa-comments config-icon"></i>Comentários</span>
         </h6>
-        <ul class="nav flex-column">
+        <ul class="sidebar-nav">
             {% sidebar_item 'comment_moderation' 'fas fa-shield-alt' 'Moderação de Comentários' 'Moderar comentários do site' %}
         </ul>
     </div>
     {% endif %}
-</div>
+</nav>

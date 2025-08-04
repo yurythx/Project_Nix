@@ -7,7 +7,7 @@ from .repositories import (
 from .services import (
     IUserManagementService, IPermissionManagementService, 
     ISystemConfigService, IAuditLogService, IModuleService,
-    IEmailConfigService, IDatabaseService
+    IEmailConfigService, IDatabaseService, IBackupService
 )
 
 __all__ = [
@@ -26,4 +26,5 @@ __all__ = [
     'IModuleService',
     'IEmailConfigService',
     'IDatabaseService',
+    'IBackupService',
 ]

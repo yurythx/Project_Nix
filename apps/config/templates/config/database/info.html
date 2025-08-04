@@ -4,229 +4,228 @@
 
 {% block title %}Informações do Banco de Dados - {{ block.super }}{% endblock %}
 
+{% block config_title %}Informações do Banco de Dados{% endblock %}
+
 {% block config_content %}
-<div class="container-fluid">
-    <!-- Header da Página -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h1 class="h2 mb-1 text-sans text-body">
-                        <i class="fas fa-database me-2 text-django-green"></i>Informações do Banco de Dados
-                    </h1>
-                    <p class="text-secondary mb-0 text-body">Status e configurações atuais do banco de dados</p>
-                </div>
-                <div class="btn-group">
-                    <button type="button" class="btn btn-outline-info" onclick="testConnection()">
-                        <i class="fas fa-vial me-2"></i>Testar Conexão
-                    </button>
-                    <button type="button" class="btn btn-outline-secondary" onclick="location.reload()">
-                        <i class="fas fa-sync me-2"></i>Atualizar
-                    </button>
-                </div>
-            </div>
-        </div>
+<!-- Cabeçalho da Página -->
+<div class="config-page-header">
+    <div class="config-page-title-section">
+        <h1 class="config-page-title">
+            <i class="fas fa-database config-page-icon" aria-hidden="true"></i>
+            Informações do Banco de Dados
+        </h1>
+        <p class="config-page-subtitle">Status e configurações atuais do banco de dados</p>
     </div>
+    <div class="config-page-actions">
+        <button type="button" class="config-btn config-btn-outline" onclick="testConnection()">
+            <i class="fas fa-vial" aria-hidden="true"></i>
+            <span>Testar Conexão</span>
+        </button>
+        <button type="button" class="config-btn config-btn-outline" onclick="location.reload()">
+            <i class="fas fa-sync" aria-hidden="true"></i>
+            <span>Atualizar</span>
+        </button>
+    </div>
+</div>
 
-    <!-- Status da Conexão -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card-django border-0 shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title text-sans text-body">
-                        <i class="fas fa-plug me-2 text-django-green"></i>Status da Conexão
-                    </h5>
-                    
-                    {% if connection_status.status == 'success' %}
-                        <div class="alert alert-success d-flex align-items-center" role="alert">
-                            <i class="fas fa-check-circle me-2"></i>
-                            <div>
-                                <strong>Conexão Ativa!</strong> {{ connection_status.message }}
-                            </div>
-                        </div>
-                        
-                        {% if connection_status.details.version %}
-                            <p class="mb-0"><strong>Versão:</strong> {{ connection_status.details.version }}</p>
-                        {% endif %}
-                        
-                        {% if connection_status.details.file_exists %}
-                            <p class="mb-0"><strong>Arquivo:</strong> Existe ({{ connection_status.details.file_size|filesizeformat }})</p>
-                        {% endif %}
-                        
-                    {% else %}
-                        <div class="alert alert-danger d-flex align-items-center" role="alert">
-                            <i class="fas fa-exclamation-triangle me-2"></i>
-                            <div>
-                                <strong>Erro de Conexão!</strong> {{ connection_status.message }}
-                            </div>
-                        </div>
+<!-- Status da Conexão -->
+<div class="config-content-card">
+    <div class="config-content-header">
+        <h5 class="config-content-title">
+            <i class="fas fa-plug" aria-hidden="true"></i>
+            Status da Conexão
+        </h5>
+    </div>
+    <div class="config-content-body">
+        {% if connection_status.status == 'success' %}
+            <div class="alert alert-success" role="alert">
+                <i class="fas fa-check-circle" aria-hidden="true"></i>
+                <strong>Conexão Ativa!</strong> {{ connection_status.message }}
+            </div>
+            
+            {% if connection_status.details.version %}
+                <div class="config-info-item">
+                    <span class="config-info-label">Versão:</span>
+                    <span class="config-info-value">{{ connection_status.details.version }}</span>
+                </div>
+            {% endif %}
+            
+            {% if connection_status.details.file_exists %}
+                <div class="config-info-item">
+                    <span class="config-info-label">Arquivo:</span>
+                    <span class="config-info-value">Existe ({{ connection_status.details.file_size|filesizeformat }})</span>
+                </div>
+            {% endif %}
+            
+        {% else %}
+            <div class="alert alert-danger" role="alert">
+                <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
+                <strong>Erro de Conexão!</strong> {{ connection_status.message }}
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Grid de Informações -->
+<div class="config-grid config-grid-2">
+    <!-- Configuração Atual -->
+    <div class="config-content-card">
+        <div class="config-content-header">
+            <h5 class="config-content-title">
+                <i class="fas fa-info-circle" aria-hidden="true"></i>
+                Configuração Atual
+            </h5>
+        </div>
+        <div class="config-content-body">
+            {% if db_info.error %}
+                <div class="config-alert config-alert-warning" role="alert">
+                    <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
+                    {{ db_info.error }}
+                </div>
+            {% else %}
+                <div class="config-info-list">
+                    <div class="config-info-item">
+                        <span class="config-info-label">Tipo:</span>
+                        <span class="config-info-value">
+                            {% if db_info.is_sqlite %}
+                                <span class="config-badge config-badge-primary">SQLite</span>
+                            {% elif db_info.is_postgresql %}
+                                <span class="config-badge config-badge-info">PostgreSQL</span>
+                            {% elif db_info.is_mysql %}
+                                <span class="config-badge config-badge-warning">MySQL</span>
+                            {% else %}
+                                <span class="config-badge config-badge-secondary">{{ db_info.type }}</span>
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="config-info-item">
+                        <span class="config-info-label">Engine:</span>
+                        <span class="config-info-value"><code>{{ db_info.engine }}</code></span>
+                    </div>
+                    <div class="config-info-item">
+                        <span class="config-info-label">Nome:</span>
+                        <span class="config-info-value">{{ db_info.name }}</span>
+                    </div>
+                    {% if db_info.host %}
+                    <div class="config-info-item">
+                        <span class="config-info-label">Host:</span>
+                        <span class="config-info-value">{{ db_info.host }}</span>
+                    </div>
+                    {% endif %}
+                    {% if db_info.port %}
+                    <div class="config-info-item">
+                        <span class="config-info-label">Porta:</span>
+                        <span class="config-info-value">{{ db_info.port }}</span>
+                    </div>
+                    {% endif %}
+                    {% if db_info.user %}
+                    <div class="config-info-item">
+                        <span class="config-info-label">Usuário:</span>
+                        <span class="config-info-value">{{ db_info.user }}</span>
+                    </div>
+                    {% endif %}
+                    {% if db_info.file_path %}
+                    <div class="config-info-item">
+                        <span class="config-info-label">Arquivo:</span>
+                        <span class="config-info-value"><code>{{ db_info.file_path }}</code></span>
+                    </div>
                     {% endif %}
                 </div>
-            </div>
+            {% endif %}
         </div>
     </div>
-
-    <!-- Informações do Banco -->
-    <div class="row mb-4">
-        <div class="col-md-6">
-            <div class="card-django border-0 shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title text-sans text-body">
-                        <i class="fas fa-info-circle me-2 text-django-green"></i>Configuração Atual
-                    </h5>
-                    
-                    {% if db_info.error %}
-                        <div class="alert alert-warning">{{ db_info.error }}</div>
-                    {% else %}
-                        <div class="table-responsive">
-                            <table class="table table-borderless mb-0">
-                                <tr>
-                                    <td><strong>Tipo:</strong></td>
-                                    <td>
-                                        {% if db_info.is_sqlite %}
-                                            <span class="badge bg-primary">SQLite</span>
-                                        {% elif db_info.is_postgresql %}
-                                            <span class="badge bg-info">PostgreSQL</span>
-                                        {% elif db_info.is_mysql %}
-                                            <span class="badge bg-warning">MySQL</span>
-                                        {% else %}
-                                            <span class="badge bg-secondary">{{ db_info.type }}</span>
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Engine:</strong></td>
-                                    <td><code>{{ db_info.engine }}</code></td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Nome:</strong></td>
-                                    <td>{{ db_info.name }}</td>
-                                </tr>
-                                {% if db_info.host %}
-                                <tr>
-                                    <td><strong>Host:</strong></td>
-                                    <td>{{ db_info.host }}</td>
-                                </tr>
-                                {% endif %}
-                                {% if db_info.port %}
-                                <tr>
-                                    <td><strong>Porta:</strong></td>
-                                    <td>{{ db_info.port }}</td>
-                                </tr>
-                                {% endif %}
-                                {% if db_info.user %}
-                                <tr>
-                                    <td><strong>Usuário:</strong></td>
-                                    <td>{{ db_info.user }}</td>
-                                </tr>
-                                {% endif %}
-                                {% if db_info.file_path %}
-                                <tr>
-                                    <td><strong>Arquivo:</strong></td>
-                                    <td><code>{{ db_info.file_path }}</code></td>
-                                </tr>
-                                {% endif %}
-                            </table>
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
+    
+    <!-- Arquivo .env -->
+    <div class="config-content-card">
+        <div class="config-content-header">
+            <h5 class="config-content-title">
+                <i class="fas fa-file-code" aria-hidden="true"></i>
+                Arquivo .env
+            </h5>
         </div>
-        
-        <div class="col-md-6">
-            <div class="card-django border-0 shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title text-sans text-body">
-                        <i class="fas fa-file-code me-2 text-django-green"></i>Arquivo .env
-                    </h5>
-                    
-                    {% if env_info.exists %}
-                        <div class="alert alert-success d-flex align-items-center" role="alert">
-                            <i class="fas fa-check-circle me-2"></i>
-                            <div>Arquivo .env encontrado</div>
-                        </div>
-                        
-                        <div class="table-responsive">
-                            <table class="table table-borderless mb-0">
-                                <tr>
-                                    <td><strong>DATABASE_URL:</strong></td>
-                                    <td>
-                                        {% if env_info.has_database_url %}
-                                            <span class="badge bg-success">Configurado</span>
-                                        {% else %}
-                                            <span class="badge bg-warning">Não configurado</span>
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td><strong>DB_ENGINE:</strong></td>
-                                    <td>
-                                        {% if env_info.has_db_engine %}
-                                            <span class="badge bg-success">Configurado</span>
-                                        {% else %}
-                                            <span class="badge bg-warning">Não configurado</span>
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                            </table>
-                        </div>
-                        
-                        {% if env_info.variables %}
-                        <details class="mt-3">
-                            <summary class="text-muted">Ver todas as variáveis de banco</summary>
-                            <div class="mt-2">
-                                {% for key, value in env_info.variables.items %}
-                                <div class="small">
-                                    <code>{{ key }}={{ value }}</code>
-                                </div>
-                                {% endfor %}
-                            </div>
-                        </details>
-                        {% endif %}
-                        
-                    {% else %}
-                        <div class="alert alert-warning d-flex align-items-center" role="alert">
-                            <i class="fas fa-exclamation-triangle me-2"></i>
-                            <div>{{ env_info.message }}</div>
-                        </div>
-                    {% endif %}
+        <div class="config-content-body">
+            {% if env_info.exists %}
+                <div class="config-alert config-alert-success" role="alert">
+                    <i class="fas fa-check-circle" aria-hidden="true"></i>
+                    Arquivo .env encontrado
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Aviso sobre Configuração -->
-    <div class="row">
-        <div class="col-12">
-            <div class="alert alert-info d-flex align-items-center" role="alert">
-                <i class="fas fa-info-circle me-2"></i>
-                <div>
-                    <strong>Configuração de Banco de Dados</strong><br>
-                    A configuração do banco de dados é feita apenas uma vez durante o setup inicial do sistema. 
-                    Para alterar a configuração, use o <a href="{% url 'config:setup_wizard' %}" class="alert-link">Wizard de Setup</a>.
+                
+                    <div class="config-info-item">
+                        <span class="config-info-label">DATABASE_URL:</span>
+                        <span class="config-info-value">
+                            {% if env_info.has_database_url %}
+                                <span class="config-badge config-badge-success">Configurado</span>
+                            {% else %}
+                                <span class="config-badge config-badge-warning">Não configurado</span>
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="config-info-item">
+                        <span class="config-info-label">DB_ENGINE:</span>
+                        <span class="config-info-value">
+                            {% if env_info.has_db_engine %}
+                                <span class="config-badge config-badge-success">Configurado</span>
+                            {% else %}
+                                <span class="config-badge config-badge-warning">Não configurado</span>
+                            {% endif %}
+                        </span>
+                    </div>
                 </div>
-            </div>
+                
+                {% if env_info.variables %}
+                <details class="config-details">
+                    <summary class="config-details-summary">Ver todas as variáveis de banco</summary>
+                    <div class="config-details-content">
+                        {% for key, value in env_info.variables.items %}
+                        <div class="config-code-line">
+                            <code>{{ key }}={{ value }}</code>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </details>
+                {% endif %}
+                
+            {% else %}
+                <div class="alert alert-warning" role="alert">
+                    <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
+                    {{ env_info.message }}
+                </div>
+            {% endif %}
         </div>
     </div>
 </div>
 
-<div class="container my-4">
-    <h1 class="h3 mb-4 text-sans text-body">
-        <i class="fas fa-database me-2 text-django-green"></i>Configurações de Banco de Dados
-    </h1>
-    <div class="card-django border-0 shadow-sm mb-4">
-        <div class="card-body p-0">
-            {% with headers=[
-                {'label': 'Nome'},
-                {'label': 'Engine'},
-                {'label': 'Banco'},
-                {'label': 'Status'}
-            ] %}
-            {% with rows=db_configs|map:'db_config_row' %}
-                {% include 'config/includes/_table.html' with headers=headers rows=rows caption='Tabela de configurações de banco de dados' %}
-            {% endwith %}
-            {% endwith %}
+<!-- Aviso sobre Configuração -->
+<div class="config-content-card">
+    <div class="config-content-body">
+        <div class="alert alert-info" role="alert">
+            <i class="fas fa-info-circle" aria-hidden="true"></i>
+            <strong>Configuração de Banco de Dados</strong><br>
+            A configuração do banco de dados é feita apenas uma vez durante o setup inicial do sistema. 
+            Para alterar a configuração, use o <a href="{% url 'config:setup_wizard' %}" class="alert-link">Wizard de Setup</a>.
         </div>
+    </div>
+</div>
+
+<!-- Configurações de Banco de Dados -->
+<div class="config-content-card">
+    <div class="config-content-header">
+        <h5 class="config-content-title">
+            <i class="fas fa-database" aria-hidden="true"></i>
+            Configurações de Banco de Dados
+        </h5>
+    </div>
+    <div class="config-content-body">
+        {% with headers=[
+            {'label': 'Nome'},
+            {'label': 'Engine'},
+            {'label': 'Banco'},
+            {'label': 'Status'}
+        ] %}
+        {% with rows=db_configs|map:'db_config_row' %}
+            {% include 'config/includes/_table.html' with headers=headers rows=rows caption='Tabela de configurações de banco de dados' %}
+        {% endwith %}
+        {% endwith %}
     </div>
 </div>
 
@@ -283,4 +282,4 @@ function showAlert(type, title, message) {
 </script>
 
 {% csrf_token %}
-{% endblock %} 
+{% endblock %}

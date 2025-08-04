@@ -1,10 +1,36 @@
 {% extends 'config/base_config.html' %}
 {% load config_extras %}
 
+{% block config_title %}Configuração do Sistema{% endblock %}
+
 {% block config_content %}
-<!-- Configuração do Sistema -->
-<div class="container my-5">
-    <h1 class="h3 mb-4">Configuração do Sistema</h1>
-    {% block page_content %}{% endblock %}
+<!-- Cabeçalho da Página -->
+<div class="config-page-header">
+    <div class="config-page-title-section">
+        <h1 class="config-page-title">
+            <i class="fas fa-cogs config-page-icon" aria-hidden="true"></i>
+            Configuração do Sistema
+        </h1>
+    </div>
+</div>
+
+<!-- Conteúdo da Página -->
+<div class="config-page-content">
+    {% block page_content %}
+    <div class="config-content-card">
+        <div class="config-content-header">
+            <h5 class="config-content-title">
+                <i class="fas fa-info-circle" aria-hidden="true"></i>
+                Informações do Sistema
+            </h5>
+        </div>
+        <div class="config-content-body">
+            <div class="config-content-text">
+                <p>Esta página permite configurar as definições gerais do sistema.</p>
+                <p>Use as opções abaixo para personalizar o comportamento da aplicação.</p>
+            </div>
+        </div>
+    </div>
+    {% endblock %}
 </div>
 {% endblock %}

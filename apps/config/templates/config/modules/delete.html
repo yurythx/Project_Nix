@@ -1,20 +1,44 @@
 {% extends 'config/base_config.html' %}
 {% block config_title %}Deletar Módulo{% endblock %}
 {% block config_content %}
-<div class="row justify-content-center">
-  <div class="col-lg-7 col-md-9">
-    <div class="card shadow-sm">
-      <div class="card-body">
-        <h1 class="h4 mb-4 text-danger"><i class="fas fa-trash-alt me-2"></i>Deletar Módulo</h1>
-        <p>Tem certeza que deseja deletar o módulo <strong>"{{ object.display_name }}"</strong>?</p>
-        <form method="post" class="mb-3">{% csrf_token %}
-          <div class="d-flex justify-content-between mt-4">
-            <a href="{% url 'config:module_list' %}" class="btn btn-outline-secondary"><i class="fas fa-times me-1"></i>Cancelar</a>
-            <button type="submit" class="btn btn-danger"><i class="fas fa-trash-alt me-1"></i>Confirmar</button>
+<div class="config-page">
+  <!-- Cabeçalho da Página -->
+  <div class="config-page-header">
+    <div class="config-page-title-section">
+      <h1 class="config-page-title config-text-danger">
+        <i class="fas fa-trash-alt"></i>
+        Deletar Módulo
+      </h1>
+      <p class="config-page-subtitle">Confirme a exclusão do módulo</p>
+    </div>
+  </div>
+
+  <!-- Conteúdo da Página -->
+  <div class="config-page-content">
+    <div class="config-content-card">
+      <div class="config-content-header">
+        <h2 class="config-content-title">Confirmação de Exclusão</h2>
+      </div>
+      <div class="config-content-body">
+        <div class="config-alert config-alert-warning">
+          <p>Tem certeza que deseja deletar o módulo <strong>"{{ object.display_name }}"</strong>?</p>
+          <p>Esta ação não pode ser desfeita.</p>
+        </div>
+        <form method="post">
+          {% csrf_token %}
+          <div class="config-form-actions">
+            <a href="{% url 'config:module_list' %}" class="config-btn config-btn-secondary">
+              <i class="fas fa-times"></i>
+              Cancelar
+            </a>
+            <button type="submit" class="config-btn config-btn-danger">
+              <i class="fas fa-trash-alt"></i>
+              Confirmar
+            </button>
           </div>
         </form>
       </div>
     </div>
   </div>
 </div>
-{% endblock %} 
+{% endblock %}

@@ -75,7 +75,7 @@ class ProfileUpdateForm(forms.ModelForm):
                 css_class='mb-4'
             ),
             Div(
-                Submit('submit', '💾 Salvar Alterações', css_class='btn btn-primary btn-lg'),
+                Submit('profile_submit', '💾 Salvar Alterações', css_class='btn btn-primary btn-lg'),
                 HTML('<a href="{% url "accounts:profile" %}" class="btn btn-outline-secondary btn-lg ms-2">❌ Cancelar</a>'),
                 css_class='text-center'
             )
@@ -245,7 +245,7 @@ class AvatarUpdateForm(forms.ModelForm):
                 css_class='mb-4'
             ),
             Div(
-                Submit('submit', '📸 Atualizar Foto', css_class='btn btn-success btn-lg'),
+                Submit('avatar_submit', '📸 Atualizar Foto', css_class='btn btn-success btn-lg'),
                 HTML('<button type="button" class="btn btn-outline-danger btn-lg ms-2" onclick="removeAvatar()">🗑️ Remover Foto</button>'),
                 css_class='text-center'
             )
@@ -318,7 +318,7 @@ class EmailUpdateForm(forms.ModelForm):
                 css_class='mb-4'
             ),
             Div(
-                Submit('submit', '📧 Alterar E-mail', css_class='btn btn-warning btn-lg'),
+                Submit('email_submit', '📧 Alterar E-mail', css_class='btn btn-warning btn-lg'),
                 HTML('<a href="{% url "accounts:profile" %}" class="btn btn-outline-secondary btn-lg ms-2">❌ Cancelar</a>'),
                 css_class='text-center'
             )
@@ -405,7 +405,7 @@ class PasswordChangeForm(forms.Form):
                 css_class='mb-4'
             ),
             Div(
-                Submit('submit', '🔒 Alterar Senha', css_class='btn btn-danger btn-lg'),
+                Submit('password_submit', '🔒 Alterar Senha', css_class='btn btn-danger btn-lg'),
                 HTML('<a href="{% url "accounts:profile" %}" class="btn btn-outline-secondary btn-lg ms-2">❌ Cancelar</a>'),
                 css_class='text-center'
             )

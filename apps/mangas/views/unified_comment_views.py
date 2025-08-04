@@ -14,10 +14,11 @@ from ..models.capitulo import Capitulo
 from ..models.manga import Manga
 from apps.comments.services.unified_comment_service import create_comment_service
 from apps.comments.exceptions import CommentNotFoundError, CommentValidationError
+from apps.comments.decorators import require_comments_module, CommentsModuleMixin
 
 logger = logging.getLogger(__name__)
 
-class MangaCommentCreateView(LoginRequiredMixin, View):
+class MangaCommentCreateView(CommentsModuleMixin, LoginRequiredMixin, View):
     """
     View para criar comentários em mangás usando service unificado
     
@@ -83,7 +84,7 @@ class MangaCommentCreateView(LoginRequiredMixin, View):
             messages.error(request, "Erro interno do servidor")
             return JsonResponse({'error': 'Erro interno'}, status=500)
 
-class ChapterCommentCreateView(LoginRequiredMixin, View):
+class ChapterCommentCreateView(CommentsModuleMixin, LoginRequiredMixin, View):
     """
     View para criar comentários em capítulos usando service unificado
     """
@@ -143,7 +144,7 @@ class ChapterCommentCreateView(LoginRequiredMixin, View):
             logger.error(f"Erro ao criar comentário no capítulo {chapter_slug}: {e}")
             return JsonResponse({'error': 'Erro interno'}, status=500)
 
-class CommentUpdateView(LoginRequiredMixin, View):
+class CommentUpdateView(CommentsModuleMixin, LoginRequiredMixin, View):
     """
     View unificada para atualizar comentários
     """
@@ -185,7 +186,7 @@ class CommentUpdateView(LoginRequiredMixin, View):
             logger.error(f"Erro ao atualizar comentário {comment_id}: {e}")
             return JsonResponse({'error': 'Erro interno'}, status=500)
 
-class CommentDeleteView(LoginRequiredMixin, View):
+class CommentDeleteView(CommentsModuleMixin, LoginRequiredMixin, View):
     """
     View unificada para deletar comentários
     """
@@ -212,7 +213,7 @@ class CommentDeleteView(LoginRequiredMixin, View):
             logger.error(f"Erro ao deletar comentário {comment_id}: {e}")
             return JsonResponse({'error': 'Erro interno'}, status=500)
 
-class CommentModerationView(LoginRequiredMixin, View):
+class CommentModerationView(CommentsModuleMixin, LoginRequiredMixin, View):
     """
     View para moderação de comentários (apenas staff)
     """

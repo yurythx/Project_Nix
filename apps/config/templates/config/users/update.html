@@ -1,16 +1,52 @@
 {% extends 'config/base_config.html' %}
-
 {% load crispy_forms_tags %}
 
+{% block config_title %}Editar Usuário{% endblock %}
+
 {% block config_content %}
-<!-- Atualização de usuário -->
-<div class="container my-5">
-    <h1 class="h3 mb-4">Editar Usuário</h1>
-    {% block page_content %}
-        <form method="post" novalidate>
+<!-- Cabeçalho da Página -->
+<div class="config-page-header">
+    <div class="config-page-title-section">
+        <h1 class="config-page-title">
+            <i class="fas fa-user-edit config-page-icon" aria-hidden="true"></i>
+            Editar Usuário
+        </h1>
+        <p class="config-page-subtitle">Modifique as informações do usuário</p>
+    </div>
+    <div class="config-page-actions">
+        <a href="{% url 'config:user_list' %}" class="config-btn config-btn-secondary">
+            <i class="fas fa-arrow-left" aria-hidden="true"></i>
+            <span>Voltar</span>
+        </a>
+    </div>
+</div>
+
+<!-- Formulário de Edição -->
+<div class="config-content-card">
+    <div class="config-content-header">
+        <h5 class="config-content-title">
+            <i class="fas fa-user-cog" aria-hidden="true"></i>
+            Informações do Usuário
+        </h5>
+    </div>
+    <div class="config-content-body">
+        {% block page_content %}
+        <form method="post" class="config-form" novalidate>
             {% csrf_token %}
             {{ form|crispy }}
+            
+            <div class="config-form-actions">
+                <button type="submit" class="config-btn config-btn-primary">
+                    <i class="fas fa-save" aria-hidden="true"></i>
+                    Salvar Alterações
+                </button>
+                <a href="{% url 'config:user_list' %}" class="config-btn config-btn-secondary">
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                    Cancelar
+                </a>
+            </div>
         </form>
-    {% endblock %}
+        {% endblock %}
+    </div>
 </div>
 {% endblock %}

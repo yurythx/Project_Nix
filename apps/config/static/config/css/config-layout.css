@@ -1,0 +1,1089 @@
+/* === CONFIG APP LAYOUT OPTIMIZATION === */
+
+/* === VARIÁVEIS CUSTOMIZADAS === */
+:root {
+    --config-sidebar-width: 280px;
+    --config-sidebar-width-collapsed: 60px;
+    --config-header-height: 70px;
+    --config-border-radius: 0.5rem;
+    --config-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    --config-shadow-hover: 0 4px 16px rgba(0, 0, 0, 0.12);
+    --config-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --config-spacing-xs: 0.25rem;
+    --config-spacing-sm: 0.5rem;
+    --config-spacing-md: 1rem;
+    --config-spacing-lg: 1.5rem;
+    --config-spacing-xl: 2rem;
+}
+
+/* === LAYOUT BASE === */
+.config-container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.config-main-wrapper {
+    display: flex;
+    flex: 1;
+    min-height: calc(100vh - var(--config-header-height));
+}
+
+/* === SIDEBAR OTIMIZADA === */
+.config-sidebar {
+    width: var(--config-sidebar-width);
+    background: var(--bg-color);
+    border-right: 1px solid var(--border-color);
+    box-shadow: var(--config-shadow);
+    transition: var(--config-transition);
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    z-index: 1000;
+}
+
+.config-sidebar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.config-sidebar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.config-sidebar::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 3px;
+}
+
+.config-sidebar::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
+}
+
+/* === SIDEBAR SECTIONS === */
+.sidebar-section {
+    margin-bottom: var(--config-spacing-lg);
+    padding-bottom: var(--config-spacing-md);
+}
+
+.sidebar-section:not(:last-child) {
+    border-bottom: 1px solid rgba(var(--border-color-rgb), 0.1);
+}
+
+.sidebar-section:first-child {
+    border-bottom: 2px solid var(--nix-primary);
+    margin-bottom: var(--config-spacing-xl);
+}
+
+.sidebar-heading {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    margin-bottom: var(--config-spacing-sm);
+    padding: 0 var(--config-spacing-md);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.sidebar-heading .badge {
+    font-size: 0.65rem;
+    font-weight: 500;
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--config-border-radius);
+}
+
+/* === SIDEBAR NAVIGATION === */
+.sidebar-nav {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar-nav-item {
+    margin-bottom: 2px;
+}
+
+.sidebar-nav-link {
+    display: flex;
+    align-items: center;
+    padding: var(--config-spacing-sm) var(--config-spacing-md);
+    color: var(--text-color);
+    text-decoration: none;
+    border-radius: var(--config-border-radius);
+    margin: 0 var(--config-spacing-sm);
+    transition: var(--config-transition);
+    font-weight: 500;
+    font-size: 0.875rem;
+    position: relative;
+}
+
+.sidebar-nav-link:hover {
+    background: rgba(var(--nix-primary-rgb), 0.1);
+    color: var(--nix-primary);
+    transform: translateX(2px);
+}
+
+.sidebar-nav-link.active {
+    background: var(--nix-primary);
+    color: white;
+    box-shadow: var(--config-shadow);
+}
+
+.sidebar-nav-link.active::before {
+    content: '';
+    position: absolute;
+    left: -var(--config-spacing-sm);
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 60%;
+    background: var(--nix-accent);
+    border-radius: 0 2px 2px 0;
+}
+
+.sidebar-nav-link i {
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: var(--config-spacing-sm);
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+/* === DASHBOARD LINK ESPECIAL === */
+.sidebar-section:first-child .sidebar-nav-link {
+    background: linear-gradient(135deg, var(--nix-primary), var(--nix-accent));
+    color: white;
+    font-weight: 600;
+    font-size: 1rem;
+    padding: var(--config-spacing-md);
+    margin: var(--config-spacing-sm);
+    box-shadow: var(--config-shadow-hover);
+}
+
+.sidebar-section:first-child .sidebar-nav-link:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(var(--nix-primary-rgb), 0.4);
+}
+
+/* === CONTEÚDO PRINCIPAL === */
+.config-content {
+    flex: 1;
+    padding: var(--config-spacing-xl);
+    background: var(--bg-secondary);
+    min-height: 100vh;
+    overflow-x: auto;
+}
+
+.config-content-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* === CABEÇALHO DA PÁGINA === */
+.config-page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--config-spacing-xl);
+    padding-bottom: var(--config-spacing-md);
+    border-bottom: 2px solid var(--border-color);
+}
+
+.config-page-title {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: var(--text-color);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    position: relative;
+}
+
+.config-page-title::before {
+    content: '';
+    position: absolute;
+    left: -var(--config-spacing-md);
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: linear-gradient(to bottom, var(--nix-primary), var(--nix-accent));
+    border-radius: 2px;
+}
+
+.config-page-title i {
+    margin-right: var(--config-spacing-sm);
+    color: var(--nix-accent);
+}
+
+.config-page-actions {
+    display: flex;
+    gap: var(--config-spacing-sm);
+    align-items: center;
+}
+
+/* === CARDS OTIMIZADOS === */
+.config-card {
+    background: var(--bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--config-border-radius);
+    box-shadow: var(--config-shadow);
+    transition: var(--config-transition);
+    margin-bottom: var(--config-spacing-lg);
+}
+
+.config-card:hover {
+    box-shadow: var(--config-shadow-hover);
+    transform: translateY(-2px);
+}
+
+.config-card-header {
+    padding: var(--config-spacing-md) var(--config-spacing-lg);
+    border-bottom: 1px solid var(--border-color);
+    background: rgba(var(--nix-primary-rgb), 0.02);
+    border-radius: var(--config-border-radius) var(--config-border-radius) 0 0;
+}
+
+.config-card-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin: 0;
+    color: var(--text-color);
+    display: flex;
+    align-items: center;
+}
+
+.config-card-title i {
+    margin-right: var(--config-spacing-sm);
+    color: var(--nix-primary);
+}
+
+.config-card-body {
+    padding: var(--config-spacing-lg);
+}
+
+/* === ESTATÍSTICAS === */
+.config-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--config-spacing-lg);
+    margin-bottom: var(--config-spacing-xl);
+}
+
+.config-stat-card {
+    background: var(--bg-color);
+    border-radius: var(--config-border-radius);
+    padding: var(--config-spacing-lg);
+    box-shadow: var(--config-shadow);
+    transition: var(--config-transition);
+    position: relative;
+    overflow: hidden;
+}
+
+.config-stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--nix-primary), var(--nix-accent));
+}
+
+.config-stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--config-shadow-hover);
+}
+
+.config-stat-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.config-stat-info h3 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0;
+    color: var(--text-color);
+}
+
+.config-stat-info p {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 500;
+}
+
+.config-stat-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(var(--nix-primary-rgb), 0.1);
+    color: var(--nix-primary);
+    font-size: 1.5rem;
+}
+
+/* === TABELAS RESPONSIVAS === */
+.config-table-wrapper {
+    background: var(--bg-color);
+    border-radius: var(--config-border-radius);
+    box-shadow: var(--config-shadow);
+    overflow: hidden;
+}
+
+.config-table {
+    width: 100%;
+    margin: 0;
+    border-collapse: collapse;
+}
+
+.config-table th {
+    background: rgba(var(--nix-primary-rgb), 0.05);
+    padding: var(--config-spacing-md);
+    font-weight: 600;
+    color: var(--text-color);
+    border-bottom: 2px solid var(--border-color);
+    text-align: left;
+}
+
+.config-table td {
+    padding: var(--config-spacing-md);
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-color);
+}
+
+.config-table tbody tr:hover {
+    background: rgba(var(--nix-primary-rgb), 0.02);
+}
+
+/* === STATUS DE CONFIGURAÇÃO === */
+.config-status-grid {
+    display: grid;
+    grid-template-columns: 1fr 3fr;
+    gap: var(--config-spacing-lg);
+    align-items: center;
+}
+
+.config-status-icon {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.config-status-icon i {
+    font-size: 3rem;
+    margin-bottom: var(--config-spacing-sm);
+}
+
+.config-status-label {
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.config-status-success {
+    color: var(--nix-success);
+}
+
+.config-status-warning {
+    color: var(--nix-warning);
+}
+
+.config-status-details {
+    display: flex;
+    flex-direction: column;
+    gap: var(--config-spacing-md);
+}
+
+.config-status-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--config-spacing-md);
+}
+
+.config-status-item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--config-spacing-xs);
+}
+
+.config-status-key {
+    font-weight: 600;
+    color: var(--text-muted);
+    font-size: 0.875rem;
+}
+
+.config-status-value {
+    font-size: 1rem;
+    color: var(--text-color);
+}
+
+/* === FORMULÁRIOS === */
+.config-form {
+    background: var(--bg-color);
+    border-radius: var(--config-border-radius);
+    box-shadow: var(--config-shadow);
+    padding: var(--config-spacing-xl);
+}
+
+.config-form-section {
+    margin-bottom: var(--config-spacing-xl);
+    padding-bottom: var(--config-spacing-lg);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.config-form-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.config-form-section-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-color);
+    margin-bottom: var(--config-spacing-md);
+    display: flex;
+    align-items: center;
+}
+
+.config-form-section-title i {
+    margin-right: var(--config-spacing-sm);
+    color: var(--nix-primary);
+}
+
+.config-form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--config-spacing-md);
+    margin-bottom: var(--config-spacing-md);
+}
+
+.config-form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.config-form-label {
+    font-weight: 500;
+    color: var(--text-muted);
+    margin-bottom: var(--config-spacing-xs);
+    font-size: 0.9rem;
+}
+
+.config-form-input,
+.config-form-select,
+.config-form-textarea {
+    padding: var(--config-spacing-sm);
+    border: 1px solid var(--border-color);
+    border-radius: var(--config-border-radius);
+    font-size: 0.9rem;
+    transition: var(--config-transition);
+    background-color: var(--bg-color);
+    color: var(--text-color);
+}
+
+.config-form-input:focus,
+.config-form-select:focus,
+.config-form-textarea:focus {
+    outline: none;
+    border-color: var(--nix-primary);
+    box-shadow: 0 0 0 3px rgba(var(--nix-primary-rgb), 0.1);
+}
+
+.config-form-textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.config-form-help {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: var(--config-spacing-xs);
+}
+
+.config-form-actions {
+    display: flex;
+    gap: var(--config-spacing-md);
+    justify-content: flex-end;
+    margin-top: var(--config-spacing-xl);
+    padding-top: var(--config-spacing-lg);
+    border-top: 1px solid var(--border-color);
+}
+
+/* Estilos para variáveis de template */
+.config-variables-section {
+    margin-bottom: var(--config-spacing-lg);
+}
+
+.config-variables-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: var(--config-spacing-sm);
+    margin-top: var(--config-spacing-lg);
+}
+
+.config-variables-title:first-child {
+    margin-top: 0;
+}
+
+.config-variables-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.config-variables-list li {
+    padding: var(--config-spacing-xs) 0;
+    border-bottom: 1px solid rgba(var(--border-color-rgb), 0.1);
+    font-size: 0.9rem;
+    color: var(--text-color);
+}
+
+.config-variables-list li:last-child {
+    border-bottom: none;
+}
+
+.config-variables-list code {
+    background-color: var(--bg-secondary);
+    color: var(--nix-primary);
+    padding: 0.2rem 0.4rem;
+    border-radius: 3px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+/* Estilos para guia de estilo */
+.config-style-guide {
+    margin-bottom: var(--config-spacing-md);
+}
+
+.config-color-palette {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: var(--config-spacing-md);
+    margin-bottom: var(--config-spacing-lg);
+}
+
+.config-color-item {
+    display: flex;
+    align-items: center;
+    gap: var(--config-spacing-xs);
+    font-size: 0.9rem;
+    color: var(--text-color);
+}
+
+.config-color-swatch {
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+    flex-shrink: 0;
+}
+
+/* === BOTÕES === */
+.config-btn {
+    padding: var(--config-spacing-sm) var(--config-spacing-lg);
+    border-radius: var(--config-border-radius);
+    font-weight: 500;
+    transition: var(--config-transition);
+    border: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--config-spacing-xs);
+}
+
+.config-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--config-shadow);
+}
+
+.config-btn-primary {
+    background: var(--nix-primary);
+    color: white;
+}
+
+.config-btn-primary:hover {
+    background: var(--nix-primary-dark);
+}
+
+.config-btn-group {
+    display: flex;
+    gap: var(--config-spacing-xs);
+    flex-wrap: wrap;
+}
+
+/* === MOBILE CARDS === */
+.config-mobile-card {
+    background: var(--bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--config-border-radius);
+    padding: var(--config-spacing-md);
+    margin-bottom: var(--config-spacing-md);
+    box-shadow: var(--config-shadow);
+}
+
+.config-mobile-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: var(--config-spacing-sm);
+}
+
+.config-mobile-card-title {
+    font-weight: 600;
+    color: var(--text-color);
+    margin: 0;
+}
+
+.config-mobile-card-meta {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    margin-bottom: var(--config-spacing-sm);
+}
+
+.config-mobile-card-actions {
+    display: flex;
+    gap: var(--config-spacing-xs);
+    flex-wrap: wrap;
+}
+
+/* === RESPONSIVIDADE === */
+
+/* Tablets */
+@media (max-width: 991.98px) {
+    .config-sidebar {
+        position: fixed;
+        left: -100%;
+        top: 0;
+        height: 100vh;
+        z-index: 1050;
+        transition: left 0.3s ease;
+    }
+    
+    .config-sidebar.show {
+        left: 0;
+    }
+    
+    .config-content {
+        padding: var(--config-spacing-md);
+        margin-left: 0;
+    }
+    
+    .config-page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--config-spacing-md);
+    }
+    
+    .config-page-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+    
+    .config-stats-grid {
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: var(--config-spacing-md);
+    }
+}
+
+/* Mobile */
+@media (max-width: 767.98px) {
+    .config-content {
+        padding: var(--config-spacing-sm);
+    }
+    
+    .config-page-title {
+        font-size: 1.5rem;
+    }
+    
+    .config-page-title::before {
+        left: -var(--config-spacing-sm);
+    }
+    
+    .config-card-body,
+    .config-form {
+        padding: var(--config-spacing-md);
+    }
+    
+    .config-stats-grid {
+        grid-template-columns: 1fr;
+        gap: var(--config-spacing-sm);
+    }
+    
+    .config-stat-card {
+        padding: var(--config-spacing-md);
+    }
+    
+    .config-stat-info h3 {
+        font-size: 1.5rem;
+    }
+    
+    .config-stat-icon {
+        width: 50px;
+        height: 50px;
+        font-size: 1.25rem;
+    }
+    
+    .config-btn-group {
+        flex-direction: column;
+    }
+    
+    .config-btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    /* Esconder tabela desktop, mostrar cards mobile */
+    .config-table-wrapper {
+        display: none;
+    }
+    
+    .config-mobile-cards {
+        display: block;
+    }
+    
+    .config-form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .config-form-actions {
+        flex-direction: column;
+    }
+    
+    .config-form-actions .config-btn {
+        width: 100%;
+    }
+    
+    .config-color-palette {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .config-progress-bar {
+        height: 1.25rem;
+    }
+    
+    .config-progress-text {
+        font-size: 0.75rem;
+    }
+}
+
+/* Desktop */
+@media (min-width: 768px) {
+    .config-mobile-cards {
+        display: none;
+    }
+    
+    .config-table-wrapper {
+        display: block;
+    }
+}
+
+/* === OFFCANVAS MOBILE === */
+.config-mobile-toggle {
+    position: fixed;
+    top: var(--config-spacing-md);
+    left: var(--config-spacing-md);
+    z-index: 1060;
+    background: var(--nix-primary);
+    color: white;
+    border: none;
+    border-radius: var(--config-border-radius);
+    padding: var(--config-spacing-sm);
+    box-shadow: var(--config-shadow);
+}
+
+.config-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1040;
+    opacity: 0;
+    visibility: hidden;
+    transition: var(--config-transition);
+}
+
+.config-overlay.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* === TEMA ESCURO === */
+[data-theme="dark"] .config-sidebar {
+    background: var(--bg-color);
+    border-right-color: var(--border-color);
+}
+
+[data-theme="dark"] .config-card,
+[data-theme="dark"] .config-stat-card,
+[data-theme="dark"] .config-form,
+[data-theme="dark"] .config-mobile-card {
+    background: var(--bg-secondary);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] .config-table th {
+    background: rgba(var(--nix-primary-rgb), 0.1);
+}
+
+[data-theme="dark"] .config-table tbody tr:hover {
+    background: rgba(var(--nix-primary-rgb), 0.05);
+}
+
+/* === ANIMAÇÕES === */
+@keyframes configFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.config-animate-in {
+    animation: configFadeIn 0.3s ease-out;
+}
+
+/* === UTILITÁRIOS === */
+.config-text-primary {
+    color: var(--nix-primary) !important;
+}
+
+.config-text-muted {
+    color: var(--text-muted) !important;
+}
+
+.config-bg-primary {
+    background-color: var(--nix-primary) !important;
+}
+
+.config-border-primary {
+    border-color: var(--nix-primary) !important;
+}
+
+.config-shadow {
+    box-shadow: var(--config-shadow) !important;
+}
+
+.config-shadow-hover {
+    box-shadow: var(--config-shadow-hover) !important;
+}
+
+/* === ACESSIBILIDADE === */
+.config-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.config-focus-visible:focus-visible {
+    outline: 2px solid var(--nix-accent);
+    outline-offset: 2px;
+}
+
+/* === UPLOAD E PROGRESSO === */
+.config-upload-progress {
+    margin: var(--config-spacing-md) 0;
+}
+
+.config-progress-bar {
+    background-color: var(--bg-secondary);
+    border-radius: var(--config-border-radius);
+    height: 1.5rem;
+    overflow: hidden;
+    position: relative;
+    border: 1px solid var(--border-color);
+}
+
+.config-progress-fill {
+    background: linear-gradient(90deg, var(--nix-primary), var(--nix-accent));
+    height: 100%;
+    transition: width 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.config-progress-text {
+    color: white;
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* === BOTÕES DE PERIGO === */
+.config-btn-danger {
+    background: linear-gradient(135deg, var(--nix-danger), #c82333);
+    border: 1px solid var(--nix-danger);
+    color: white;
+}
+
+.config-btn-danger:hover {
+    background: linear-gradient(135deg, #c82333, #a71e2a);
+    border-color: #c82333;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+}
+
+.config-btn-danger:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(220, 53, 69, 0.2);
+}
+
+/* === INFORMAÇÕES E DETALHES === */
+.config-info-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--config-spacing-sm);
+}
+
+.config-info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--config-spacing-sm) 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.config-info-item:last-child {
+    border-bottom: none;
+}
+
+.config-info-label {
+    font-weight: 600;
+    color: var(--text-primary);
+    min-width: 120px;
+}
+
+.config-info-value {
+    color: var(--text-secondary);
+    text-align: right;
+}
+
+.config-info-value code {
+    background-color: var(--bg-secondary);
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--config-border-radius-sm);
+    font-size: 0.875rem;
+    border: 1px solid var(--border-color);
+}
+
+/* === BADGES === */
+.config-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: var(--config-border-radius);
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+}
+
+.config-badge-primary {
+    background-color: var(--nix-primary);
+    color: white;
+}
+
+.config-badge-secondary {
+    background-color: var(--text-muted);
+    color: white;
+}
+
+.config-badge-success {
+    background-color: var(--nix-success);
+    color: white;
+}
+
+.config-badge-warning {
+    background-color: var(--nix-warning);
+    color: var(--text-primary);
+}
+
+.config-badge-info {
+    background-color: var(--nix-info);
+    color: white;
+}
+
+/* === DETALHES EXPANSÍVEIS === */
+.config-details {
+    margin-top: var(--config-spacing-md);
+    border: 1px solid var(--border-color);
+    border-radius: var(--config-border-radius);
+    overflow: hidden;
+}
+
+.config-details-summary {
+    padding: var(--config-spacing-sm) var(--config-spacing-md);
+    background-color: var(--bg-secondary);
+    cursor: pointer;
+    font-weight: 500;
+    color: var(--text-secondary);
+    border: none;
+    outline: none;
+    transition: background-color 0.2s ease;
+}
+
+.config-details-summary:hover {
+    background-color: var(--bg-hover);
+}
+
+.config-details-content {
+    padding: var(--config-spacing-md);
+    background-color: var(--bg-primary);
+    border-top: 1px solid var(--border-color);
+}
+
+.config-code-line {
+    margin-bottom: var(--config-spacing-xs);
+    font-family: var(--font-mono);
+}
+
+.config-code-line:last-child {
+    margin-bottom: 0;
+}
+
+.config-code-line code {
+    background-color: var(--bg-secondary);
+    padding: 0.5rem;
+    border-radius: var(--config-border-radius-sm);
+    display: block;
+    border: 1px solid var(--border-color);
+    font-size: 0.875rem;
+}
+
+/* === PERFORMANCE === */
+.config-will-change {
+    will-change: transform, opacity;
+}
+
+.config-gpu-accelerated {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    perspective: 1000px;
+}

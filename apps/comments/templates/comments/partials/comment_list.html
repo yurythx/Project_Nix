@@ -1,0 +1,123 @@
+{% load static %}
+{% load humanize %}
+
+<div class="comments-list">
+    {% if comments %}
+        {% for comment in comments %}
+            <div class="comment-item" data-comment-id="{{ comment.uuid }}" data-depth="{{ comment.depth }}">
+                <div class="comment-content">
+                    <div class="comment-header">
+                        <div class="comment-author">
+                            {% if comment.author.avatar %}
+                                <img src="{{ comment.author.avatar.url }}" alt="{{ comment.author.username }}" class="author-avatar">
+                            {% else %}
+                                <div class="author-avatar-placeholder">
+                                    {{ comment.author.username|first|upper }}
+                                </div>
+                            {% endif %}
+                            <div class="author-info">
+                                <span class="author-name">{{ comment.author.username }}</span>
+                                {% if comment.author.is_staff %}
+                                    <span class="staff-badge">Staff</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="comment-meta">
+                            <time datetime="{{ comment.created_at|date:'c' }}" class="comment-date">
+                                {{ comment.created_at|naturaltime }}
+                            </time>
+                            {% if comment.is_edited %}
+                                <span class="edited-indicator" title="Comentário editado">✏️</span>
+                            {% endif %}
+                            {% if comment.is_pinned %}
+                                <span class="pinned-indicator" title="Comentário fixado">📌</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="comment-body">
+                        <div class="comment-text">
+                            {{ comment.content|linebreaks }}
+                        </div>
+                    </div>
+                    
+                    <div class="comment-actions">
+                        <div class="comment-reactions">
+                            <button class="reaction-btn like-btn {% if user_reaction == 'like' %}active{% endif %}" 
+                                    data-action="like" data-comment-id="{{ comment.uuid }}">
+                                <span class="reaction-icon">👍</span>
+                                <span class="reaction-count">{{ comment.likes_count }}</span>
+                            </button>
+                            
+                            <button class="reaction-btn dislike-btn {% if user_reaction == 'dislike' %}active{% endif %}" 
+                                    data-action="dislike" data-comment-id="{{ comment.uuid }}">
+                                <span class="reaction-icon">👎</span>
+                                <span class="reaction-count">{{ comment.dislikes_count }}</span>
+                            </button>
+                        </div>
+                        
+                        <div class="comment-controls">
+                            {% if comment.can_have_replies %}
+                                <button class="reply-btn" data-comment-id="{{ comment.uuid }}">
+                                    💬 Responder
+                                </button>
+                            {% endif %}
+                            
+                            {% if user.is_authenticated %}
+                                {% if comment.author == user and comment.can_be_edited_by:user %}
+                                    <button class="edit-btn" data-comment-id="{{ comment.uuid }}">
+                                        ✏️ Editar
+                                    </button>
+                                {% endif %}
+                                
+                                {% if comment.can_be_deleted_by:user %}
+                                    <button class="delete-btn" data-comment-id="{{ comment.uuid }}">
+                                        🗑️ Deletar
+                                    </button>
+                                {% endif %}
+                                
+                                {% if user != comment.author %}
+                                    <button class="report-btn" data-comment-id="{{ comment.uuid }}">
+                                        🚩 Denunciar
+                                    </button>
+                                {% endif %}
+                                
+                                {% if user.is_staff %}
+                                    <div class="staff-actions">
+                                        {% if not comment.is_pinned %}
+                                            <button class="pin-btn" data-comment-id="{{ comment.uuid }}">
+                                                📌 Fixar
+                                            </button>
+                                        {% else %}
+                                            <button class="unpin-btn" data-comment-id="{{ comment.uuid }}">
+                                                📌 Desfixar
+                                            </button>
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Replies -->
+                {% if comment.replies.all %}
+                    <div class="comment-replies" id="replies-{{ comment.uuid }}">
+                        {% for reply in comment.replies.all %}
+                            {% if reply.status == 'approved' %}
+                                {% include "comments/partials/comment_list.html" with comments=reply only %}
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="no-comments text-center py-5">
+            <i class="fas fa-comments fa-3x text-secondary mb-3"></i>
+            <h5 class="text-secondary">Nenhum comentário encontrado</h5>
+            <p class="text-secondary">Seja o primeiro a comentar!</p>
+        </div>
+    {% endif %}
+</div>

@@ -23,6 +23,7 @@ from ..repositories import (
     DjangoModerationRepository
 )
 from ..forms import CommentForm, CommentSearchForm
+from ..decorators import require_comments_module, CommentsModuleMixin
 
 
 class CommentServiceMixin:
@@ -49,7 +50,7 @@ class CommentServiceMixin:
         self.websocket_service = WebSocketService()
 
 
-class CommentListView(CommentServiceMixin, ListView):
+class CommentListView(CommentsModuleMixin, CommentServiceMixin, ListView):
     """
     Lista comentários para um objeto específico
     """
@@ -78,6 +79,57 @@ class CommentListView(CommentServiceMixin, ListView):
         except (ContentType.DoesNotExist, content_type.model_class().DoesNotExist):
             return Comment.objects.none()
     
+    def get(self, request, *args, **kwargs):
+        """Handle GET requests, return JSON for AJAX requests"""
+        # Check if this is an AJAX request expecting JSON
+        if (request.headers.get('X-Requested-With') == 'XMLHttpRequest' or 
+            request.headers.get('Accept') == 'application/json'):
+            
+            try:
+                content_type_id = self.kwargs.get('content_type_id')
+                object_id = self.kwargs.get('object_id')
+                
+                if not content_type_id or not object_id:
+                    return JsonResponse({
+                        'success': False,
+                        'error': 'Parâmetros inválidos'
+                    }, status=400)
+                
+                content_type = ContentType.objects.get(id=content_type_id)
+                content_object = content_type.get_object_for_this_type(id=object_id)
+                
+                comments = self.comment_service.get_comments_for_object(
+                    content_object,
+                    request.user if request.user.is_authenticated else None
+                ).select_related('author', 'parent').prefetch_related('replies')
+                
+                # Render comments as HTML
+                comments_html = render_to_string(
+                    'comments/partials/comment_list.html',
+                    {
+                        'comments': comments,
+                        'user': request.user,
+                        'content_type': content_type,
+                        'object_id': object_id,
+                    },
+                    request=request
+                )
+                
+                return JsonResponse({
+                    'success': True,
+                    'comments_html': comments_html,
+                    'total_comments': comments.count(),
+                })
+                
+            except Exception as e:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Erro ao carregar comentários'
+                }, status=500)
+        
+        # Regular HTTP request, return normal template response
+        return super().get(request, *args, **kwargs)
+    
     def get_context_data(self, **kwargs) -> Dict[str, Any]:
         context = super().get_context_data(**kwargs)
         
@@ -105,7 +157,7 @@ class CommentListView(CommentServiceMixin, ListView):
         return context
 
 
-class CommentDetailView(CommentServiceMixin, DetailView):
+class CommentDetailView(CommentsModuleMixin, CommentServiceMixin, DetailView):
     """
     Exibe detalhes de um comentário específico
     """
@@ -134,7 +186,7 @@ class CommentDetailView(CommentServiceMixin, DetailView):
         return context
 
 
-class CommentCreateView(CommentServiceMixin, LoginRequiredMixin, CreateView):
+class CommentCreateView(CommentsModuleMixin, CommentServiceMixin, LoginRequiredMixin, CreateView):
     """
     Cria novo comentário
     """
@@ -208,7 +260,7 @@ class CommentCreateView(CommentServiceMixin, LoginRequiredMixin, CreateView):
             return self.form_invalid(form)
 
 
-class CommentUpdateView(CommentServiceMixin, LoginRequiredMixin, UpdateView):
+class CommentUpdateView(CommentsModuleMixin, CommentServiceMixin, LoginRequiredMixin, UpdateView):
     """
     Atualiza comentário existente
     """
@@ -265,7 +317,7 @@ class CommentUpdateView(CommentServiceMixin, LoginRequiredMixin, UpdateView):
             return self.form_invalid(form)
 
 
-class CommentDeleteView(CommentServiceMixin, LoginRequiredMixin, DeleteView):
+class CommentDeleteView(CommentsModuleMixin, CommentServiceMixin, LoginRequiredMixin, DeleteView):
     """
     Remove comentário
     """

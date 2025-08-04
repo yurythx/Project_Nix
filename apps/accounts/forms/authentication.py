@@ -68,7 +68,7 @@ class FlexibleLoginForm(AuthenticationForm):
                 css_class='mb-4'
             ),
             Div(
-                Submit('submit', '🚀 Entrar', css_class='btn btn-primary btn-lg w-100 mb-3'),
+                Submit('login_submit', '🚀 Entrar', css_class='btn btn-primary btn-lg w-100 mb-3'),
                 
                 css_class='text-center'
             )
@@ -184,7 +184,7 @@ class QuickLoginForm(forms.Form):
                 Column('login', css_class='col-md-4'),
                 Column('password', css_class='col-md-4'),
                 Column(
-                    Submit('submit', 'Entrar', css_class='btn btn-primary btn-sm'),
+                    Submit('quick_login_submit', 'Entrar', css_class='btn btn-primary btn-sm'),
                     css_class='col-md-4 d-grid'
                 ),
                 css_class='g-2 align-items-end'

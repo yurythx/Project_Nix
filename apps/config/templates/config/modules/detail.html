@@ -4,159 +4,150 @@
 {% block title %}{{ module.display_name }} - {{ block.super }}{% endblock %}
 
 {% block config_content %}
-<div class="container-fluid">
-    <!-- Header da Página -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h1 class="h2 mb-1 text-sans text-body">
-                        <i class="{{ module.menu_icon }} me-2 text-django-green"></i>{{ module.display_name }}
-                    </h1>
-                    <p class="text-secondary mb-0 text-body">Detalhes e configurações do módulo</p>
-                </div>
-                <div>
-                    <a href="{% url 'config:module_update' module.app_name %}" class="btn btn-primary">
-                        <i class="fas fa-edit me-2"></i>Editar Módulo
-                    </a>
-                    <a href="{% url 'config:module_list' %}" class="btn btn-outline-secondary">
-                        <i class="fas fa-arrow-left me-2"></i>Voltar
-                    </a>
-                </div>
-            </div>
+<div class="config-page">
+    <!-- Cabeçalho da Página -->
+    <div class="config-page-header">
+        <div class="config-page-title-section">
+            <h1 class="config-page-title">
+                <i class="{{ module.menu_icon }} config-page-icon" aria-hidden="true"></i>
+                {{ module.display_name }}
+            </h1>
+            <p class="config-page-subtitle">Detalhes e configurações do módulo</p>
+        </div>
+        <div class="config-page-actions">
+            <a href="{% url 'config:module_update' module.app_name %}" class="config-btn config-btn-primary">
+                <i class="fas fa-edit" aria-hidden="true"></i> Editar Módulo
+            </a>
+            <a href="{% url 'config:module_list' %}" class="config-btn config-btn-secondary">
+                <i class="fas fa-arrow-left" aria-hidden="true"></i> Voltar
+            </a>
         </div>
     </div>
 
-    <div class="row">
-        <!-- Informações Principais -->
-        <div class="col-lg-8">
-            <!-- Informações Básicas -->
-            <div class="card-django border-0 shadow-sm mb-4">
-                <div class="profile-card-header">
-                    <h6 class="mb-0 text-sans text-body">
-                        <i class="fas fa-info-circle me-2 text-django-green"></i>Informações Básicas
-                    </h6>
-                </div>
-                <div class="card-body profile-card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <strong>Nome do App:</strong>
-                            <p class="text-muted">{{ module.app_name }}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <strong>Nome de Exibição:</strong>
-                            <p class="text-muted">{{ module.display_name }}</p>
-                        </div>
+    <!-- Conteúdo da Página -->
+    <div class="config-page-content">
+        <div class="config-grid">
+            <!-- Informações Principais -->
+            <div class="config-grid-main">
+                <!-- Informações Básicas -->
+                <div class="config-content-card">
+                    <div class="config-content-header">
+                        <h3 class="config-content-title">
+                            <i class="fas fa-info-circle" aria-hidden="true"></i> Informações Básicas
+                        </h3>
                     </div>
-                    
-                    {% if module.description %}
-                        <div class="row">
-                            <div class="col-12">
-                                <strong>Descrição:</strong>
-                                <p class="text-muted">{{ module.description }}</p>
+                    <div class="config-content-body">
+                        <div class="config-info-list">
+                            <div class="config-info-item">
+                                <span class="config-info-label">Nome do App:</span>
+                                <span class="config-info-value">{{ module.app_name }}</span>
+                            </div>
+                            <div class="config-info-item">
+                                <span class="config-info-label">Nome de Exibição:</span>
+                                <span class="config-info-value">{{ module.display_name }}</span>
+                            </div>
+                            {% if module.description %}
+                                <div class="config-info-item">
+                                    <span class="config-info-label">Descrição:</span>
+                                    <span class="config-info-value">{{ module.description }}</span>
+                                </div>
+                            {% endif %}
+                            <div class="config-info-item">
+                                <span class="config-info-label">Tipo:</span>
+                                <span class="config-info-value">
+                                    <span class="config-badge {% if module.is_core %}config-badge-warning{% else %}config-badge-info{% endif %}">
+                                        {{ module.get_module_type_display }}
+                                    </span>
+                                </span>
+                            </div>
+                            <div class="config-info-item">
+                                <span class="config-info-label">Status:</span>
+                                <span class="config-info-value">
+                                    {% if module.is_enabled %}
+                                        <span class="config-badge config-badge-success">
+                                            <i class="fas fa-check" aria-hidden="true"></i> Ativo
+                                        </span>
+                                    {% else %}
+                                        <span class="config-badge config-badge-secondary">
+                                            <i class="fas fa-times" aria-hidden="true"></i> Inativo
+                                        </span>
+                                    {% endif %}
+                                </span>
+                            </div>
+                            <div class="config-info-item">
+                                <span class="config-info-label">Módulo Principal:</span>
+                                <span class="config-info-value">
+                                    {% if module.is_core %}
+                                        <i class="fas fa-lock" aria-hidden="true"></i> Sim
+                                    {% else %}
+                                        <i class="fas fa-unlock" aria-hidden="true"></i> Não
+                                    {% endif %}
+                                </span>
                             </div>
                         </div>
-                    {% endif %}
-                    
-                    <div class="row">
-                        <div class="col-md-4">
-                            <strong>Tipo:</strong>
-                            <p class="text-muted">
-                                <span class="badge {% if module.is_core %}bg-warning{% else %}bg-info{% endif %}">
-                                    {{ module.get_module_type_display }}
+                    </div>
+                </div>
+
+                <!-- Configurações de Menu -->
+                <div class="config-content-card">
+                    <div class="config-content-header">
+                        <h3 class="config-content-title">
+                            <i class="fas fa-bars" aria-hidden="true"></i> Configurações de Menu
+                        </h3>
+                    </div>
+                    <div class="config-content-body">
+                        <div class="config-info-list">
+                            <div class="config-info-item">
+                                <span class="config-info-label">Ícone:</span>
+                                <span class="config-info-value">
+                                    <i class="{{ module.menu_icon }}" aria-hidden="true"></i> {{ module.menu_icon }}
                                 </span>
-                            </p>
-                        </div>
-                        <div class="col-md-4">
-                            <strong>Status:</strong>
-                            <p class="text-muted">
-                                {% if module.is_enabled %}
-                                    <span class="badge bg-success">
-                                        <i class="fas fa-check me-1"></i>Ativo
-                                    </span>
-                                {% else %}
-                                    <span class="badge bg-danger">
-                                        <i class="fas fa-times me-1"></i>Inativo
-                                    </span>
-                                {% endif %}
-                            </p>
-                        </div>
-                        <div class="col-md-4">
-                            <strong>Módulo Principal:</strong>
-                            <p class="text-muted">
-                                {% if module.is_core %}
-                                    <i class="fas fa-lock text-warning"></i> Sim
-                                {% else %}
-                                    <i class="fas fa-unlock text-success"></i> Não
-                                {% endif %}
-                            </p>
+                            </div>
+                            <div class="config-info-item">
+                                <span class="config-info-label">Ordem no Menu:</span>
+                                <span class="config-info-value">{{ module.menu_order }}</span>
+                            </div>
+                            <div class="config-info-item">
+                                <span class="config-info-label">Padrão de URL:</span>
+                                <span class="config-info-value">{{ module.url_pattern|default:"Não definido" }}</span>
+                            </div>
+                            <div class="config-info-item">
+                                <span class="config-info-label">Exibir no Menu:</span>
+                                <span class="config-info-value">
+                                    {% if module.show_in_menu %}
+                                        <i class="fas fa-eye" aria-hidden="true"></i> Sim
+                                    {% else %}
+                                        <i class="fas fa-eye-slash" aria-hidden="true"></i> Não
+                                    {% endif %}
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Configurações de Menu -->
-            <div class="card-django border-0 shadow-sm mb-4">
-                <div class="profile-card-header">
-                    <h6 class="mb-0 text-sans text-body">
-                        <i class="fas fa-bars me-2 text-django-green"></i>Configurações de Menu
-                    </h6>
-                </div>
-                <div class="card-body profile-card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <strong>Ícone:</strong>
-                            <p class="text-muted">
-                                <i class="{{ module.menu_icon }} me-2"></i>{{ module.menu_icon }}
-                            </p>
+                <!-- Dependências -->
+                {% if module.dependencies or dependent_modules %}
+                    <div class="config-content-card">
+                        <div class="config-content-header">
+                            <h3 class="config-content-title">
+                                <i class="fas fa-project-diagram" aria-hidden="true"></i> Dependências
+                            </h3>
                         </div>
-                        <div class="col-md-6">
-                            <strong>Ordem no Menu:</strong>
-                            <p class="text-muted">{{ module.menu_order }}</p>
-                        </div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <strong>Padrão de URL:</strong>
-                            <p class="text-muted">{{ module.url_pattern|default:"Não definido" }}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <strong>Exibir no Menu:</strong>
-                            <p class="text-muted">
-                                {% if module.show_in_menu %}
-                                    <i class="fas fa-eye text-success"></i> Sim
-                                {% else %}
-                                    <i class="fas fa-eye-slash text-muted"></i> Não
-                                {% endif %}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Dependências -->
-            {% if module.dependencies or dependent_modules %}
-                <div class="card-django border-0 shadow-sm mb-4">
-                    <div class="profile-card-header">
-                        <h6 class="mb-0 text-sans text-body">
-                            <i class="fas fa-project-diagram me-2 text-django-green"></i>Dependências
-                        </h6>
-                    </div>
-                    <div class="card-body profile-card-body">
-                        {% if module.dependencies %}
-                            <div class="mb-3">
-                                <strong>Este módulo depende de:</strong>
-                                <div class="mt-2">
-                                    {% for dep in module.dependencies %}
-                                        <span class="badge bg-secondary me-1">{{ dep }}</span>
-                                    {% endfor %}
+                        <div class="config-content-body">
+                            {% if module.dependencies %}
+                                <div class="config-info-item">
+                                    <span class="config-info-label">Este módulo depende de:</span>
+                                    <div class="config-info-value">
+                                        {% for dep in module.dependencies %}
+                                            <span class="config-badge config-badge-secondary">{{ dep }}</span>
+                                        {% endfor %}
+                                    </div>
                                 </div>
                                 
                                 {% if dependencies_info %}
                                     {% if not dependencies_info.valid %}
-                                        <div class="alert alert-warning mt-3">
-                                            <i class="fas fa-exclamation-triangle me-2"></i>
+                                        <div class="config-alert config-alert-warning">
+                                            <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
                                             <strong>Problemas nas dependências:</strong>
                                             {% if dependencies_info.missing %}
                                                 <br>Módulos não encontrados: {{ dependencies_info.missing|join:", " }}
@@ -166,130 +157,136 @@
                                             {% endif %}
                                         </div>
                                     {% else %}
-                                        <div class="alert alert-success mt-3">
-                                            <i class="fas fa-check me-2"></i>
+                                        <div class="config-alert config-alert-success">
+                                            <i class="fas fa-check" aria-hidden="true"></i>
                                             Todas as dependências estão satisfeitas.
                                         </div>
                                     {% endif %}
                                 {% endif %}
-                            </div>
-                        {% endif %}
-                        
-                        {% if dependent_modules %}
-                            <div>
-                                <strong>Módulos que dependem deste:</strong>
-                                <div class="mt-2">
-                                    {% for dep_module in dependent_modules %}
-                                        <span class="badge bg-info me-1">{{ dep_module.display_name }}</span>
-                                    {% endfor %}
+                            {% endif %}
+                            
+                            {% if dependent_modules %}
+                                <div class="config-info-item">
+                                    <span class="config-info-label">Módulos que dependem deste:</span>
+                                    <div class="config-info-value">
+                                        {% for dep_module in dependent_modules %}
+                                            <span class="config-badge config-badge-info">{{ dep_module.display_name }}</span>
+                                        {% endfor %}
+                                    </div>
                                 </div>
                                 {% if not module.is_core %}
-                                    <div class="alert alert-info mt-3">
-                                        <i class="fas fa-info-circle me-2"></i>
+                                    <div class="config-alert config-alert-info">
+                                        <i class="fas fa-info-circle" aria-hidden="true"></i>
                                         Este módulo não pode ser desabilitado enquanto outros módulos dependerem dele.
                                     </div>
                                 {% endif %}
-                            </div>
-                        {% endif %}
+                            {% endif %}
+                        </div>
                     </div>
-                </div>
-            {% endif %}
+                {% endif %}
         </div>
 
-        <!-- Sidebar -->
-        <div class="col-lg-4">
-            <!-- Ações Rápidas -->
-            <div class="card-django border-0 shadow-sm mb-4">
-                <div class="profile-card-header">
-                    <h6 class="mb-0 text-sans text-body">
-                        <i class="fas fa-bolt me-2 text-django-green"></i>Ações Rápidas
-                    </h6>
+            <!-- Sidebar -->
+            <div class="config-grid-sidebar">
+                <!-- Ações Rápidas -->
+                <div class="config-content-card">
+                    <div class="config-content-header">
+                        <h3 class="config-content-title">
+                            <i class="fas fa-bolt" aria-hidden="true"></i> Ações Rápidas
+                        </h3>
+                    </div>
+                    <div class="config-content-body">
+                        {% if not module.is_core %}
+                            <form method="post" action="{% if module.is_enabled %}{% url 'config:module_disable' module.app_name %}{% else %}{% url 'config:module_enable' module.app_name %}{% endif %}">
+                                {% csrf_token %}
+                                <button type="submit" class="config-btn {% if module.is_enabled %}config-btn-danger{% else %}config-btn-success{% endif %} config-btn-block"
+                                        onclick="return confirm('{% if module.is_enabled %}Desabilitar{% else %}Habilitar{% endif %} o módulo {{ module.display_name }}?')">
+                                    <i class="fas fa-power-off" aria-hidden="true"></i> {% if module.is_enabled %}Desabilitar{% else %}Habilitar{% endif %} Módulo
+                                </button>
+                            </form>
+                        {% else %}
+                            <div class="config-alert config-alert-warning">
+                                <i class="fas fa-lock" aria-hidden="true"></i>
+                                <strong>Módulo Principal</strong><br>
+                                Este módulo não pode ser desabilitado.
+                            </div>
+                        {% endif %}
+                    </div>
                 </div>
-                <div class="card-body profile-card-body">
-                    {% if not module.is_core %}
-                        <form method="post" action="{% if module.is_enabled %}{% url 'config:module_disable' module.app_name %}{% else %}{% url 'config:module_enable' module.app_name %}{% endif %}">
-                            {% csrf_token %}
-                            <button type="submit" class="btn {% if module.is_enabled %}btn-danger{% else %}btn-success{% endif %} btn-sm w-100 mb-2"
-                                    onclick="return confirm('{% if module.is_enabled %}Desabilitar{% else %}Habilitar{% endif %} o módulo {{ module.display_name }}?')">
-                                <i class="fas fa-power-off me-2"></i>{% if module.is_enabled %}Desabilitar{% else %}Habilitar{% endif %} Módulo
-                            </button>
-                        </form>
-                    {% else %}
-                        <div class="alert alert-warning">
-                            <i class="fas fa-lock me-2"></i>
-                            <strong>Módulo Principal</strong><br>
-                            Este módulo não pode ser desabilitado.
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
 
-            <!-- Metadados -->
-            {% if module.version or module.author or module.documentation_url %}
-                <div class="card-django border-0 shadow-sm mb-4">
-                    <div class="profile-card-header">
-                        <h6 class="mb-0 text-sans text-body">
-                            <i class="fas fa-tags me-2 text-django-green"></i>Metadados
-                        </h6>
+                <!-- Metadados -->
+                {% if module.version or module.author or module.documentation_url %}
+                    <div class="config-content-card">
+                        <div class="config-content-header">
+                            <h3 class="config-content-title">
+                                <i class="fas fa-tags" aria-hidden="true"></i> Metadados
+                            </h3>
+                        </div>
+                        <div class="config-content-body">
+                            <div class="config-info-list">
+                                {% if module.version %}
+                                    <div class="config-info-item">
+                                        <span class="config-info-label">Versão:</span>
+                                        <span class="config-info-value">{{ module.version }}</span>
+                                    </div>
+                                {% endif %}
+                                
+                                {% if module.author %}
+                                    <div class="config-info-item">
+                                        <span class="config-info-label">Autor:</span>
+                                        <span class="config-info-value">{{ module.author }}</span>
+                                    </div>
+                                {% endif %}
+                                
+                                {% if module.documentation_url %}
+                                    <div class="config-info-item">
+                                        <span class="config-info-label">Documentação:</span>
+                                        <span class="config-info-value">
+                                            <a href="{{ module.documentation_url }}" target="_blank" class="config-link">
+                                                <i class="fas fa-external-link-alt" aria-hidden="true"></i> Ver Documentação
+                                            </a>
+                                        </span>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
                     </div>
-                    <div class="card-body profile-card-body">
-                        {% if module.version %}
-                            <div class="mb-2">
-                                <strong>Versão:</strong>
-                                <span class="text-muted">{{ module.version }}</span>
-                            </div>
-                        {% endif %}
-                        
-                        {% if module.author %}
-                            <div class="mb-2">
-                                <strong>Autor:</strong>
-                                <span class="text-muted">{{ module.author }}</span>
-                            </div>
-                        {% endif %}
-                        
-                        {% if module.documentation_url %}
-                            <div class="mb-2">
-                                <strong>Documentação:</strong>
-                                <a href="{{ module.documentation_url }}" target="_blank" class="text-django-green">
-                                    <i class="fas fa-external-link-alt me-1"></i>Ver Documentação
-                                </a>
-                            </div>
-                        {% endif %}
-                    </div>
-                </div>
-            {% endif %}
+                {% endif %}
 
-            <!-- Histórico -->
-            <div class="card-django border-0 shadow-sm">
-                <div class="profile-card-header">
-                    <h6 class="mb-0 text-sans text-body">
-                        <i class="fas fa-history me-2 text-django-green"></i>Histórico
-                    </h6>
-                </div>
-                <div class="card-body profile-card-body">
-                    <div class="mb-2">
-                        <strong>Criado em:</strong>
-                        <span class="text-muted">{{ module.created_at|date:"d/m/Y H:i" }}</span>
+                <!-- Histórico -->
+                <div class="config-content-card">
+                    <div class="config-content-header">
+                        <h3 class="config-content-title">
+                            <i class="fas fa-history" aria-hidden="true"></i> Histórico
+                        </h3>
                     </div>
-                    
-                    {% if module.created_by %}
-                        <div class="mb-2">
-                            <strong>Criado por:</strong>
-                            <span class="text-muted">{{ module.created_by.get_full_name|default:module.created_by.username }}</span>
+                    <div class="config-content-body">
+                        <div class="config-info-list">
+                            <div class="config-info-item">
+                                <span class="config-info-label">Criado em:</span>
+                                <span class="config-info-value">{{ module.created_at|date:"d/m/Y H:i" }}</span>
+                            </div>
+                            
+                            {% if module.created_by %}
+                                <div class="config-info-item">
+                                    <span class="config-info-label">Criado por:</span>
+                                    <span class="config-info-value">{{ module.created_by.get_full_name|default:module.created_by.username }}</span>
+                                </div>
+                            {% endif %}
+                            
+                            <div class="config-info-item">
+                                <span class="config-info-label">Atualizado em:</span>
+                                <span class="config-info-value">{{ module.updated_at|date:"d/m/Y H:i" }}</span>
+                            </div>
+                            
+                            {% if module.updated_by %}
+                                <div class="config-info-item">
+                                    <span class="config-info-label">Atualizado por:</span>
+                                    <span class="config-info-value">{{ module.updated_by.get_full_name|default:module.updated_by.username }}</span>
+                                </div>
+                            {% endif %}
                         </div>
-                    {% endif %}
-                    
-                    <div class="mb-2">
-                        <strong>Atualizado em:</strong>
-                        <span class="text-muted">{{ module.updated_at|date:"d/m/Y H:i" }}</span>
                     </div>
-                    
-                    {% if module.updated_by %}
-                        <div>
-                            <strong>Atualizado por:</strong>
-                            <span class="text-muted">{{ module.updated_by.get_full_name|default:module.updated_by.username }}</span>
-                        </div>
-                    {% endif %}
                 </div>
             </div>
         </div>

@@ -1,56 +1,124 @@
 {% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'config/css/config-layout.css' %}">
+{% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <div class="row">
-        <!-- Sidebar fixo à esquerda, sempre visível em md+ -->
-        <div class="offcanvas-md offcanvas-start offcanvas-fullscreen" tabindex="-1" id="sidebar" aria-labelledby="sidebarLabel">
+<div class="config-container">
+    <div class="config-main-wrapper">
+        <!-- Sidebar Otimizada -->
+        <aside class="config-sidebar offcanvas-md offcanvas-start" tabindex="-1" id="configSidebar" aria-labelledby="configSidebarLabel">
             <div class="offcanvas-header d-md-none">
-                <h5 class="offcanvas-title" id="sidebarLabel">Menu de Configurações</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#sidebar" aria-label="Close"></button>
+                <h5 class="offcanvas-title" id="configSidebarLabel">
+                    <i class="fas fa-cog me-2"></i>Configurações
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#configSidebar" aria-label="Fechar menu"></button>
             </div>
             <div class="offcanvas-body p-0">
                 {% include 'config/includes/sidebar.html' %}
             </div>
-        </div>
-        <!-- Conteúdo principal alinhado à direita do sidebar -->
-        <main class="col-12 px-2 px-md-4 pt-4 pb-4" id="config-main-content">
-            <!-- Botão hamburguer para mobile -->
-            <button class="btn btn-outline-primary d-md-none my-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" aria-controls="sidebar">
-                <i class="fas fa-bars"></i> Menu
+        </aside>
+        
+        <!-- Conteúdo Principal -->
+        <main class="config-content" role="main">
+            <!-- Botão Mobile Toggle -->
+            <button class="config-mobile-toggle d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#configSidebar" aria-controls="configSidebar" aria-label="Abrir menu">
+                <i class="fas fa-bars"></i>
             </button>
-            <div class="config-content">
+            
+            <div class="config-content-inner">
                 {% block config_content %}
-                <!-- Content goes here -->
-                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                    <h1 class="h2 config-page-title">
-                        <i class="fas fa-cog me-2" style="color: var(--nix-accent);"></i>Painel de Configurações
+                <!-- Cabeçalho Padrão -->
+                <div class="config-page-header">
+                    <h1 class="config-page-title">
+                        <i class="fas fa-tachometer-alt"></i>
+                        Painel de Configurações
                     </h1>
+                    <div class="config-page-actions">
+                        <!-- Ações da página podem ser adicionadas aqui -->
+                    </div>
                 </div>
-                <p class="lead">Sistema de administração do Project Nix</p>
+                
+                <!-- Conteúdo Padrão -->
+                <div class="config-card config-animate-in">
+                    <div class="config-card-header">
+                        <h2 class="config-card-title">
+                            <i class="fas fa-info-circle"></i>
+                            Bem-vindo ao Sistema de Configurações
+                        </h2>
+                    </div>
+                    <div class="config-card-body">
+                        <p class="lead mb-0">Sistema de administração e configuração do Project Nix</p>
+                    </div>
+                </div>
                 {% endblock %}
             </div>
         </main>
     </div>
 </div>
+
+<!-- Overlay para mobile -->
+<div class="config-overlay d-md-none" id="configOverlay"></div>
 {% endblock %}
 
-{% block extra_css %}
-<style>
-@media (max-width: 767.98px) {
-  .offcanvas-fullscreen {
-    width: 100vw !important;
-    max-width: 100vw !important;
-    height: 100vh !important;
-    max-height: 100vh !important;
-    border-radius: 0 !important;
-  }
-  .offcanvas-fullscreen .offcanvas-body {
-    padding-bottom: 2rem;
-    overflow-y: auto;
-  }
-}
-</style>
+{% block extra_js %}
+<script>
+// Config Layout JavaScript
+document.addEventListener('DOMContentLoaded', function() {
+    // Mobile sidebar toggle
+    const sidebar = document.getElementById('configSidebar');
+    const overlay = document.getElementById('configOverlay');
+    const toggleBtn = document.querySelector('.config-mobile-toggle');
+    
+    if (sidebar && overlay) {
+        // Show overlay when sidebar opens
+        sidebar.addEventListener('show.bs.offcanvas', function() {
+            overlay.classList.add('show');
+        });
+        
+        // Hide overlay when sidebar closes
+        sidebar.addEventListener('hide.bs.offcanvas', function() {
+            overlay.classList.remove('show');
+        });
+        
+        // Close sidebar when clicking overlay
+        overlay.addEventListener('click', function() {
+            const offcanvas = bootstrap.Offcanvas.getInstance(sidebar);
+            if (offcanvas) {
+                offcanvas.hide();
+            }
+        });
+    }
+    
+    // Add animation classes to cards
+    const cards = document.querySelectorAll('.config-card, .config-stat-card');
+    cards.forEach((card, index) => {
+        setTimeout(() => {
+            card.classList.add('config-animate-in');
+        }, index * 100);
+    });
+    
+    // Smooth scroll for sidebar links
+    const sidebarLinks = document.querySelectorAll('.sidebar-nav-link');
+    sidebarLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            // Add active class management if needed
+            sidebarLinks.forEach(l => l.classList.remove('active'));
+            this.classList.add('active');
+        });
+    });
+    
+    // Auto-close mobile sidebar on window resize
+    window.addEventListener('resize', function() {
+        if (window.innerWidth >= 768 && sidebar) {
+            const offcanvas = bootstrap.Offcanvas.getInstance(sidebar);
+            if (offcanvas) {
+                offcanvas.hide();
+            }
+        }
+    });
+});
+</script>
 {% endblock %}
-
-{% block extra_js %}{% endblock %}

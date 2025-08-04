@@ -1,6 +1,19 @@
 {% load static %}
+{% load comments_tags %}
 
 <div class="comments-list">
+    {% if comments_disabled %}
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>
+            O sistema de comentários não está disponível no momento.
+        </div>
+    {% elif not comments %}
+        <div class="text-center py-5">
+            <i class="fas fa-comments fa-3x text-secondary mb-3"></i>
+            <h5 class="text-secondary">Nenhum comentário encontrado</h5>
+            <p class="text-secondary">Seja o primeiro a comentar!</p>
+        </div>
+    {% else %}
     {% for comment in comments %}
         <div class="comment-item mb-4" id="comment-{{ comment.uuid }}">
             <div class="d-flex">
@@ -41,11 +54,6 @@
                 </div>
             </div>
         </div>
-    {% empty %}
-        <div class="text-center py-5">
-            <i class="fas fa-comments fa-3x text-secondary mb-3"></i>
-            <h5 class="text-secondary">Nenhum comentário encontrado</h5>
-            <p class="text-secondary">Seja o primeiro a comentar!</p>
-        </div>
     {% endfor %}
+    {% endif %}
 </div>

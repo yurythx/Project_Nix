@@ -2,21 +2,23 @@
 {% load crispy_forms_tags %}
 {% block config_title %}Novo Módulo{% endblock %}
 {% block config_content %}
-<div class="row justify-content-center">
-  <div class="col-lg-7 col-md-9">
-    <div class="card shadow-sm">
-      <div class="card-body">
-        <h1 class="h4 mb-4"><i class="fas fa-cube me-2"></i>Novo Módulo</h1>
+<div class="config-container">
+  <div class="config-page-header">
+    <div class="config-page-title-section">
+      <h1 class="config-page-title"><i class="fas fa-cube config-page-icon"></i>Novo Módulo</h1>
+    </div>
+  </div>
+  <div class="config-content-card">
+    <div class="config-content-body">
         <form method="post" novalidate>
           {% csrf_token %}
           {{ form|crispy }}
-          <div class="d-flex justify-content-between mt-4">
-            <a href="{% url 'config:module_list' %}" class="btn btn-outline-secondary"><i class="fas fa-arrow-left me-1"></i>Voltar</a>
-            <button type="submit" class="btn btn-success"><i class="fas fa-save me-1"></i>Salvar</button>
+          <div class="config-form-actions">
+            <a href="{% url 'config:module_list' %}" class="config-btn config-btn-secondary"><i class="fas fa-arrow-left"></i>Voltar</a>
+            <button type="submit" class="config-btn config-btn-success"><i class="fas fa-save"></i>Salvar</button>
           </div>
         </form>
-      </div>
     </div>
   </div>
 </div>
-{% endblock %} 
+{% endblock %}
