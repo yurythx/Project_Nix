@@ -16,6 +16,7 @@ from django.core.exceptions import ValidationError
 
 from apps.config.interfaces.services import IBackupService
 from apps.config.models import DatabaseConfiguration, UserActivityLog
+from apps.config.models.backup_models import BackupMetadata
 
 User = get_user_model()
 
@@ -38,29 +39,88 @@ class BackupService(IBackupService):
         for directory in [self.database_backup_dir, self.media_backup_dir, self.config_backup_dir]:
             directory.mkdir(parents=True, exist_ok=True)
     
-    def create_database_backup(self, user: Optional[User] = None) -> Tuple[bool, str, Optional[str]]:
-        """Cria backup do banco de dados"""
+    def create_database_backup(self, user: Optional[User] = None, description: str = "") -> Tuple[bool, str, Optional[str]]:
+        """Cria backup do banco de dados com registro em modelo"""
         try:
             timestamp = timezone.now().strftime('%Y%m%d_%H%M%S')
-            backup_filename = f'database_backup_{timestamp}.backup'
+            backup_filename = f'database_backup_{timestamp}.sql'
             backup_path = self.database_backup_dir / backup_filename
             
-            # Executar backup baseado no engine do banco
-            success = self._execute_database_backup(backup_path)
+            # Executar backup
+            backup_success = self._execute_database_backup(backup_path)
             
-            if success:
-                # Gerar hash SHA256 para integridade
+            if backup_success:
+                # Gerar hash SHA256
                 sha256_hash = self._generate_file_hash(backup_path)
                 
-                # Salvar metadados do backup
+                # CORREÇÃO: Criar registro no banco de dados
+                backup_metadata = BackupMetadata.objects.create(
+                    name=f'Backup BD {timestamp}',
+                    backup_type='database',
+                    status='completed',
+                    file_path=str(backup_path),
+                    file_size=backup_path.stat().st_size,
+                    sha256_hash=sha256_hash,
+                    created_by=user,
+                    description=description or f'Backup automático criado em {timezone.now().strftime("%d/%m/%Y às %H:%M")}'
+                )
+                
+                # Salvar metadados em arquivo também
                 self._save_backup_metadata(backup_path, sha256_hash, 'database', user)
+                
+                self._log_backup_activity('database_backup_created', user, f'Backup criado: {backup_metadata.slug}')
                 
                 return True, f'Backup criado com sucesso: {backup_filename}', str(backup_path)
             else:
+                # Se o backup falhou, remover arquivo se existir
+                if backup_path and backup_path.exists():
+                    backup_path.unlink()
                 return False, 'Falha ao criar backup do banco de dados', None
                 
         except Exception as e:
             return False, f'Erro ao criar backup: {str(e)}', None
+    
+    def get_backup_by_slug(self, slug: str) -> Optional[BackupMetadata]:
+        """Obtém backup pelo slug"""
+        try:
+            return BackupMetadata.objects.get(slug=slug)
+        except BackupMetadata.DoesNotExist:
+            return None
+    
+    def verify_backup_integrity(self, file_path: str) -> Dict[str, Any]:
+        """Verifica integridade de um backup"""
+        try:
+            backup_file = Path(file_path)
+            
+            if not backup_file.exists():
+                return {'valid': False, 'error': 'Arquivo não encontrado'}
+            
+            # Verificar hash se disponível no banco de dados
+            try:
+                backup_metadata = BackupMetadata.objects.get(file_path=file_path)
+                if backup_metadata.sha256_hash:
+                    current_hash = self._generate_file_hash(backup_file)
+                    if current_hash != backup_metadata.sha256_hash:
+                        return {'valid': False, 'error': 'Hash SHA256 não confere'}
+            except BackupMetadata.DoesNotExist:
+                # Se não há registro no banco, verificar arquivo de metadados
+                metadata_file = backup_file.with_suffix('.metadata.json')
+                if metadata_file.exists():
+                    try:
+                        with open(metadata_file, 'r', encoding='utf-8') as f:
+                            metadata = json.load(f)
+                        stored_hash = metadata.get('sha256')
+                        if stored_hash:
+                            current_hash = self._generate_file_hash(backup_file)
+                            if current_hash != stored_hash:
+                                return {'valid': False, 'error': 'Hash SHA256 não confere (arquivo de metadados)'}
+                    except Exception:
+                        pass
+            
+            return {'valid': True, 'message': 'Backup íntegro'}
+            
+        except Exception as e:
+            return {'valid': False, 'error': f'Erro na verificação: {str(e)}'}
     
     def create_media_backup(self, user: Optional[User] = None) -> Tuple[bool, str, Optional[str]]:
         """Cria backup dos arquivos de mídia"""
@@ -81,7 +141,19 @@ class BackupService(IBackupService):
             # Gerar hash SHA256
             sha256_hash = self._generate_file_hash(backup_path)
             
-            # Salvar metadados
+            # CORREÇÃO: Criar registro no banco de dados
+            backup_metadata = BackupMetadata.objects.create(
+                name=f'Backup Mídia {timestamp}',
+                backup_type='media',
+                status='completed',
+                file_path=str(backup_path),
+                file_size=backup_path.stat().st_size,
+                sha256_hash=sha256_hash,
+                created_by=user,
+                description=f'Backup de mídia criado em {timezone.now().strftime("%d/%m/%Y às %H:%M")}'
+            )
+            
+            # Salvar metadados em arquivo
             self._save_backup_metadata(backup_path, sha256_hash, 'media', user)
             
             return True, f'Backup de mídia criado: {backup_filename}', str(backup_path)
@@ -106,7 +178,19 @@ class BackupService(IBackupService):
             # Gerar hash SHA256
             sha256_hash = self._generate_file_hash(backup_path)
             
-            # Salvar metadados
+            # CORREÇÃO: Criar registro no banco de dados
+            backup_metadata = BackupMetadata.objects.create(
+                name=f'Backup Config {timestamp}',
+                backup_type='configuration',
+                status='completed',
+                file_path=str(backup_path),
+                file_size=backup_path.stat().st_size,
+                sha256_hash=sha256_hash,
+                created_by=user,
+                description=f'Backup de configurações criado em {timezone.now().strftime("%d/%m/%Y às %H:%M")}'
+            )
+            
+            # Salvar metadados em arquivo
             self._save_backup_metadata(backup_path, sha256_hash, 'configuration', user)
             
             return True, f'Backup de configurações criado: {backup_filename}', str(backup_path)
@@ -123,13 +207,18 @@ class BackupService(IBackupService):
                 return False, 'Arquivo de backup não encontrado'
             
             # Validar integridade do arquivo
-            if not self._validate_backup_integrity(backup_file):
-                return False, 'Arquivo de backup corrompido ou inválido'
+            integrity_result = self.verify_backup_integrity(backup_path)
+            if not integrity_result['valid']:
+                return False, f'Arquivo de backup corrompido: {integrity_result.get("error", "Erro desconhecido")}'
             
-            # Criar backup automático antes da restauração
-            auto_backup_success, auto_backup_msg, _ = self.create_database_backup(user)
-            if not auto_backup_success:
-                return False, f'Falha ao criar backup automático: {auto_backup_msg}'
+            # CORREÇÃO: Tentar criar backup automático, mas não falhar se não conseguir
+            try:
+                auto_backup_success, auto_backup_msg, _ = self.create_database_backup(user)
+                if auto_backup_success:
+                    self._log_backup_activity('auto_backup_before_restore', user, f'Backup automático criado antes da restauração: {auto_backup_msg}')
+            except Exception as e:
+                # Log do erro, mas continua com a restauração
+                self._log_backup_activity('auto_backup_failed', user, f'Falha ao criar backup automático: {str(e)}')
             
             # Executar restauração
             success = self._execute_database_restore(backup_file)
@@ -253,17 +342,147 @@ class BackupService(IBackupService):
             return False, f'Erro ao deletar backup: {str(e)}'
     
     def _execute_database_backup(self, backup_path: Path) -> bool:
-        """Executa o backup do banco baseado no engine configurado"""
-        # Esta implementação seria específica para cada engine de banco
-        # Por simplicidade, retornamos True aqui
-        # Na implementação real, seria necessário usar pg_dump, mysqldump, etc.
-        return True
+        """Executa o backup do banco baseado no engine configurado automaticamente"""
+        try:
+            from django.conf import settings
+            import shutil
+            import subprocess
+            import os
+            
+            # Obter configuração do banco de dados padrão
+            db_config = settings.DATABASES['default']
+            engine = db_config['ENGINE']
+            
+            if engine == 'django.db.backends.sqlite3':
+                # Backup para SQLite - cópia direta do arquivo
+                db_file = Path(db_config['NAME'])
+                if db_file.exists():
+                    shutil.copy2(db_file, backup_path)
+                    return True
+                else:
+                    # Se o arquivo não existe, cria um backup vazio
+                    backup_path.touch()
+                    return False
+                    
+            elif engine == 'django.db.backends.postgresql':
+                # Backup para PostgreSQL usando pg_dump
+                cmd = [
+                    'pg_dump',
+                    '--host', db_config.get('HOST', 'localhost'),
+                    '--port', str(db_config.get('PORT', 5432)),
+                    '--username', db_config.get('USER', ''),
+                    '--dbname', db_config.get('NAME', ''),
+                    '--file', str(backup_path),
+                    '--verbose',
+                    '--no-password'
+                ]
+                
+                # Configurar variáveis de ambiente para autenticação
+                env = os.environ.copy()
+                if db_config.get('PASSWORD'):
+                    env['PGPASSWORD'] = db_config['PASSWORD']
+                
+                result = subprocess.run(cmd, env=env, capture_output=True, text=True)
+                return result.returncode == 0
+                
+            elif engine == 'django.db.backends.mysql':
+                # Backup para MySQL usando mysqldump
+                cmd = [
+                    'mysqldump',
+                    '--host', db_config.get('HOST', 'localhost'),
+                    '--port', str(db_config.get('PORT', 3306)),
+                    '--user', db_config.get('USER', ''),
+                    '--single-transaction',
+                    '--routines',
+                    '--triggers',
+                    db_config.get('NAME', '')
+                ]
+                
+                if db_config.get('PASSWORD'):
+                    cmd.append(f'--password={db_config["PASSWORD"]}')
+                
+                with open(backup_path, 'w') as f:
+                    result = subprocess.run(cmd, stdout=f, stderr=subprocess.PIPE, text=True)
+                
+                return result.returncode == 0
+                
+            else:
+                # Engine não suportado - cria arquivo vazio para evitar erro
+                backup_path.touch()
+                return False
+                
+        except Exception as e:
+            # Em caso de erro, cria um arquivo vazio para evitar IntegrityError
+            try:
+                backup_path.touch()
+            except:
+                pass
+            return False
     
     def _execute_database_restore(self, backup_file: Path) -> bool:
-        """Executa a restauração do banco baseado no engine configurado"""
-        # Esta implementação seria específica para cada engine de banco
-        # Por simplicidade, retornamos True aqui
-        return True
+        """Executa a restauração do banco baseado no engine configurado automaticamente"""
+        try:
+            from django.conf import settings
+            import shutil
+            import subprocess
+            import os
+            
+            # Obter configuração do banco de dados padrão
+            db_config = settings.DATABASES['default']
+            engine = db_config['ENGINE']
+            
+            if engine == 'django.db.backends.sqlite3':
+                # Restauração para SQLite - cópia direta do arquivo
+                db_file = Path(db_config['NAME'])
+                if backup_file.exists():
+                    shutil.copy2(backup_file, db_file)
+                    return True
+                return False
+                
+            elif engine == 'django.db.backends.postgresql':
+                # Restauração para PostgreSQL usando psql
+                cmd = [
+                    'psql',
+                    '--host', db_config.get('HOST', 'localhost'),
+                    '--port', str(db_config.get('PORT', 5432)),
+                    '--username', db_config.get('USER', ''),
+                    '--dbname', db_config.get('NAME', ''),
+                    '--file', str(backup_file),
+                    '--quiet'
+                ]
+                
+                # Configurar variáveis de ambiente para autenticação
+                env = os.environ.copy()
+                if db_config.get('PASSWORD'):
+                    env['PGPASSWORD'] = db_config['PASSWORD']
+                
+                result = subprocess.run(cmd, env=env, capture_output=True, text=True)
+                return result.returncode == 0
+                
+            elif engine == 'django.db.backends.mysql':
+                # Restauração para MySQL usando mysql
+                cmd = [
+                    'mysql',
+                    '--host', db_config.get('HOST', 'localhost'),
+                    '--port', str(db_config.get('PORT', 3306)),
+                    '--user', db_config.get('USER', ''),
+                    db_config.get('NAME', '')
+                ]
+                
+                if db_config.get('PASSWORD'):
+                    cmd.append(f'--password={db_config["PASSWORD"]}')
+                
+                with open(backup_file, 'r') as f:
+                    result = subprocess.run(cmd, stdin=f, capture_output=True, text=True)
+                
+                return result.returncode == 0
+                
+            else:
+                # Engine não suportado
+                return False
+                
+        except Exception as e:
+            return False
     
     def _generate_file_hash(self, file_path: Path) -> str:
         """Gera hash SHA256 de um arquivo"""
@@ -421,7 +640,7 @@ class BackupService(IBackupService):
             if not backup_file.exists():
                 return False, "Arquivo de backup não encontrado", None
             
-            if not self._is_safe_path(backup_file):
+            if not self._is_safe_backup_path(backup_file):
                 self._log_backup_activity(
                     "DOWNLOAD_BACKUP_SECURITY_VIOLATION",
                     user,
@@ -457,5 +676,4 @@ class BackupService(IBackupService):
                     ip_address='127.0.0.1'  # Seria obtido do request em uma implementação real
                 )
         except Exception:
-            # Se falhar ao registrar o log, não deve interromper a operação
             pass

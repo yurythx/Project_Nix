@@ -289,3 +289,31 @@ class PermissionHelperMixin:
             user.groups.filter(name__iexact='administrador').exists() or
             user.groups.filter(name__iexact='admin').exists()
         )
+
+
+class BackupViewMixin:
+    """Mixin para views de backup que implementa injeção de dependência"""
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        from apps.config.services.backup_service import BackupService
+        from apps.config.interfaces.services import IBackupService
+        self.backup_service: IBackupService = BackupService()
+    
+    def get_backup_service(self):
+        """Retorna o serviço de backup (permite injeção de dependência)"""
+        return self.backup_service
+    
+    def handle_backup_error(self, request, error_message: str, redirect_url: str):
+        """Trata erros de backup de forma consistente"""
+        messages.error(request, error_message)
+        logger = logging.getLogger('config.backup')
+        logger.error(f"Erro de backup para usuário {request.user.username}: {error_message}")
+        return redirect(redirect_url)
+    
+    def handle_backup_success(self, request, success_message: str, redirect_url: str):
+        """Trata sucessos de backup de forma consistente"""
+        messages.success(request, success_message)
+        logger = logging.getLogger('config.backup')
+        logger.info(f"Backup bem-sucedido para usuário {request.user.username}: {success_message}")
+        return redirect(redirect_url)

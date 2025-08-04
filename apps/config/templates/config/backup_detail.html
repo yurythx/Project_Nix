@@ -1,0 +1,196 @@
+{% extends 'config/base_config_page.html' %}
+{% load static %}
+
+{% block title %}{{ backup.name }} - Detalhes do Backup{% endblock %}
+
+{% block page_title %}Detalhes do Backup{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'config:backup_list' %}">Backups</a></li>
+            <li class="breadcrumb-item active">{{ backup.name }}</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <!-- Informações principais -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">{{ backup.name }}</h5>
+                    <div class="btn-group" role="group">
+                        {% if backup.status == 'completed' and file_exists %}
+                            <a href="{% url 'config:backup_download' slug=backup.slug %}" 
+                               class="btn btn-success btn-sm">
+                                <i class="fas fa-download"></i> Download
+                            </a>
+                            <a href="{% url 'config:backup_restore' slug=backup.slug %}" 
+                               class="btn btn-warning btn-sm">
+                                <i class="fas fa-undo"></i> Restaurar
+                            </a>
+                        {% endif %}
+                        <a href="{% url 'config:backup_update' slug=backup.slug %}" 
+                           class="btn btn-info btn-sm">
+                            <i class="fas fa-edit"></i> Editar
+                        </a>
+                        <a href="{% url 'config:backup_delete' slug=backup.slug %}" 
+                           class="btn btn-danger btn-sm">
+                            <i class="fas fa-trash"></i> Excluir
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if backup.description %}
+                        <p class="text-muted">{{ backup.description }}</p>
+                    {% endif %}
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Informações Básicas</h6>
+                            <table class="table table-sm">
+                                <tr>
+                                    <td><strong>Tipo:</strong></td>
+                                    <td><span class="badge bg-secondary">{{ backup.get_backup_type_display }}</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Status:</strong></td>
+                                    <td>
+                                        {% if backup.status == 'completed' %}
+                                            <span class="badge bg-success">{{ backup.get_status_display }}</span>
+                                        {% elif backup.status == 'failed' %}
+                                            <span class="badge bg-danger">{{ backup.get_status_display }}</span>
+                                        {% elif backup.status == 'corrupted' %}
+                                            <span class="badge bg-warning">{{ backup.get_status_display }}</span>
+                                        {% else %}
+                                            <span class="badge bg-info">{{ backup.get_status_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Slug:</strong></td>
+                                    <td><code>{{ backup.slug }}</code></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Criado por:</strong></td>
+                                    <td>{{ backup.created_by|default:"Sistema" }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Criado em:</strong></td>
+                                    <td>{{ backup.created_at|date:"d/m/Y H:i:s" }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Atualizado em:</strong></td>
+                                    <td>{{ backup.updated_at|date:"d/m/Y H:i:s" }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Informações do Arquivo</h6>
+                            <table class="table table-sm">
+                                <tr>
+                                    <td><strong>Caminho:</strong></td>
+                                    <td><code>{{ backup.file_path }}</code></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Tamanho:</strong></td>
+                                    <td>
+                                        {{ backup.file_size|filesizeformat }}
+                                        {% if file_size_mb %}
+                                            ({{ file_size_mb }} MB)
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>SHA256:</strong></td>
+                                    <td><code class="small">{{ backup.sha256_hash }}</code></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Arquivo existe:</strong></td>
+                                    <td>
+                                        {% if file_exists %}
+                                            <span class="badge bg-success">Sim</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Não</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    {% if backup.metadata %}
+                        <div class="mt-4">
+                            <h6>Metadados Adicionais</h6>
+                            <pre class="bg-light p-3 rounded"><code>{{ backup.metadata|pprint }}</code></pre>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar com ações -->
+        <div class="col-lg-4">
+            <!-- Status do arquivo -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h6 class="mb-0">Status do Arquivo</h6>
+                </div>
+                <div class="card-body">
+                    {% if not file_exists %}
+                        <div class="alert alert-danger" role="alert">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <strong>Arquivo não encontrado!</strong><br>
+                            O arquivo físico do backup não foi encontrado no sistema.
+                        </div>
+                    {% elif backup.status == 'corrupted' %}
+                        <div class="alert alert-warning" role="alert">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <strong>Arquivo corrompido!</strong><br>
+                            A integridade do arquivo pode estar comprometida.
+                        </div>
+                    {% elif backup.status == 'completed' %}
+                        <div class="alert alert-success" role="alert">
+                            <i class="fas fa-check-circle"></i>
+                            <strong>Backup íntegro!</strong><br>
+                            O arquivo está disponível e íntegro.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Ações rápidas -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">Ações Rápidas</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        {% if backup.status == 'completed' and file_exists %}
+                            <a href="{% url 'config:backup_download' slug=backup.slug %}" 
+                               class="btn btn-success">
+                                <i class="fas fa-download"></i> Fazer Download
+                            </a>
+                            <a href="{% url 'config:backup_restore' slug=backup.slug %}" 
+                               class="btn btn-warning">
+                                <i class="fas fa-undo"></i> Restaurar Backup
+                            </a>
+                        {% endif %}
+                        <a href="{% url 'config:backup_update' slug=backup.slug %}" 
+                           class="btn btn-info">
+                            <i class="fas fa-edit"></i> Editar Metadados
+                        </a>
+                        <hr>
+                        <a href="{% url 'config:backup_delete' slug=backup.slug %}" 
+                           class="btn btn-danger">
+                            <i class="fas fa-trash"></i> Excluir Backup
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

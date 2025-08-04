@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backup & Recovery Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-50">
+    <div class="min-h-screen">
+        <!-- Header -->
+        <header class="bg-white shadow-sm border-b border-gray-200">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center py-6">
+                    <div class="flex items-center">
+                        <h1 class="text-2xl font-bold text-gray-900">Backup & Recovery Center</h1>
+                        <span class="ml-3 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            Sistema Operacional
+                        </span>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium">
+                            Criar Backup
+                        </button>
+                        <div class="relative">
+                            <button class="flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                <img class="h-8 w-8 rounded-full" src="https://ui-avatars.com/api/?name={{ user.get_full_name }}&background=3B82F6&color=fff" alt="">
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+            <!-- Status Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="bg-white overflow-hidden shadow rounded-lg">
+                    <div class="p-5">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <div class="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center">
+                                    <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="ml-5 w-0 flex-1">
+                                <dl>
+                                    <dt class="text-sm font-medium text-gray-500 truncate">Backups Bem-sucedidos (24h)</dt>
+                                    <dd class="text-lg font-medium text-gray-900">{{ successful_backups_24h }}</dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white overflow-hidden shadow rounded-lg">
+                    <div class="p-5">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <div class="w-8 h-8 bg-red-500 rounded-md flex items-center justify-center">
+                                    <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="ml-5 w-0 flex-1">
+                                <dl>
+                                    <dt class="text-sm font-medium text-gray-500 truncate">Falhas de Backup (24h)</dt>
+                                    <dd class="text-lg font-medium text-gray-900">{{ failed_backups_24h }}</dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white overflow-hidden shadow rounded-lg">
+                    <div class="p-5">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <div class="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center">
+                                    <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="ml-5 w-0 flex-1">
+                                <dl>
+                                    <dt class="text-sm font-medium text-gray-500 truncate">Armazenamento Total</dt>
+                                    <dd class="text-lg font-medium text-gray-900">{{ total_storage_used }}</dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white overflow-hidden shadow rounded-lg">
+                    <div class="p-5">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <div class="w-8 h-8 bg-yellow-500 rounded-md flex items-center justify-center">
+                                    <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="ml-5 w-0 flex-1">
+                                <dl>
+                                    <dt class="text-sm font-medium text-gray-500 truncate">RTO Médio</dt>
+                                    <dd class="text-lg font-medium text-gray-900">{{ average_rto }} min</dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Section -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                <!-- Backup Trends -->
+                <div class="bg-white shadow rounded-lg p-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Tendências de Backup (30 dias)</h3>
+                    <canvas id="backupTrendsChart" width="400" height="200"></canvas>
+                </div>
+
+                <!-- Storage Distribution -->
+                <div class="bg-white shadow rounded-lg p-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Distribuição de Armazenamento</h3>
+                    <canvas id="storageDistributionChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+
+            <!-- Compliance Status -->
+            <div class="bg-white shadow rounded-lg mb-8">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-medium text-gray-900">Status de Compliance</h3>
+                </div>
+                <div class="p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {% for framework in compliance_frameworks %}
+                        <div class="border rounded-lg p-4">
+                            <div class="flex items-center justify-between mb-2">
+                                <h4 class="font-medium text-gray-900">{{ framework.name }}</h4>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                                    {% if framework.status == 'compliant' %}bg-green-100 text-green-800
+                                    {% elif framework.status == 'warning' %}bg-yellow-100 text-yellow-800
+                                    {% else %}bg-red-100 text-red-800{% endif %}">
+                                    {{ framework.status|title }}
+                                </span>
+                            </div>
+                            <div class="text-sm text-gray-600">
+                                <p>Última auditoria: {{ framework.last_audit|date:"d/m/Y" }}</p>
+                                <p>Próxima revisão: {{ framework.next_review|date:"d/m/Y" }}</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activities -->
+            <div class="bg-white shadow rounded-lg">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-medium text-gray-900">Atividades Recentes</h3>
+                </div>
+                <div class="divide-y divide-gray-200">
+                    {% for activity in recent_activities %}
+                    <div class="px-6 py-4">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0">
+                                    <div class="w-8 h-8 bg-{{ activity.color }}-500 rounded-full flex items-center justify-center">
+                                        <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                            {{ activity.icon|safe }}
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="ml-4">
+                                    <p class="text-sm font-medium text-gray-900">{{ activity.description }}</p>
+                                    <p class="text-sm text-gray-500">{{ activity.user }} • {{ activity.timestamp|timesince }} atrás</p>
+                                </div>
+                            </div>
+                            <div class="text-sm text-gray-500">
+                                {{ activity.status }}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Backup Trends Chart
+        const backupTrendsCtx = document.getElementById('backupTrendsChart').getContext('2d');
+        new Chart(backupTrendsCtx, {
+            type: 'line',
+            data: {
+                labels: {{ backup_trends_labels|safe }},
+                datasets: [{
+                    label: 'Backups Bem-sucedidos',
+                    data: {{ backup_trends_success|safe }},
+                    borderColor: 'rgb(34, 197, 94)',
+                    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                    tension: 0.1
+                }, {
+                    label: 'Backups Falhados',
+                    data: {{ backup_trends_failed|safe }},
+                    borderColor: 'rgb(239, 68, 68)',
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        // Storage Distribution Chart
+        const storageDistCtx = document.getElementById('storageDistributionChart').getContext('2d');
+        new Chart(storageDistCtx, {
+            type: 'doughnut',
+            data: {
+                labels: {{ storage_labels|safe }},
+                datasets: [{
+                    data: {{ storage_data|safe }},
+                    backgroundColor: [
+                        'rgb(59, 130, 246)',
+                        'rgb(16, 185, 129)',
+                        'rgb(245, 158, 11)',
+                        'rgb(239, 68, 68)'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

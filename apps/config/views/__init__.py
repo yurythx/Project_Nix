@@ -7,6 +7,11 @@ from .module_views import (
     ModuleStatsAPIView, ModuleDependencyCheckView
 )
 from .setup_wizard_view import SetupWizardView, SetupAPIView, setup_redirect
+from .backup_crud_views import (
+    BackupListView, BackupDetailView, BackupCreateView, 
+    BackupUpdateView, BackupDeleteView, BackupDownloadView, BackupRestoreView,
+    BackupRestoreOptionsView
+)
 
 __all__ = [
     'ConfigDashboardView',
@@ -28,4 +33,12 @@ __all__ = [
     'SetupWizardView',
     'SetupAPIView',
     'setup_redirect',
+    'BackupListView',
+    'BackupDetailView',
+    'BackupCreateView',
+    'BackupUpdateView',
+    'BackupDeleteView',
+    'BackupDownloadView',
+    'BackupRestoreView',
+    'BackupRestoreOptionsView',
 ]

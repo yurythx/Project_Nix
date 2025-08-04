@@ -1,0 +1,219 @@
+{% extends 'config/base_config_page.html' %}
+{% load static %}
+
+{% block title %}Lista de Backups{% endblock %}
+
+{% block page_title %}Gerenciamento de Backups{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Filtros -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Filtros</h5>
+                </div>
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-3">
+                            <label for="type" class="form-label">Tipo de Backup</label>
+                            <select name="type" id="type" class="form-select">
+                                <option value="">Todos os tipos</option>
+                                {% for value, label in backup_types %}
+                                    <option value="{{ value }}" {% if current_filters.type == value %}selected{% endif %}>
+                                        {{ label }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="status" class="form-label">Status</label>
+                            <select name="status" id="status" class="form-select">
+                                <option value="">Todos os status</option>
+                                {% for value, label in backup_status %}
+                                    <option value="{{ value }}" {% if current_filters.status == value %}selected{% endif %}>
+                                        {{ label }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="search" class="form-label">Buscar</label>
+                            <input type="text" name="search" id="search" class="form-control" 
+                                   value="{{ current_filters.search }}" placeholder="Nome ou descrição">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">&nbsp;</label>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary">Filtrar</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ações rápidas -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h4>Backups ({{ page_obj.paginator.count }} total)</h4>
+                <div class="btn-group" role="group">
+                    <!-- Botões de Backup -->
+                    <a href="{% url 'config:backup_create' backup_type='database' %}" class="btn btn-success">
+                        <i class="fas fa-database"></i> Backup BD
+                    </a>
+                    <a href="{% url 'config:backup_create' backup_type='media' %}" class="btn btn-info">
+                        <i class="fas fa-file-archive"></i> Backup Mídia
+                    </a>
+                    <a href="{% url 'config:backup_create' backup_type='configuration' %}" class="btn btn-warning">
+                        <i class="fas fa-cog"></i> Backup Config
+                    </a>
+                    
+                    <!-- Separador -->
+                    <div class="btn-group-divider mx-2"></div>
+                    
+                    <!-- Botão de Restauração -->
+                    <a href="{% url 'config:backup_restore_options' %}" class="btn btn-primary">
+                        <i class="fas fa-undo"></i> Opções de Restauração
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de backups -->
+    <div class="row">
+        <div class="col-12">
+            {% if backups %}
+                <div class="card">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Nome</th>
+                                        <th>Tipo</th>
+                                        <th>Status</th>
+                                        <th>Tamanho</th>
+                                        <th>Criado em</th>
+                                        <th>Criado por</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for backup in backups %}
+                                        <tr>
+                                            <td>
+                                                <a href="{% url 'config:backup_detail' slug=backup.slug %}" 
+                                                   class="text-decoration-none fw-bold">
+                                                    {{ backup.name }}
+                                                </a>
+                                                {% if backup.description %}
+                                                    <br><small class="text-muted">{{ backup.description|truncatechars:50 }}</small>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-secondary">{{ backup.get_backup_type_display }}</span>
+                                            </td>
+                                            <td>
+                                                {% if backup.status == 'completed' %}
+                                                    <span class="badge bg-success">{{ backup.get_status_display }}</span>
+                                                {% elif backup.status == 'failed' %}
+                                                    <span class="badge bg-danger">{{ backup.get_status_display }}</span>
+                                                {% elif backup.status == 'corrupted' %}
+                                                    <span class="badge bg-warning">{{ backup.get_status_display }}</span>
+                                                {% else %}
+                                                    <span class="badge bg-info">{{ backup.get_status_display }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ backup.file_size|filesizeformat }}</td>
+                                            <td>{{ backup.created_at|date:"d/m/Y H:i" }}</td>
+                                            <td>{{ backup.created_by|default:"Sistema" }}</td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm" role="group">
+                                                    <a href="{% url 'config:backup_detail' slug=backup.slug %}" 
+                                                       class="btn btn-outline-primary" title="Detalhes">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    {% if backup.status == 'completed' %}
+                                                        <a href="{% url 'config:backup_download' slug=backup.slug %}" 
+                                                           class="btn btn-outline-success" title="Download">
+                                                            <i class="fas fa-download"></i>
+                                                        </a>
+                                                        <a href="{% url 'config:backup_restore' slug=backup.slug %}" 
+                                                           class="btn btn-outline-warning" title="Restaurar">
+                                                            <i class="fas fa-undo"></i>
+                                                        </a>
+                                                    {% endif %}
+                                                    <a href="{% url 'config:backup_update' slug=backup.slug %}" 
+                                                       class="btn btn-outline-info" title="Editar">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                    <a href="{% url 'config:backup_delete' slug=backup.slug %}" 
+                                                       class="btn btn-outline-danger" title="Excluir">
+                                                        <i class="fas fa-trash"></i>
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Paginação -->
+                {% if is_paginated %}
+                    <nav aria-label="Navegação de páginas" class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=1{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">
+                                        Primeira
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">
+                                        Anterior
+                                    </a>
+                                </li>
+                            {% endif %}
+
+                            <li class="page-item active">
+                                <span class="page-link">
+                                    Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+                                </span>
+                            </li>
+
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">
+                                        Próxima
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">
+                                        Última
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                {% endif %}
+            {% else %}
+                <div class="card">
+                    <div class="card-body text-center py-5">
+                        <i class="fas fa-archive fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">Nenhum backup encontrado</h5>
+                        <p class="text-muted">Crie seu primeiro backup usando os botões acima.</p>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,147 @@
+{% extends 'config/base_config_page.html' %}
+{% load static %}
+
+{% block title %}Excluir Backup - {{ object.name }}{% endblock %}
+
+{% block page_title %}Excluir Backup{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'config:backup_list' %}">Backups</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'config:backup_detail' slug=object.slug %}">{{ object.name }}</a></li>
+            <li class="breadcrumb-item active">Excluir</li>
+        </ol>
+    </nav>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Confirmar Exclusão do Backup
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning" role="alert">
+                        <h6 class="alert-heading">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            Atenção!
+                        </h6>
+                        <p class="mb-0">
+                            Você está prestes a excluir permanentemente o backup <strong>{{ object.name }}</strong>.
+                            Esta ação não pode ser desfeita.
+                        </p>
+                    </div>
+
+                    <!-- Informações do backup -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h6>Informações do Backup</h6>
+                            <table class="table table-sm">
+                                <tr>
+                                    <td><strong>Nome:</strong></td>
+                                    <td>{{ object.name }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Tipo:</strong></td>
+                                    <td><span class="badge bg-secondary">{{ object.get_backup_type_display }}</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Status:</strong></td>
+                                    <td>
+                                        {% if object.status == 'completed' %}
+                                            <span class="badge bg-success">{{ object.get_status_display }}</span>
+                                        {% elif object.status == 'failed' %}
+                                            <span class="badge bg-danger">{{ object.get_status_display }}</span>
+                                        {% elif object.status == 'corrupted' %}
+                                            <span class="badge bg-warning">{{ object.get_status_display }}</span>
+                                        {% else %}
+                                            <span class="badge bg-info">{{ object.get_status_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Criado em:</strong></td>
+                                    <td>{{ object.created_at|date:"d/m/Y H:i:s" }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Informações do Arquivo</h6>
+                            <table class="table table-sm">
+                                <tr>
+                                    <td><strong>Caminho:</strong></td>
+                                    <td><code class="small">{{ object.file_path }}</code></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Tamanho:</strong></td>
+                                    <td>{{ object.file_size|filesizeformat }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Arquivo existe:</strong></td>
+                                    <td>
+                                        {% if object.file_path and object.file_path|length > 0 %}
+                                            <span class="badge bg-success">Sim</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Não</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Formulário de confirmação -->
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <div class="form-check">
+                                {{ form.confirm_delete }}
+                                <label class="form-check-label" for="{{ form.confirm_delete.id_for_label }}">
+                                    {{ form.confirm_delete.label }}
+                                </label>
+                                {% if form.confirm_delete.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.confirm_delete.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check">
+                                {{ form.delete_file }}
+                                <label class="form-check-label" for="{{ form.delete_file.id_for_label }}">
+                                    {{ form.delete_file.label }}
+                                </label>
+                                {% if form.delete_file.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.delete_file.errors.0 }}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">
+                                    Se desmarcado, apenas o registro será removido do banco de dados, mantendo o arquivo físico.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'config:backup_detail' slug=object.slug %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash"></i> Confirmar Exclusão
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

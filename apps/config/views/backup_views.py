@@ -5,25 +5,19 @@ import tarfile
 import shutil
 import logging
 from pathlib import Path
-from django.shortcuts import render, redirect
+from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
+from django.http import FileResponse, Http404
+from django.shortcuts import render, redirect
+from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.views import View
-from django.views.generic import TemplateView
-from django.http import FileResponse, HttpResponse, HttpResponseForbidden, Http404, HttpResponseRedirect
-from django.urls import reverse
-from django.contrib import messages
-from django.conf import settings
-from django.core.exceptions import PermissionDenied
-from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_http_methods
-from django.core.files.storage import default_storage
-from django.core.files.base import ContentFile
 
-from apps.config.services.backup_service import BackupService
-from apps.config.interfaces.services import IBackupService
+from ..services.backup_service import BackupService
+from ..interfaces.services import IBackupService
+from ..mixins import BackupViewMixin
 
-logger = logging.getLogger('config.backup')
+logger = logging.getLogger(__name__)
 
 class BackupViewMixin:
     """Mixin para views de backup que implementa injeção de dependência"""
@@ -188,9 +182,20 @@ class DeleteBackupView(BackupViewMixin, View):
         """Exclui um backup específico"""
         try:
             backup_service = self.get_backup_service()
-            result = backup_service.delete_backup(backup_type, filename)
             
-            if result['success']:
+            # Primeiro, obter o caminho completo do arquivo
+            file_success, file_message, backup_file_path = backup_service.get_backup_file(
+                backup_type, filename, request.user
+            )
+            
+            if not file_success:
+                messages.error(request, f'Erro ao localizar backup: {file_message}')
+                return redirect('config:dashboard')
+            
+            # Agora excluir usando o caminho completo
+            success, message = backup_service.delete_backup(str(backup_file_path), request.user)
+            
+            if success:
                 messages.success(request, f'Backup {filename} excluído com sucesso!')
                 
                 # Redireciona para a página apropriada
@@ -199,7 +204,7 @@ class DeleteBackupView(BackupViewMixin, View):
                 else:
                     return redirect('config:backup_media')
             else:
-                messages.error(request, f'Erro ao excluir backup: {result["error"]}')
+                messages.error(request, f'Erro ao excluir backup: {message}')
                 return redirect('config:dashboard')
                 
         except Exception as e:
@@ -312,18 +317,17 @@ def download_backup(request, backup_type, filename):
     try:
         # Usar BackupService para validar e obter o arquivo
         backup_service = BackupService()
-        download_result = backup_service.get_backup_file(backup_type, filename)
+        success, message, file_path = backup_service.get_backup_file(backup_type, filename, request.user)
         
-        if download_result['success']:
-            file_path = download_result['file_path']
+        if success and file_path:
             return FileResponse(
                 open(file_path, 'rb'), 
                 as_attachment=True, 
                 filename=filename
             )
         else:
-            logger.error(f"[DOWNLOAD BACKUP] Erro: {download_result['error']} para {backup_type}/{filename}")
-            raise Http404(download_result['error'])
+            logger.error(f"[DOWNLOAD BACKUP] Erro: {message} para {backup_type}/{filename}")
+            raise Http404(message)
             
     except Exception as e:
         logger.error(f"[DOWNLOAD BACKUP] Erro inesperado: {str(e)} para {backup_type}/{filename}")

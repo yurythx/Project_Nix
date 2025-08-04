@@ -1,0 +1,106 @@
+{% extends 'config/base_config_page.html' %}
+{% load static %}
+
+{% block title %}Criar Novo Backup{% endblock %}
+
+{% block page_title %}Criar Novo Backup{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'config:backup_list' %}">Backups</a></li>
+            <li class="breadcrumb-item active">Criar Backup</li>
+        </ol>
+    </nav>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Novo Backup</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="backup-form">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.name.id_for_label }}" class="form-label">{{ form.name.label }}</label>
+                            {{ form.name }}
+                            {% if form.name.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.name.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.backup_type.id_for_label }}" class="form-label">{{ form.backup_type.label }}</label>
+                            {{ form.backup_type }}
+                            {% if form.backup_type.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.backup_type.errors.0 }}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">
+                                <ul class="mb-0">
+                                    <li><strong>Banco de Dados:</strong> Backup completo do banco de dados</li>
+                                    <li><strong>Arquivos de Mídia:</strong> Backup dos arquivos de mídia uploadados</li>
+                                    <li><strong>Configurações:</strong> Backup das configurações do sistema</li>
+                                    <li><strong>Backup Completo:</strong> Inclui banco, mídia e configurações</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.description.id_for_label }}" class="form-label">{{ form.description.label }}</label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.description.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'config:backup_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Voltar
+                            </a>
+                            <button type="submit" class="btn btn-primary" id="create-btn">
+                                <i class="fas fa-plus"></i> Criar Backup
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Modal -->
+<div class="modal fade" id="loadingModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center py-4">
+                <div class="spinner-border text-primary mb-3" role="status">
+                    <span class="visually-hidden">Carregando...</span>
+                </div>
+                <h5>Criando backup...</h5>
+                <p class="text-muted mb-0">Por favor, aguarde. Este processo pode levar alguns minutos.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('backup-form').addEventListener('submit', function() {
+    // Mostrar modal de loading
+    var loadingModal = new bootstrap.Modal(document.getElementById('loadingModal'));
+    loadingModal.show();
+    
+    // Desabilitar botão de submit
+    document.getElementById('create-btn').disabled = true;
+});
+</script>
+{% endblock %}

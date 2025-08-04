@@ -1,5 +1,5 @@
 from django.urls import path
-from django.shortcuts import redirect, render
+from django.shortcuts import redirect
 from apps.config.views import (
     ConfigDashboardView,
     UserListView,
@@ -10,6 +10,14 @@ from apps.config.views import (
     SetupWizardView,
     SetupAPIView,
     setup_redirect,
+    BackupListView,
+    BackupDetailView,
+    BackupCreateView,
+    BackupUpdateView,
+    BackupDeleteView,
+    BackupDownloadView,
+    BackupRestoreView,
+    BackupRestoreOptionsView,
 )
 from apps.config.views.email_views import (
     EmailConfigView,
@@ -37,19 +45,15 @@ from apps.config.views.database_views import (
     DatabaseConnectionTestAjaxView,
 )
 from apps.config.views.user_views import (
-    UserListView, UserCreateView, UserUpdateView, UserDeleteView,
     UserActivateView, UserDeactivateView,
     UserPermissionAssignView, UserPermissionRemoveView,
     UserGroupAssignView, UserGroupRemoveView
 )
 from apps.config.views.system_config_views import (
-    SystemConfigView, SystemLogListView
+    SystemLogListView
 )
 from apps.config.views.groups import (
     GroupListView, GroupCreateView, GroupUpdateView, GroupDeleteView, GroupDetailView
-)
-from apps.config.views.users import (
-    UserListView, UserCreateView, UserUpdateView, UserDeleteView
 )
 from apps.config.views.backup_views import (
     BackupDatabaseView, BackupMediaView, download_backup,
@@ -59,14 +63,13 @@ from apps.config.views.permission_dashboard_views import (
     PermissionDashboardView, UserPermissionsView, GroupPermissionsView,
     CacheManagementView, PermissionAnalyticsView, PermissionAPIView
 )
-
+from django.urls import path, include
 
 app_name = 'config'
 
 urlpatterns = [
-    # Setup Wizard (primeira instalação)
+    # Setup Wizard
     path('wizard/', SetupWizardView.as_view(), name='setup_wizard'),
-    path('wizard-teste/', SetupWizardView.as_view(), name='setup_wizard_teste'),
     path('setup/api/', SetupAPIView.as_view(), name='setup_api'),
     path('setup-wizard/api/database-step/', SetupAPIView.as_view(), name='setup_database_api'),
     path('setup-wizard/api/finalize/', SetupAPIView.as_view(), name='setup_finalize_api'),
@@ -87,13 +90,6 @@ urlpatterns = [
     path('users/<slug:slug>/group/assign/', UserGroupAssignView.as_view(), name='user_group_assign'),
     path('users/<slug:slug>/group/remove/', UserGroupRemoveView.as_view(), name='user_group_remove'),
     
-    # Grupos (TODO)
-    # path('grupos/', GroupListView.as_view(), name='group_list'),
-    # path('grupos/criar/', GroupCreateView.as_view(), name='group_create'),
-    # path('grupos/<int:group_id>/', GroupDetailView.as_view(), name='group_detail'),
-    # path('grupos/<int:group_id>/editar/', GroupUpdateView.as_view(), name='group_update'),
-    # path('grupos/<int:group_id>/deletar/', GroupDeleteView.as_view(), name='group_delete'),
-    
     # Email
     path('email/', EmailConfigView.as_view(), name='email_config'),
     path('email/teste/', EmailTestView.as_view(), name='email_test'),
@@ -106,8 +102,9 @@ urlpatterns = [
 
     # Configurações do Sistema
     path('sistema/', SystemConfigView.as_view(), name='system_config'),
+    path('system/logs/', SystemLogListView.as_view(), name='system_logs'),
 
-    # Módulos do Sistema (usando AppModuleConfiguration)
+    # Módulos do Sistema
     path('modules/', ModuleListView.as_view(), name='module_list'),
     path('modules/<str:app_name>/', ModuleDetailView.as_view(), name='module_detail'),
     path('modules/<str:app_name>/update/', ModuleUpdateView.as_view(), name='module_update'),
@@ -120,7 +117,7 @@ urlpatterns = [
     path('api/modulos/stats/', ModuleStatsAPIView.as_view(), name='module_stats_api'),
     path('api/modulos/<str:app_name>/dependencies/', ModuleDependencyCheckView.as_view(), name='module_dependency_check'),
 
-    # Banco de Dados (somente informações)
+    # Banco de Dados
     path('banco-dados/', DatabaseInfoView.as_view(), name='database_info'),
     path('ajax/test-database-connection/', DatabaseConnectionTestAjaxView.as_view(), name='database_connection_test'),
 
@@ -131,16 +128,6 @@ urlpatterns = [
     path('permissions/cache/', CacheManagementView.as_view(), name='cache_management'),
     path('permissions/analytics/', PermissionAnalyticsView.as_view(), name='permission_analytics'),
     path('permissions/api/', PermissionAPIView.as_view(), name='permission_api'),
-    
-    # Backup & Manutenção (TODO)
-    path('backup/', SystemConfigView.as_view(), name='backup_config'),
-    path('cache/', SystemConfigView.as_view(), name='cache_management_old'),
-    path('logs/', SystemConfigView.as_view(), name='system_logs'),
-    
-    # Logs de Auditoria (TODO)
-    # path('logs/', AuditLogListView.as_view(), name='audit_log_list'),
-    # path('logs/usuario/<int:user_id>/', UserAuditLogView.as_view(), name='user_audit_logs'),
-    path('system/logs/', SystemLogListView.as_view(), name='system_logs'),
 
     # Grupos
     path('groups/', GroupListView.as_view(), name='group_list'),
@@ -148,22 +135,20 @@ urlpatterns = [
     path('groups/<slug:slug>/', GroupDetailView.as_view(), name='group_detail'),
     path('groups/<slug:slug>/update/', GroupUpdateView.as_view(), name='group_update'),
     path('groups/<slug:slug>/delete/', GroupDeleteView.as_view(), name='group_delete'),
-
-    # Usuários (rotas alternativas)
-    # path('users/', UserListView.as_view(), name='user_list'),
-    # path('users/create/', UserCreateView.as_view(), name='user_create'),
-    # path('users/<int:pk>/', UserDetailView.as_view(), name='user_detail'),
-    # path('users/<int:pk>/update/', UserUpdateView.as_view(), name='user_update'),
-    # path('users/<int:pk>/delete/', UserDeleteView.as_view(), name='user_delete'),
     
-    # Moderação de Comentários (redireciona para articles)
+    # Moderação de Comentários
     path('comentarios/', lambda request: redirect('articles:moderate_comments'), name='comment_moderation'),
 
-    # Backup & Restauração
-    path('backup/database/', BackupDatabaseView.as_view(), name='backup_database'),
-    path('backup/media/', BackupMediaView.as_view(), name='backup_media'),
-    path('restore/database/', RestoreDatabaseView.as_view(), name='restore_database'),
-    path('restore/media/', RestoreMediaView.as_view(), name='restore_media'),
-    path('backup/download/<str:backup_type>/<str:filename>/', download_backup, name='download_backup'),
-    path('backup/delete/<str:backup_type>/<str:filename>/', DeleteBackupView.as_view(), name='delete_backup'),
+    # Sistema de Backup Moderno (URLs principais)
+    path('backups/', BackupListView.as_view(), name='backup_list'),
+    path('backups/restore-options/', BackupRestoreOptionsView.as_view(), name='backup_restore_options'),
+    path('backups/create/<str:backup_type>/', BackupCreateView.as_view(), name='backup_create'),
+    path('backups/<slug:slug>/', BackupDetailView.as_view(), name='backup_detail'),
+    path('backups/<slug:slug>/update/', BackupUpdateView.as_view(), name='backup_update'),
+    path('backups/<slug:slug>/delete/', BackupDeleteView.as_view(), name='backup_delete'),
+    path('backups/<slug:slug>/download/', BackupDownloadView.as_view(), name='backup_download'),
+    path('backups/<slug:slug>/restore/', BackupRestoreView.as_view(), name='backup_restore'),
+
+    # Backup Enterprise
+    path('backup/enterprise/', include('apps.config.backup_enterprise_urls')),
 ]

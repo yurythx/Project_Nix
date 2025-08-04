@@ -1,0 +1,74 @@
+{% extends 'config/base_config.html' %}
+{% load static %}
+
+{% block config_title %}Monitoramento de Backup{% endblock %}
+
+{% block config_content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Relatório de Saúde do Sistema</h3>
+            </div>
+            <div class="card-body">
+                {% if health_report %}
+                <div class="alert alert-{% if health_report.overall_status == 'healthy' %}success{% elif health_report.overall_status == 'warning' %}warning{% else %}danger{% endif %}">
+                    <h5>Status Geral: {{ health_report.overall_status|title }}</h5>
+                    <p>{{ health_report.summary }}</p>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Políticas Desatualizadas:</h6>
+                        <ul>
+                            {% for policy in health_report.stale_policies %}
+                            <li>{{ policy.name }} - Último backup: {{ policy.last_backup|timesince }} atrás</li>
+                            {% empty %}
+                            <li>Nenhuma política desatualizada</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Jobs Falhados:</h6>
+                        <ul>
+                            {% for job in health_report.failed_jobs %}
+                            <li>{{ job.policy.name }} - {{ job.error_message|truncatechars:50 }}</li>
+                            {% empty %}
+                            <li>Nenhum job falhado</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Detecção de Ransomware</h3>
+            </div>
+            <div class="card-body">
+                {% if ransomware_check %}
+                <div class="alert alert-{% if ransomware_check.risk_level == 'low' %}success{% elif ransomware_check.risk_level == 'medium' %}warning{% else %}danger{% endif %}">
+                    <h5>Nível de Risco: {{ ransomware_check.risk_level|title }}</h5>
+                    <p>{{ ransomware_check.summary }}</p>
+                </div>
+                
+                {% if ransomware_check.indicators %}
+                <h6>Indicadores Detectados:</h6>
+                <ul>
+                    {% for indicator in ransomware_check.indicators %}
+                    <li>{{ indicator }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

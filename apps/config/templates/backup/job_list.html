@@ -1,0 +1,58 @@
+{% extends 'config/base_config.html' %}
+{% load static %}
+
+{% block config_title %}Jobs de Backup{% endblock %}
+
+{% block config_content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Jobs de Backup</h3>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Política</th>
+                                <th>Método</th>
+                                <th>Status</th>
+                                <th>Agendado</th>
+                                <th>Iniciado</th>
+                                <th>Concluído</th>
+                                <th>Tamanho</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for job in jobs %}
+                            <tr>
+                                <td>{{ job.policy.name }}</td>
+                                <td>{{ job.get_backup_method_display }}</td>
+                                <td>
+                                    <span class="badge badge-{% if job.status == 'completed' %}success{% elif job.status == 'failed' %}danger{% elif job.status == 'running' %}warning{% else %}secondary{% endif %}">
+                                        {{ job.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>{{ job.scheduled_at|date:"d/m/Y H:i" }}</td>
+                                <td>{{ job.started_at|date:"d/m/Y H:i"|default:"-" }}</td>
+                                <td>{{ job.completed_at|date:"d/m/Y H:i"|default:"-" }}</td>
+                                <td>{{ job.total_size_bytes|filesizeformat|default:"-" }}</td>
+                                <td>
+                                    <a href="#" class="btn btn-sm btn-outline-primary">Detalhes</a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="8" class="text-center">Nenhum job encontrado</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,131 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=False
+      - DJANGO_SETTINGS_MODULE=core.production
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/project_nix
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_STORAGE_BUCKET_NAME=${AWS_STORAGE_BUCKET_NAME}
+      - AWS_S3_REGION_NAME=${AWS_S3_REGION_NAME}
+      - BACKUP_ENCRYPTION_KEY=${BACKUP_ENCRYPTION_KEY}
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - ./backups:/app/backups
+      - ./media:/app/media
+    networks:
+      - enterprise_network
+
+  db:
+    image: postgres:15
+    environment:
+      - POSTGRES_DB=project_nix
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backups/database:/backups
+    networks:
+      - enterprise_network
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - enterprise_network
+
+  celery_worker:
+    build: .
+    command: celery -A core worker -l info
+    environment:
+      - DEBUG=False
+      - DJANGO_SETTINGS_MODULE=core.production
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/project_nix
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_STORAGE_BUCKET_NAME=${AWS_STORAGE_BUCKET_NAME}
+      - AWS_S3_REGION_NAME=${AWS_S3_REGION_NAME}
+      - BACKUP_ENCRYPTION_KEY=${BACKUP_ENCRYPTION_KEY}
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - ./backups:/app/backups
+      - ./media:/app/media
+    networks:
+      - enterprise_network
+
+  celery_beat:
+    build: .
+    command: celery -A core beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    environment:
+      - DEBUG=False
+      - DJANGO_SETTINGS_MODULE=core.production
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/project_nix
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - ./backups:/app/backups
+    networks:
+      - enterprise_network
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./ssl:/etc/nginx/ssl
+      - ./static:/app/static
+      - ./media:/app/media
+    depends_on:
+      - web
+    networks:
+      - enterprise_network
+
+  backup_monitor:
+    build: .
+    command: python manage.py backup_health_monitor
+    environment:
+      - DEBUG=False
+      - DJANGO_SETTINGS_MODULE=core.production
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/project_nix
+      - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL}
+      - EMAIL_ALERTS_ENABLED=True
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - ./backups:/app/backups
+    networks:
+      - enterprise_network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  enterprise_network:
+    driver: bridge

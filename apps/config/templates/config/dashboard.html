@@ -130,6 +130,12 @@
                             <i class="fas fa-layer-group" aria-hidden="true"></i>
                             <span>Gerenciar Grupos</span>
                         </a>
+                        <a href="{% url 'config:backup_list' %}" class="config-action-btn config-action-primary">
+                            <i class="fas fa-database" aria-hidden="true"></i>
+                            <span>Sistema de Backup</span>
+                        </a>
+                        {% comment %}
+                        <!-- Ações legadas removidas - usar apenas backup_list -->
                         <a href="{% url 'config:backup_database' %}" class="config-action-btn config-action-secondary">
                             <i class="fas fa-database" aria-hidden="true"></i>
                             <span>Backup do Banco de Dados</span>
@@ -138,14 +144,11 @@
                             <i class="fas fa-database" aria-hidden="true"></i>
                             <span>Restaurar Banco de Dados</span>
                         </a>
-                        <a href="{% url 'config:backup_media' %}" class="config-action-btn config-action-secondary">
-                            <i class="fas fa-folder-open" aria-hidden="true"></i>
-                            <span>Backup da Mídia</span>
-                        </a>
                         <a href="{% url 'config:restore_media' %}" class="config-action-btn config-action-danger">
                             <i class="fas fa-folder-open" aria-hidden="true"></i>
                             <span>Restaurar Mídia</span>
                         </a>
+                        {% endcomment %}
                     </div>
                 </div>
             </div>

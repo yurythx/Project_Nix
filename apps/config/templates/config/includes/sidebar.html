@@ -51,8 +51,14 @@
             <span><i class="fas fa-database config-icon"></i>Backup & Restauração</span>
         </h6>
         <ul class="sidebar-nav">
+            {% sidebar_item 'backup_list' 'fas fa-list' 'Gerenciar Backups' 'Interface completa de gerenciamento de backups' %}
+            {% comment %}
+            <!-- URLs legadas removidas - usar apenas backup_list -->
             {% sidebar_item 'backup_database' 'fas fa-database' 'Backup Banco' 'Backup do banco de dados' %}
             {% sidebar_item 'backup_media' 'fas fa-folder-open' 'Backup Mídia' 'Backup da mídia do site' %}
+            {% sidebar_item 'restore_database' 'fas fa-undo' 'Restaurar Banco' 'Restaurar banco de dados' %}
+            {% sidebar_item 'restore_media' 'fas fa-undo' 'Restaurar Mídia' 'Restaurar mídia do site' %}
+            {% endcomment %}
         </ul>
     </div>
 

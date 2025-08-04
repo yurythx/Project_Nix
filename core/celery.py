@@ -5,6 +5,7 @@ Configuração do Celery para tarefas em background.
 import os
 from celery import Celery
 from django.conf import settings
+from celery.schedules import crontab
 
 # Definir o módulo de configurações padrão do Django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
@@ -118,4 +119,51 @@ if settings.DEBUG:
     app.conf.update(
         task_always_eager=True,  # Executar tarefas sincronamente em desenvolvimento
         task_eager_propagates=True,
-    ) 
+    )
+
+
+# Configuração do Celery Beat para tarefas periódicas
+app.conf.beat_schedule = {
+    'cleanup-expired-downloads': {
+        'task': 'apps.mangas.tasks.download_tasks.cleanup_expired_downloads',
+        'schedule': 3600.0,  # A cada hora
+    },
+    'cleanup-expired-notifications': {
+        'task': 'apps.mangas.tasks.notification_tasks.cleanup_expired_notifications',
+        'schedule': 3600.0,  # A cada hora
+    },
+    'process-moderation-queue': {
+        'task': 'apps.mangas.tasks.moderation_tasks.process_moderation_queue',
+        'schedule': 300.0,  # A cada 5 minutos
+    },
+    'send-pending-notifications': {
+        'task': 'apps.mangas.tasks.notification_tasks.send_pending_notifications',
+        'schedule': 60.0,  # A cada minuto
+    },
+    # Novas tasks para mangás
+    'update-manga-statistics': {
+        'task': 'apps.mangas.tasks.manga_tasks.update_manga_statistics',
+        'schedule': 1800.0,  # A cada 30 minutos
+    },
+    'cleanup-manga-cache': {
+        'task': 'apps.mangas.tasks.manga_tasks.cleanup_manga_cache',
+        'schedule': 7200.0,  # A cada 2 horas
+    },
+    # Backup Enterprise Tasks
+    'schedule-policy-backups': {
+        'task': 'apps.config.tasks.backup_tasks.schedule_policy_backups',
+        'schedule': crontab(minute=0),  # A cada hora
+    },
+    'backup-health-check': {
+        'task': 'apps.config.tasks.backup_tasks.backup_health_check',
+        'schedule': crontab(minute='*/15'),  # A cada 15 minutos
+    },
+    'cleanup-old-backups': {
+        'task': 'apps.config.tasks.backup_tasks.cleanup_old_backups',
+        'schedule': crontab(hour=2, minute=0),  # Diariamente às 2h
+    },
+    'generate-compliance-reports': {
+        'task': 'apps.config.tasks.backup_tasks.generate_compliance_reports',
+        'schedule': crontab(hour=6, minute=0, day_of_week=1),  # Semanalmente às segundas 6h
+    },
+}
