@@ -17,6 +17,7 @@ class BackupMetadata(models.Model):
     
     BACKUP_STATUS = [
         ('created', 'Criado'),
+        ('in_progress', 'Em Progresso'),
         ('completed', 'Concluído'),
         ('failed', 'Falhou'),
         ('corrupted', 'Corrompido'),

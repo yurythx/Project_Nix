@@ -94,22 +94,38 @@ class BackupCreateView(LoginRequiredMixin, PermissionRequiredMixin, BackupViewMi
         return initial
     
     def form_valid(self, form):
-        # Não criar backup_metadata aqui, pois o serviço já cria
         backup_type = form.cleaned_data['backup_type']
+        name = form.cleaned_data.get('name', f'Backup {backup_type.title()}')
         description = form.cleaned_data.get('description', '')
         
         try:
+            # Validar se o tipo de backup é suportado
+            supported_types = ['database', 'media', 'configuration', 'full']
+            if backup_type not in supported_types:
+                messages.error(self.request, f'Tipo de backup "{backup_type}" não é suportado')
+                return self.form_invalid(form)
+            
             # Criar o backup usando o serviço
             backup_service = self.get_backup_service()
             
             if backup_type == 'database':
-                success, message, file_path = backup_service.create_database_backup(self.request.user, description)
+                success, message, file_path = backup_service.create_database_backup(
+                    user=self.request.user, 
+                    description=description
+                )
             elif backup_type == 'media':
-                success, message, file_path = backup_service.create_media_backup(self.request.user)
+                success, message, file_path = backup_service.create_media_backup(
+                    user=self.request.user,
+                    description=description
+                )
             elif backup_type == 'configuration':
-                success, message, file_path = backup_service.create_configuration_backup(self.request.user)
-            else:
-                raise ValueError(f"Tipo de backup não suportado: {backup_type}")
+                success, message, file_path = backup_service.create_configuration_backup(
+                    user=self.request.user,
+                    description=description
+                )
+            elif backup_type == 'full':
+                messages.error(self.request, 'Backup completo ainda não implementado')
+                return self.form_invalid(form)
             
             if not success:
                 raise Exception(message)
@@ -126,14 +142,19 @@ class BackupCreateView(LoginRequiredMixin, PermissionRequiredMixin, BackupViewMi
             if not backup_metadata:
                 raise Exception("Backup criado mas registro não encontrado")
             
+            # Atualizar o nome do backup se fornecido
+            if name != f'Backup {backup_type.title()}':
+                backup_metadata.name = name
+                backup_metadata.save()
+            
             # Definir o objeto para redirecionamento
             self.object = backup_metadata
             
-            messages.success(self.request, f'Backup {backup_metadata.name} criado com sucesso!')
+            messages.success(self.request, f'Backup "{backup_metadata.name}" criado com sucesso!')
             return redirect(self.get_success_url())
             
         except Exception as e:
-            messages.error(self.request, f'Erro ao criar backup: {str(e)}')
+            messages.error(self.request, f'Erro inesperado ao criar backup: {str(e)}')
             return self.form_invalid(form)
     
     def get_success_url(self):
@@ -403,20 +424,30 @@ class BackupRestoreView(LoginRequiredMixin, PermissionRequiredMixin, BackupViewM
                     success, message = backup_service.restore_media_backup(backup_file_path, request.user)
                 elif self.object.backup_type == 'configuration':
                     success, message = backup_service.restore_configuration_backup(backup_file_path, request.user)
+                else:
+                    raise Exception(f'Tipo de backup "{self.object.backup_type}" não suportado para restauração')
                 
                 if not success:
                     raise Exception(message)
+                
+                # Limpar arquivo temporário se foi criado
+                if uploaded_file and 'temp_file_path' in locals() and os.path.exists(temp_file_path):
+                    os.remove(temp_file_path)
+                    os.rmdir(temp_dir)
                 
                 messages.success(request, f'Backup "{self.object.name}" restaurado com sucesso!')
                 return redirect('config:backup_detail', slug=self.object.slug)
                 
             except Exception as e:
                 # Limpar arquivo temporário se foi criado
-                if uploaded_file and os.path.exists(backup_file_path):
-                    os.remove(backup_file_path)
-                    os.rmdir(temp_dir)
+                if uploaded_file and 'temp_file_path' in locals() and os.path.exists(temp_file_path):
+                    try:
+                        os.remove(temp_file_path)
+                        os.rmdir(temp_dir)
+                    except:
+                        pass
                 
-            messages.error(request, f'Erro ao restaurar backup: {str(e)}')
-            return self.render_to_response(self.get_context_data(form=form))
+                messages.error(request, f'Erro ao restaurar backup: {str(e)}')
+                return self.render_to_response(self.get_context_data(form=form))
         
         return self.render_to_response(self.get_context_data(form=form))
