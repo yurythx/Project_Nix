@@ -6,6 +6,7 @@ from django.conf import settings
 from apps.config.models.app_module_config import AppModuleConfiguration
 from apps.config.interfaces.services import IModuleService
 import logging
+from django.core.cache import cache
 
 User = get_user_model()
 logger = logging.getLogger(__name__)
@@ -35,9 +36,16 @@ class ModuleService(IModuleService):
             status='active'
         ).order_by('menu_order', 'display_name')
     
-    def get_menu_modules(self) -> List[AppModuleConfiguration]:
+    def get_menu_modules(self):
         """Retorna módulos que devem aparecer no menu"""
-        return self.get_available_modules().filter(show_in_menu=True)
+        cache_key = 'menu_modules'
+        modules = cache.get(cache_key)
+        
+        if modules is None:
+            modules = list(self.get_available_modules().filter(show_in_menu=True))
+            cache.set(cache_key, modules, 300)  # 5 minutos
+        
+        return modules
     
     def get_module_by_name(self, app_name: str) -> Optional[AppModuleConfiguration]:
         """Busca módulo por nome, tolerante a prefixo 'apps.'"""

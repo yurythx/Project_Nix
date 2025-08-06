@@ -331,88 +331,151 @@ body.reader-fullscreen {
 }
 */
 
-/* ===== RESPONSIVIDADE ===== */
+/* ===== RESPONSIVIDADE MOBILE MELHORADA ===== */
 
-/* Tablets */
-@media (max-width: 992px) {
-  .book-detail-container {
-    margin: var(--spacing-md) auto;
-    padding: 0 var(--spacing-sm);
-  }
-  
-  .book-header {
-    gap: var(--spacing-md);
-    padding: var(--spacing-md);
-  }
-  
-  .book-cover {
-    flex: 0 0 200px;
-  }
+/* Botões mobile-friendly */
+.btn-mobile {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 8px 12px;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
 }
 
-/* Mobile */
-@media (max-width: 768px) {
-  .book-header {
+/* Layout responsivo das ações */
+.book-actions {
+    display: flex;
     flex-direction: column;
-    text-align: center;
-  }
-  
-  .book-cover {
-    margin: 0 auto;
-    max-width: 200px;
-    flex: none;
-  }
-  
-  .book-reader-content {
-    min-height: 400px;
-  }
-  
-  .pdf-container embed {
-    min-height: 400px;
-  }
-  
-  #epub-reader {
-    min-height: 400px;
-  }
-  
-  .book-reader-header {
-    padding: 8px 12px;
-  }
-  
-  .book-reader-title {
-    font-size: 0.9rem;
-    max-width: 60%;
-  }
-  
-  .btn-reader {
-    padding: 6px 8px;
-    min-width: 36px;
-    min-height: 32px;
-  }
-  
-  .btn-reader span {
-    display: none;
-  }
-  
-  .btn-reader i {
-    margin: 0;
-  }
+    gap: var(--spacing-md);
+    margin: var(--spacing-lg) 0;
+}
+
+.action-buttons-row {
+    display: flex;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+    justify-content: flex-start;
+}
+
+.theme-controls-wrapper {
+    display: flex;
+    justify-content: flex-start;
+}
+
+.theme-controls {
+    display: inline-flex;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 4px;
+    gap: 2px;
+}
+
+.theme-option {
+    min-width: 40px;
+    min-height: 40px;
+    padding: 8px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.theme-option:hover,
+.theme-option:focus {
+    background: var(--bg-primary);
+    color: var(--accent-primary);
+    transform: scale(1.05);
+}
+
+.theme-option.active {
+    background: var(--accent-primary);
+    color: white;
+    box-shadow: 0 2px 4px var(--shadow-light);
+}
+
+/* Mobile específico */
+@media (max-width: 768px) {
+    .book-actions {
+        align-items: center;
+        text-align: center;
+    }
+    
+    .action-buttons-row {
+        justify-content: center;
+        width: 100%;
+    }
+    
+    .btn-mobile {
+        flex: 1;
+        min-width: 120px;
+        max-width: 150px;
+    }
+    
+    .theme-controls-wrapper {
+        justify-content: center;
+        width: 100%;
+    }
+    
+    .theme-controls {
+        background: var(--bg-tertiary);
+        border: 2px solid var(--border-color);
+        padding: 6px;
+        box-shadow: 0 2px 8px var(--shadow-light);
+    }
+    
+    .theme-option {
+        min-width: 48px;
+        min-height: 48px;
+        padding: 12px;
+    }
 }
 
 /* Mobile pequeno */
 @media (max-width: 576px) {
-  .book-detail-container {
-    margin: var(--spacing-sm) auto;
-    padding: 0 var(--spacing-xs);
-  }
-  
-  .book-header {
-    padding: var(--spacing-sm);
-  }
-  
-  .book-actions {
-    justify-content: center;
-  }
+    .action-buttons-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .btn-mobile {
+        width: 100%;
+        max-width: none;
+        justify-content: flex-start;
+        padding: 12px 16px;
+    }
+    
+    .btn-text {
+        margin-left: 8px;
+    }
+    
+    .theme-controls {
+        justify-self: center;
+        margin: 0 auto;
+    }
+}
+
+/* Touch targets melhorados */
+@media (pointer: coarse) {
+    .btn-mobile,
+    .theme-option {
+        min-height: 48px;
+        min-width: 48px;
+    }
+    
+    .theme-option {
+        padding: 14px;
+    }
 }
 
 /* ===== SUPORTE A DISPOSITIVOS COM NOTCH ===== */

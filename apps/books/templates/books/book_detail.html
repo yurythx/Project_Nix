@@ -33,54 +33,64 @@
             </div>
             
             <div class="book-actions">
-                <a href="{% url 'books:book_list' %}" class="btn btn-outline-secondary">
-                    <i class="fas fa-arrow-left me-1"></i> Voltar
-                </a>
-                {% if user.is_authenticated %}
-                <button id="favorite-btn" class="btn btn-outline-warning">
-                    <i id="favorite-icon" class="far fa-star me-1"></i>
-                    <span id="favorite-label">Favoritar</span>
-                </button>
-                {% endif %}
-                {% if user.is_staff %}
-                <a href="{% url 'books:book_edit' book.slug %}" class="btn btn-outline-primary">
-                    <i class="fas fa-edit me-1"></i> Editar
-                </a>
-                {% endif %}
-                {% if book.file %}
-                <a href="{{ book.file.url }}" class="btn btn-outline-success" download>
-                    <i class="fas fa-download me-1"></i> Baixar
-                </a>
-                {% endif %}
-                <!-- Botão de alternância de tema -->
-                <!-- Remover o botão customizado e manter apenas os botões padrão -->
-                <div class="theme-toggle d-inline-flex">
-                    <button class="theme-option" data-theme="light" title="Tema claro">
-                        <i class="fas fa-sun"></i>
+                <div class="action-buttons-row">
+                    <a href="{% url 'books:book_list' %}" class="btn btn-outline-secondary btn-mobile">
+                        <i class="fas fa-arrow-left me-1"></i>
+                        <span class="btn-text">Voltar</span>
+                    </a>
+                    {% if user.is_authenticated %}
+                    <button id="favorite-btn" class="btn btn-outline-warning btn-mobile">
+                        <i id="favorite-icon" class="far fa-star me-1"></i>
+                        <span id="favorite-label" class="btn-text">Favoritar</span>
                     </button>
-                    <button class="theme-option" data-theme="dark" title="Tema escuro">
-                        <i class="fas fa-moon"></i>
-                    </button>
+                    {% endif %}
+                    {% if user.is_staff %}
+                    <a href="{% url 'books:book_edit' book.slug %}" class="btn btn-outline-primary btn-mobile">
+                        <i class="fas fa-edit me-1"></i>
+                        <span class="btn-text">Editar</span>
+                    </a>
+                    {% endif %}
+                    {% if book.file %}
+                    <a href="{{ book.file.url }}" class="btn btn-outline-success btn-mobile" download>
+                        <i class="fas fa-download me-1"></i>
+                        <span class="btn-text">Baixar</span>
+                    </a>
+                    {% endif %}
                 </div>
                 
-                <!-- REMOVER completamente o script ThemeManager local -->
-                <!-- Botão customizado (desnecessário) -->
-                <button id="theme-toggle" class="theme-toggle" title="Alternar tema">
-                    <i class="fas fa-palette"></i>
-                    <span>Tema</span>
-                </button>
+                <!-- Sistema de tema unificado -->
+                <div class="theme-controls-wrapper">
+                    <div class="theme-controls" role="radiogroup" aria-label="Seleção de tema">
+                        <button class="theme-option" data-theme="light" title="Tema claro" 
+                                role="radio" aria-checked="true" tabindex="0">
+                            <i class="fas fa-sun" aria-hidden="true"></i>
+                            <span class="sr-only">Tema claro</span>
+                        </button>
+                        <button class="theme-option" data-theme="dark" title="Tema escuro" 
+                                role="radio" aria-checked="false" tabindex="-1">
+                            <i class="fas fa-moon" aria-hidden="true"></i>
+                            <span class="sr-only">Tema escuro</span>
+                        </button>
+                        <button class="theme-option" data-theme="sepia" title="Tema sépia" 
+                                role="radio" aria-checked="false" tabindex="-1">
+                            <i class="fas fa-book-open" aria-hidden="true"></i>
+                            <span class="sr-only">Tema sépia</span>
+                        </button>
+                    </div>
+                </div>
             </div>
-            
-            {% if book.description %}
-            <div class="book-description">
-                <h5>Descrição</h5>
-                <p>{{ book.description|linebreaksbr }}</p>
-            </div>
-            {% endif %}
         </div>
     </div>
     
-    <!-- Leitor de livros -->
+    <!-- Descrição do livro -->
+    {% if book.description %}
+    <div class="book-description">
+        <h3>Descrição</h3>
+        <p>{{ book.description|linebreaks }}</p>
+    </div>
+    {% endif %}
+    
+    <!-- Leitor de livros (ÚNICA INSTÂNCIA) -->
     {% if book.file %}
     <div class="book-reader-container" id="book-reader-container">
         <div class="book-reader-header">
@@ -126,46 +136,69 @@
 {% endif %}
 
 <script>
-// ===== GERENCIADOR DE TEMAS =====
-class ThemeManager {
-    constructor() {
-        this.currentTheme = localStorage.getItem('theme') || 'light';
-        this.init();
-    }
-    
-    init() {
-        this.applyTheme(this.currentTheme);
-        this.setupThemeButtons();
-    }
-    
-    applyTheme(theme) {
-        document.documentElement.setAttribute('data-theme', theme);
-        this.currentTheme = theme;
-        localStorage.setItem('theme', theme);
-        this.updateActiveButton();
-    }
-    
-    setupThemeButtons() {
-        const themeButtons = document.querySelectorAll('.theme-option');
-        themeButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                const theme = button.getAttribute('data-theme');
-                this.applyTheme(theme);
+// ===== INTEGRAÇÃO COM SISTEMA GLOBAL DE TEMAS =====
+// Usar o ThemeManager global se disponível, caso contrário usar implementação local
+if (typeof window.ThemeManager !== 'undefined') {
+    // Usar o sistema global
+    document.addEventListener('DOMContentLoaded', () => {
+        if (window.ThemeManager.init) {
+            window.ThemeManager.init();
+        }
+    });
+} else {
+    // Fallback para implementação local simplificada
+    class LocalThemeManager {
+        constructor() {
+            this.currentTheme = localStorage.getItem('theme') || 'light';
+            this.init();
+        }
+        
+        init() {
+            this.applyTheme(this.currentTheme);
+            this.setupThemeButtons();
+        }
+        
+        applyTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            this.currentTheme = theme;
+            localStorage.setItem('theme', theme);
+            this.updateActiveButton();
+        }
+        
+        setupThemeButtons() {
+            const themeButtons = document.querySelectorAll('.theme-option');
+            themeButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const theme = button.getAttribute('data-theme');
+                    this.applyTheme(theme);
+                });
+                
+                // Navegação por teclado
+                button.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        button.click();
+                    }
+                });
             });
-        });
+        }
+        
+        updateActiveButton() {
+            const themeButtons = document.querySelectorAll('.theme-option');
+            themeButtons.forEach(button => {
+                const theme = button.getAttribute('data-theme');
+                const isActive = theme === this.currentTheme;
+                
+                button.classList.toggle('active', isActive);
+                button.setAttribute('aria-checked', isActive.toString());
+                button.tabIndex = isActive ? 0 : -1;
+            });
+        }
     }
     
-    updateActiveButton() {
-        const themeButtons = document.querySelectorAll('.theme-option');
-        themeButtons.forEach(button => {
-            const theme = button.getAttribute('data-theme');
-            if (theme === this.currentTheme) {
-                button.classList.add('active');
-            } else {
-                button.classList.remove('active');
-            }
-        });
-    }
+    document.addEventListener('DOMContentLoaded', () => {
+        new LocalThemeManager();
+    });
 }
 
 // ===== GERENCIADOR DE PDF =====
@@ -183,7 +216,6 @@ class PDFManager {
     }
     
     optimizePDFDisplay() {
-        // Otimizações para melhor exibição do PDF
         this.pdfViewer.style.width = '100%';
         this.pdfViewer.style.height = '100%';
         this.pdfViewer.style.border = 'none';
@@ -212,10 +244,8 @@ class FullscreenManager {
     }
     
     setupEventListeners() {
-        // Botão de toggle
         this.toggleBtn.addEventListener('click', () => this.toggle());
         
-        // Eventos de mudança de tela cheia
         const events = [
             'fullscreenchange',
             'webkitfullscreenchange',
@@ -227,7 +257,6 @@ class FullscreenManager {
             document.addEventListener(event, () => this.updateButton());
         });
         
-        // Atalho F11
         document.addEventListener('keydown', (e) => {
             if (e.key === 'F11') {
                 e.preventDefault();
@@ -394,8 +423,6 @@ class BookReaderApp {
     }
     
     init() {
-        // Inicializar gerenciadores
-        this.managers.theme = new ThemeManager();
         this.managers.pdf = new PDFManager();
         this.managers.fullscreen = new FullscreenManager();
         
@@ -403,10 +430,8 @@ class BookReaderApp {
         this.managers.favorite = new FavoriteManager();
         {% endif %}
         
-        // Inicializar leitor EPUB se necessário
         this.initializeEpubViewer();
         
-        // Adicionar classe de fade-in
         document.querySelector('.book-detail-container')?.classList.add('fade-in');
     }
     
@@ -426,7 +451,6 @@ class BookReaderApp {
     }
     
     cleanup() {
-        // Limpeza quando necessário
         Object.values(this.managers).forEach(manager => {
             if (manager.cleanup) {
                 manager.cleanup();
@@ -442,7 +466,6 @@ document.addEventListener('DOMContentLoaded', () => {
     bookReaderApp = new BookReaderApp();
 });
 
-// Limpeza ao sair da página
 window.addEventListener('beforeunload', () => {
     if (bookReaderApp) {
         bookReaderApp.cleanup();

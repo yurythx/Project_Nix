@@ -32,114 +32,96 @@
 
                 <!-- Módulos dinâmicos baseados na configuração -->
                 {% if available_modules %}
+                    <!-- Exibir módulos dinâmicos -->
                     {% for module in available_modules %}
-                        {% if module.show_in_menu and module.is_enabled and module.status == 'active' %}
-                             <li class="nav-item">
-                                 {% comment %}
-                                 Gera URL baseada no app_name do módulo
-                                 Mapeia app_name para URLs conhecidas
-                                 {% endcomment %}
-                                 {% if module.app_name == 'articles' %}
-                                     <a class="nav-link {% if request.resolver_match.namespace == 'articles' %}active{% endif %}" href="{% url 'articles:article_list' %}">
-                                 {% elif module.app_name == 'books' %}
-                                     <a class="nav-link {% if request.resolver_match.namespace == 'books' %}active{% endif %}" href="{% url 'books:book_list' %}">
-                                 {% elif module.app_name == 'mangas' %}
-                                     <a class="nav-link {% if request.resolver_match.namespace == 'mangas' %}active{% endif %}" href="{% url 'mangas:manga_list' %}">
-                                 {% elif module.app_name == 'audiobooks' %}
-                                     <a class="nav-link {% if request.resolver_match.namespace == 'audiobooks' %}active{% endif %}" href="{% url 'audiobooks:video_list' %}">
-                                 {% else %}
-                                     <a class="nav-link" href="{% if module.url_pattern %}/{{ module.url_pattern }}{% else %}#{% endif %}">
-                                 {% endif %}
-                                     {% if module.menu_icon %}
-                                         <i class="{{ module.menu_icon }} me-1"></i>
-                                     {% endif %}
-                                     {{ module.display_name }}
-                                 </a>
-                             </li>
-                         {% endif %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ module.get_absolute_url }}">
+                                {{ module.get_menu_icon_html|safe }}
+                                {{ module.display_name }}
+                            </a>
+                        </li>
                     {% endfor %}
+                {% elif modules_configured %}
+                    <!-- Módulos configurados mas desabilitados -->
+                    <li class="nav-item">
+                        <span class="nav-link text-muted">
+                            <i class="fas fa-info-circle me-1"></i>Módulos desabilitados
+                        </span>
+                    </li>
                 {% else %}
-                    <!-- Fallback: Links estáticos apenas se não houver módulos configurados -->
-                    {% has_modules_configured as modules_exist %}
-                    {% if not modules_exist %}
-                        <li class="nav-item">
-                            <a class="nav-link {% if request.resolver_match.namespace == 'articles' %}active{% endif %}" href="{% url 'articles:article_list' %}">
-                                <i class="fas fa-newspaper me-1"></i>Artigos
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {% if request.resolver_match.namespace == 'books' %}active{% endif %}" href="{% url 'books:book_list' %}">
-                                <i class="fas fa-book me-1"></i>Livros
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {% if request.resolver_match.namespace == 'mangas' %}active{% endif %}" href="{% url 'mangas:manga_list' %}">
-                                <i class="fas fa-book-open me-1"></i>Mangás
-                            </a>
-                         </li>
-                         <li class="nav-item">
-                             <a class="nav-link {% if request.resolver_match.namespace == 'audiobooks' %}active{% endif %}" href="{% url 'audiobooks:video_list' %}">
-                                 <i class="fas fa-headphones me-1"></i>Audiolivros
-                             </a>
-                         </li>
-                    {% else %}
-                        <!-- Todos os módulos estão desabilitados - não mostrar links -->
-                        <li class="nav-item">
-                            <span class="nav-link text-muted">
-                                <i class="fas fa-info-circle me-1"></i>Módulos desabilitados
-                            </span>
-                        </li>
-                    {% endif %}
-                 {% endif %}
-
-                 <!-- Sobre (sempre visível) -->
-                 <li class="nav-item">
-                     <a class="nav-link {% if request.resolver_match.url_name == 'about' %}active{% endif %}" href="{% url 'pages:about' %}">
-                         <i class="fas fa-info-circle me-1"></i>Sobre
-                     </a>
-                 </li>
-                {% if not user.is_authenticated %}
-                <li class="nav-item">
-                    <a href="{% url 'accounts:login' %}" class="nav-link">
-                        <i class="fas fa-sign-in-alt"></i>Entrar
-                    </a>
-                </li>
+                    <!-- Fallback: Links estáticos para instalação nova -->
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.namespace == 'articles' %}active{% endif %}" href="{% url 'articles:article_list' %}">
+                            <i class="fas fa-newspaper me-1"></i>Artigos
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.namespace == 'books' %}active{% endif %}" href="{% url 'books:book_list' %}">
+                            <i class="fas fa-book me-1"></i>Livros
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.namespace == 'mangas' %}active{% endif %}" href="{% url 'mangas:manga_list' %}">
+                            <i class="fas fa-book-open me-1"></i>Mangás
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.namespace == 'audiobooks' %}active{% endif %}" href="{% url 'audiobooks:video_list' %}">
+                            <i class="fas fa-headphones me-1"></i>Audiolivros
+                        </a>
+                    </li>
                 {% endif %}
-                {% if user.is_authenticated %}
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <img src="{{ user.get_avatar_url }}" alt="Avatar" class="navbar-avatar me-2" style="width:32px; height:32px; object-fit:cover; border-radius:50%; border:2px solid #eee; background:#fff;">
-                        <span>{{ user.get_full_name|default:user.username }}</span>
+
+                <!-- Sobre (sempre visível) -->
+                <li class="nav-item">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'about' %}active{% endif %}" href="{% url 'pages:about' %}">
+                        <i class="fas fa-info-circle me-1"></i>Sobre
                     </a>
-                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                        <li>
-                            <a class="dropdown-item" href="{% url 'accounts:profile' %}">
-                                <i class="fas fa-user-circle me-1"></i>Meu Perfil
-                            </a>
-                        </li>
-                        {% if user.is_staff %}
-                        <li>
-                            <a class="dropdown-item" href="{% url 'config:dashboard' %}">
-                                <i class="fas fa-tachometer-alt me-1"></i>Dashboard
-                            </a>
-                        </li>
-                        {% endif %}
-                        <li>
-                            <a class="dropdown-item" href="{% url 'accounts:settings' %}">
-                                <i class="fas fa-cog me-1"></i>Configurações
-                            </a>
-                        </li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li>
-                            <a class="dropdown-item text-danger" href="{% url 'accounts:logout' %}">
-                                <i class="fas fa-sign-out-alt me-1"></i>Sair
-                            </a>
-                        </li>
-                    </ul>
                 </li>
+                
+                <!-- Menu de usuário -->
+                {% if not user.is_authenticated %}
+                    <li class="nav-item">
+                        <a href="{% url 'accounts:login' %}" class="nav-link">
+                            <i class="fas fa-sign-in-alt"></i>Entrar
+                        </a>
+                    </li>
+                {% endif %}
+                
+                {% if user.is_authenticated %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <img src="{{ user.get_avatar_url }}" alt="Avatar" class="navbar-avatar me-2" style="width:32px; height:32px; object-fit:cover; border-radius:50%; border:2px solid #eee; background:#fff;">
+                            <span>{{ user.get_full_name|default:user.username }}</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                            <li>
+                                <a class="dropdown-item" href="{% url 'accounts:profile' %}">
+                                    <i class="fas fa-user-circle me-1"></i>Meu Perfil
+                                </a>
+                            </li>
+                            {% if user.is_staff %}
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'config:dashboard' %}">
+                                        <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+                                    </a>
+                                </li>
+                            {% endif %}
+                            <li>
+                                <a class="dropdown-item" href="{% url 'accounts:settings' %}">
+                                    <i class="fas fa-cog me-1"></i>Configurações
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item text-danger" href="{% url 'accounts:logout' %}">
+                                    <i class="fas fa-sign-out-alt me-1"></i>Sair
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
                 {% endif %}
             </ul>
-
 
             <!-- User Menu Mobile -->
             <div class="mobile-user-menu d-lg-none mt-4">
@@ -220,8 +202,6 @@
         </div>
     </div>
 </header>
-
-
 
 <!-- Breadcrumbs -->
 {% if breadcrumbs %}

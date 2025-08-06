@@ -1,54 +1,51 @@
 from typing import Dict, Any
 from django.http import HttpRequest
 from apps.config.services.module_service import ModuleService
+from pathlib import Path
+from django.conf import settings
 import logging
 
 logger = logging.getLogger(__name__)
 
+def is_first_installation() -> bool:
+    """Verifica se é primeira instalação"""
+    first_install_file = Path(settings.BASE_DIR) / '.first_install'
+    return first_install_file.exists()
+
+def can_access_database() -> bool:
+    """Verifica se o banco de dados está acessível"""
+    try:
+        from django.db import connection
+        connection.ensure_connection()
+        return True
+    except Exception:
+        return False
+
 def modules_context(request: HttpRequest) -> Dict[str, Any]:
-    """
-    Context processor para adicionar informações de módulos a todos os templates.
-    
-    Adiciona:
-    - available_modules: Lista de módulos habilitados que devem aparecer no menu
-    - current_module: Informações do módulo atual baseado na URL
-    """
+    """Context processor principal para módulos"""
     context = {}
     
+    # Verificação unificada de primeira instalação
+    if is_first_installation():
+        return context
+    
+    # Verificação robusta de banco
+    if not can_access_database():
+        return context
+    
     try:
-        # Verificar se é primeira instalação
-        from django.db import connection, OperationalError
+        service = ModuleService()
+        available_modules = service.get_menu_modules()
         
-        try:
-            connection.ensure_connection()
-        except (OperationalError, Exception):
-            # Se não conseguir conectar ao banco, retornar contexto vazio
-            return context
-            
-        # Inicializar o service de módulos
-        module_service = ModuleService()
-        
-        # Adicionar módulos disponíveis para o menu
-        available_modules = module_service.get_menu_modules()
-        context['available_modules'] = available_modules
-        
-        # Identificar módulo atual baseado na URL
-        current_app = _get_current_app(request)
-        if current_app:
-            current_module = module_service.get_module_by_name(current_app)
-            context['current_module'] = current_module
-        else:
-            context['current_module'] = None
-            
-        logger.debug(f"Context processor: {len(available_modules)} módulos disponíveis")
-        
+        context.update({
+            'available_modules': available_modules,
+            'current_module': service.get_current_module(request),
+            'modules_configured': bool(available_modules),  # True se há módulos disponíveis
+        })
     except Exception as e:
-        logger.warning(f"Erro no context processor de módulos: {str(e)}")
-        # Em caso de erro, retornar contexto vazio para não quebrar o site
-        context = {
-            'available_modules': [],
-            'current_module': None
-        }
+        logger.error(f"Erro no context processor de módulos: {e}")
+        # Em caso de erro, definir modules_configured como False
+        context['modules_configured'] = False
     
     return context
 
