@@ -4,6 +4,10 @@ from django.conf import settings
 MAX_UPLOAD_SIZE_MB = getattr(settings, 'MAX_UPLOAD_SIZE_MB', 100)
 MAX_UPLOAD_SIZE = MAX_UPLOAD_SIZE_MB * 1024 * 1024  # 100 MB em bytes
 
+# Limites de sessão de upload
+MAX_SESSION_SIZE_MB = getattr(settings, 'MAX_SESSION_SIZE_MB', 500)
+MAX_FILES_PER_SESSION = getattr(settings, 'MAX_FILES_PER_SESSION', 100)
+
 # Dimensões de imagem
 MIN_IMAGE_WIDTH = getattr(settings, 'MIN_IMAGE_WIDTH', 300)
 MIN_IMAGE_HEIGHT = getattr(settings, 'MIN_IMAGE_HEIGHT', 450)

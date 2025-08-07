@@ -1,0 +1,607 @@
+{% extends "base.html" %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block title %}Upload Aprimorado de Capítulo - {{ manga.titulo }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'mangas/css/enhanced-upload.css' %}">
+<style>
+    .upload-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+    }
+    
+    .upload-header {
+        text-align: center;
+        margin-bottom: 3rem;
+        padding: 2rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+    }
+    
+    .upload-header h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+    
+    .upload-header p {
+        font-size: 1.1rem;
+        opacity: 0.9;
+        margin-bottom: 0;
+    }
+    
+    .form-section {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        border: 1px solid #e9ecef;
+    }
+    
+    .form-section h3 {
+        color: #495057;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid #e9ecef;
+    }
+    
+    .upload-actions {
+        position: sticky;
+        bottom: 2rem;
+        background: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e9ecef;
+        z-index: 100;
+    }
+    
+    .btn-upload {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        border: none;
+        padding: 0.75rem 2rem;
+        font-weight: 600;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+    }
+    
+    .btn-upload:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+    }
+    
+    .btn-upload:disabled {
+        background: #6c757d;
+        transform: none;
+        box-shadow: none;
+    }
+    
+    .validation-summary {
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+    }
+    
+    .validation-summary.valid {
+        background: #d4edda;
+        border: 1px solid #c3e6cb;
+        color: #155724;
+    }
+    
+    .validation-summary.invalid {
+        background: #f8d7da;
+        border: 1px solid #f5c6cb;
+        color: #721c24;
+    }
+    
+    .validation-summary.warning {
+        background: #fff3cd;
+        border: 1px solid #ffeaa7;
+        color: #856404;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="upload-container">
+    <!-- Header -->
+    <div class="upload-header">
+        <h1><i class="fas fa-cloud-upload-alt me-3"></i>Upload Aprimorado</h1>
+        <p>Sistema avançado de upload com validação instantânea e preview</p>
+    </div>
+    
+    <!-- Informações do Mangá -->
+    <div class="form-section">
+        <h3><i class="fas fa-book me-2"></i>Informações do Capítulo</h3>
+        <form id="enhanced-upload-form" method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="{{ form.manga.id_for_label }}" class="form-label">
+                            <i class="fas fa-book me-1"></i>Mangá
+                        </label>
+                        {{ form.manga|add_class:"form-select" }}
+                        {% if form.manga.errors %}
+                            <div class="text-danger mt-1">
+                                {% for error in form.manga.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label for="{{ form.numero.id_for_label }}" class="form-label">
+                            <i class="fas fa-hashtag me-1"></i>Número do Capítulo
+                        </label>
+                        {{ form.numero|add_class:"form-control" }}
+                        {% if form.numero.errors %}
+                            <div class="text-danger mt-1">
+                                {% for error in form.numero.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label for="{{ form.volume.id_for_label }}" class="form-label">
+                            <i class="fas fa-layer-group me-1"></i>Volume
+                        </label>
+                        {{ form.volume|add_class:"form-control" }}
+                        {% if form.volume.errors %}
+                            <div class="text-danger mt-1">
+                                {% for error in form.volume.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="mb-3">
+                        <label for="{{ form.titulo.id_for_label }}" class="form-label">
+                            <i class="fas fa-heading me-1"></i>Título do Capítulo
+                        </label>
+                        {{ form.titulo|add_class:"form-control" }}
+                        {% if form.titulo.errors %}
+                            <div class="text-danger mt-1">
+                                {% for error in form.titulo.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label for="{{ form.data_publicacao.id_for_label }}" class="form-label">
+                            <i class="fas fa-calendar me-1"></i>Data de Publicação
+                        </label>
+                        {{ form.data_publicacao|add_class:"form-control" }}
+                        {% if form.data_publicacao.errors %}
+                            <div class="text-danger mt-1">
+                                {% for error in form.data_publicacao.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            {% if form.descricao %}
+            <div class="mb-3">
+                <label for="{{ form.descricao.id_for_label }}" class="form-label">
+                    <i class="fas fa-align-left me-1"></i>Descrição
+                </label>
+                {{ form.descricao|add_class:"form-control" }}
+                {% if form.descricao.errors %}
+                    <div class="text-danger mt-1">
+                        {% for error in form.descricao.errors %}
+                            <small>{{ error }}</small>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            {% endif %}
+        </form>
+    </div>
+    
+    <!-- Sistema de Upload Aprimorado -->
+    <div class="form-section">
+        <h3><i class="fas fa-images me-2"></i>Upload de Páginas</h3>
+        
+        <!-- Resumo de Validação -->
+        <div id="validation-summary" class="validation-summary" style="display: none;">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-info-circle me-2"></i>
+                <span id="validation-message">Aguardando arquivos...</span>
+            </div>
+        </div>
+        
+        <!-- Drop Zone Aprimorada -->
+        <div id="enhanced-drop-zone" class="enhanced-drop-zone">
+            <div class="drop-zone-content">
+                <div class="drop-zone-icon">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                </div>
+                <div class="drop-zone-text">
+                    Arraste e solte suas imagens aqui
+                </div>
+                <div class="drop-zone-hint">
+                    ou clique para selecionar arquivos
+                </div>
+                <div class="drop-zone-limits">
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <strong>Máx. por arquivo:</strong><br>
+                            <span class="text-primary">20 MB</span>
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Máx. por sessão:</strong><br>
+                            <span class="text-primary">200 MB</span>
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Máx. arquivos:</strong><br>
+                            <span class="text-primary">500</span>
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Formatos:</strong><br>
+                            <span class="text-primary">JPG, PNG, WebP, GIF</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <input type="file" id="enhanced-file-input" multiple accept="image/*" style="display: none;">
+        </div>
+    </div>
+    
+    <!-- Ações de Upload -->
+    <div class="upload-actions">
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="upload-info">
+                <span id="upload-status" class="text-muted">
+                    <i class="fas fa-info-circle me-1"></i>
+                    Selecione arquivos para começar
+                </span>
+            </div>
+            
+            <div class="upload-buttons">
+                <button type="button" class="btn btn-outline-secondary me-2" id="clear-files">
+                    <i class="fas fa-trash me-1"></i>Limpar
+                </button>
+                
+                <button type="button" class="btn btn-outline-primary me-2" id="validate-files">
+                    <i class="fas fa-check-circle me-1"></i>Validar
+                </button>
+                
+                <button type="submit" class="btn btn-upload" id="start-upload" disabled>
+                    <i class="fas fa-upload me-1"></i>Iniciar Upload
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmação -->
+<div class="modal fade" id="uploadConfirmModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-question-circle me-2"></i>Confirmar Upload
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Você está prestes a fazer upload de:</p>
+                <ul id="upload-summary-list"></ul>
+                <p class="text-muted">Esta ação não pode ser desfeita. Deseja continuar?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>Cancelar
+                </button>
+                <button type="button" class="btn btn-success" id="confirm-upload">
+                    <i class="fas fa-check me-1"></i>Confirmar Upload
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Progresso -->
+<div class="modal fade" id="uploadProgressModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-cloud-upload-alt me-2"></i>Upload em Progresso
+                </h5>
+            </div>
+            <div class="modal-body">
+                <div class="overall-progress mb-4">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Progresso Geral</span>
+                        <span id="modal-progress-percent">0%</span>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                             id="modal-progress-bar" style="width: 0%"></div>
+                    </div>
+                    <div class="d-flex justify-content-between mt-2 text-muted">
+                        <span id="modal-progress-files">0 de 0 arquivos</span>
+                        <span id="modal-progress-size">0 MB de 0 MB</span>
+                    </div>
+                </div>
+                
+                <div class="current-file">
+                    <h6>Arquivo Atual:</h6>
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-file-image me-2 text-primary"></i>
+                        <span id="current-file-name">-</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-danger" id="cancel-upload">
+                    <i class="fas fa-stop me-1"></i>Cancelar Upload
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'mangas/js/enhanced-upload.js' %}"></script>
+<script>
+    // Configurações globais
+    window.mangaId = {{ manga.id|default:'null' }};
+    window.volumeId = {{ volume.id|default:'null' }};
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        // Elementos
+        const form = document.getElementById('enhanced-upload-form');
+        const startUploadBtn = document.getElementById('start-upload');
+        const clearFilesBtn = document.getElementById('clear-files');
+        const validateFilesBtn = document.getElementById('validate-files');
+        const uploadStatus = document.getElementById('upload-status');
+        const validationSummary = document.getElementById('validation-summary');
+        const validationMessage = document.getElementById('validation-message');
+        
+        // Modais
+        const confirmModal = new bootstrap.Modal(document.getElementById('uploadConfirmModal'));
+        const progressModal = new bootstrap.Modal(document.getElementById('uploadProgressModal'));
+        
+        // Event Listeners
+        document.addEventListener('validationUpdated', function(e) {
+            updateValidationUI(e.detail);
+        });
+        
+        startUploadBtn.addEventListener('click', function() {
+            if (enhancedUpload.canStartUpload()) {
+                showUploadConfirmation();
+            }
+        });
+        
+        clearFilesBtn.addEventListener('click', function() {
+            if (confirm('Tem certeza que deseja limpar todos os arquivos selecionados?')) {
+                enhancedUpload.clear();
+            }
+        });
+        
+        validateFilesBtn.addEventListener('click', function() {
+            const files = Array.from(enhancedUpload.files.values());
+            if (files.length > 0) {
+                enhancedUpload.validateFiles(files);
+                enhancedUpload.showNotification('Validação concluída!', 'success');
+            } else {
+                enhancedUpload.showNotification('Nenhum arquivo para validar', 'warning');
+            }
+        });
+        
+        document.getElementById('confirm-upload').addEventListener('click', function() {
+            confirmModal.hide();
+            startActualUpload();
+        });
+        
+        document.getElementById('cancel-upload').addEventListener('click', function() {
+            if (confirm('Tem certeza que deseja cancelar o upload?')) {
+                // Implementar cancelamento
+                progressModal.hide();
+            }
+        });
+        
+        // Funções
+        function updateValidationUI(validation) {
+            const { totalFiles, validFiles, invalidFiles, totalSize, canUpload } = validation;
+            
+            // Atualiza status
+            if (totalFiles === 0) {
+                uploadStatus.innerHTML = '<i class="fas fa-info-circle me-1"></i>Selecione arquivos para começar';
+                validationSummary.style.display = 'none';
+            } else {
+                uploadStatus.innerHTML = `<i class="fas fa-files me-1"></i>${totalFiles} arquivo(s) • ${formatFileSize(totalSize)}`;
+                
+                // Atualiza resumo de validação
+                validationSummary.style.display = 'block';
+                
+                if (invalidFiles === 0 && validFiles > 0) {
+                    validationSummary.className = 'validation-summary valid';
+                    validationMessage.innerHTML = `<strong>Pronto!</strong> ${validFiles} arquivo(s) válido(s) para upload`;
+                } else if (invalidFiles > 0) {
+                    validationSummary.className = 'validation-summary invalid';
+                    validationMessage.innerHTML = `<strong>Atenção!</strong> ${invalidFiles} arquivo(s) com problemas de ${totalFiles} total`;
+                } else {
+                    validationSummary.className = 'validation-summary warning';
+                    validationMessage.innerHTML = `<strong>Validando...</strong> ${totalFiles} arquivo(s) em análise`;
+                }
+            }
+            
+            // Atualiza botão de upload
+            startUploadBtn.disabled = !canUpload;
+            
+            // Atualiza botões auxiliares
+            clearFilesBtn.disabled = totalFiles === 0;
+            validateFilesBtn.disabled = totalFiles === 0;
+        }
+        
+        function showUploadConfirmation() {
+            const validFiles = enhancedUpload.getValidFiles();
+            const summaryList = document.getElementById('upload-summary-list');
+            
+            summaryList.innerHTML = '';
+            
+            const totalSize = validFiles.reduce((sum, f) => sum + f.size, 0);
+            
+            summaryList.innerHTML = `
+                <li><strong>${validFiles.length}</strong> arquivo(s) de imagem</li>
+                <li><strong>${formatFileSize(totalSize)}</strong> de dados</li>
+                <li>Capítulo: <strong>${form.numero.value || 'Não informado'}</strong></li>
+                <li>Mangá: <strong>${form.manga.options[form.manga.selectedIndex]?.text || 'Não selecionado'}</strong></li>
+            `;
+            
+            confirmModal.show();
+        }
+        
+        async function startActualUpload() {
+            try {
+                // Valida formulário
+                if (!validateForm()) {
+                    return;
+                }
+                
+                // Mostra modal de progresso
+                progressModal.show();
+                
+                // Prepara dados do formulário
+                const formData = new FormData(form);
+                const validFiles = enhancedUpload.getValidFiles();
+                
+                // Adiciona arquivos
+                validFiles.forEach((fileInfo, index) => {
+                    formData.append('images', fileInfo.file);
+                });
+                
+                // Adiciona informações da sessão
+                if (enhancedUpload.getSessionId()) {
+                    formData.append('session_id', enhancedUpload.getSessionId());
+                }
+                
+                // Inicia upload
+                await uploadWithProgress(formData, validFiles);
+                
+            } catch (error) {
+                console.error('Erro no upload:', error);
+                enhancedUpload.showNotification('Erro no upload: ' + error.message, 'danger');
+                progressModal.hide();
+            }
+        }
+        
+        async function uploadWithProgress(formData, files) {
+            return new Promise((resolve, reject) => {
+                const xhr = new XMLHttpRequest();
+                
+                // Progress handler
+                xhr.upload.addEventListener('progress', function(e) {
+                    if (e.lengthComputable) {
+                        const percent = Math.round((e.loaded / e.total) * 100);
+                        updateProgressModal(percent, e.loaded, e.total, files.length);
+                    }
+                });
+                
+                // Success handler
+                xhr.addEventListener('load', function() {
+                    if (xhr.status === 200 || xhr.status === 201) {
+                        try {
+                            const response = JSON.parse(xhr.responseText);
+                            progressModal.hide();
+                            
+                            enhancedUpload.showNotification('Upload concluído com sucesso!', 'success');
+                            
+                            // Redireciona após sucesso
+                            setTimeout(() => {
+                                if (response.redirect_url) {
+                                    window.location.href = response.redirect_url;
+                                } else {
+                                    window.location.reload();
+                                }
+                            }, 2000);
+                            
+                            resolve(response);
+                        } catch (error) {
+                            reject(new Error('Erro ao processar resposta do servidor'));
+                        }
+                    } else {
+                        reject(new Error(`Erro HTTP: ${xhr.status}`));
+                    }
+                });
+                
+                // Error handler
+                xhr.addEventListener('error', function() {
+                    reject(new Error('Erro de conexão'));
+                });
+                
+                // Send request
+                xhr.open('POST', form.action || window.location.pathname);
+                xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+                xhr.send(formData);
+            });
+        }
+        
+        function updateProgressModal(percent, loaded, total, fileCount) {
+            document.getElementById('modal-progress-percent').textContent = percent + '%';
+            document.getElementById('modal-progress-bar').style.width = percent + '%';
+            document.getElementById('modal-progress-size').textContent = 
+                `${formatFileSize(loaded)} de ${formatFileSize(total)}`;
+            document.getElementById('modal-progress-files').textContent = 
+                `Processando ${fileCount} arquivo(s)`;
+        }
+        
+        function validateForm() {
+            const requiredFields = ['manga', 'numero'];
+            let isValid = true;
+            
+            requiredFields.forEach(fieldName => {
+                const field = form[fieldName];
+                if (!field.value.trim()) {
+                    enhancedUpload.showNotification(`Campo ${fieldName} é obrigatório`, 'danger');
+                    field.focus();
+                    isValid = false;
+                }
+            });
+            
+            return isValid;
+        }
+        
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+    });
+</script>
+{% endblock %}
