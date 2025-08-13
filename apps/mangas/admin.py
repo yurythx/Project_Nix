@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from .models import Manga, Volume, Capitulo, Pagina
+from .models.reading_progress import ReadingProgress, ReadingHistory
 
 @admin.register(Manga)
 class MangaAdmin(admin.ModelAdmin):
@@ -130,3 +131,33 @@ class PaginaAdmin(admin.ModelAdmin):
             )
         return "Sem imagem"
     image_preview.short_description = "Preview da Imagem"
+
+@admin.register(ReadingProgress)
+class ReadingProgressAdmin(admin.ModelAdmin):
+    list_display = ('user', 'manga', 'capitulo', 'progress_display', 'is_completed', 'last_read_at')
+    list_filter = ('is_completed', 'last_read_at', 'manga')
+    search_fields = ('user__username', 'manga__titulo', 'capitulo__titulo')
+    readonly_fields = ('progress_percentage', 'last_read_at')
+    raw_id_fields = ('user', 'manga', 'capitulo')
+    ordering = ('-last_read_at',)
+    
+    def progress_display(self, obj):
+        return f"{obj.progress_percentage:.1f}%"
+    progress_display.short_description = 'Progresso'
+
+@admin.register(ReadingHistory)
+class ReadingHistoryAdmin(admin.ModelAdmin):
+    list_display = ('user', 'manga', 'capitulo', 'started_at', 'completed_at', 'session_display')
+    list_filter = ('started_at', 'completed_at', 'manga')
+    search_fields = ('user__username', 'manga__titulo', 'capitulo__titulo')
+    readonly_fields = ('started_at', 'completed_at')
+    raw_id_fields = ('user', 'manga', 'capitulo')
+    ordering = ('-completed_at',)
+    
+    def session_display(self, obj):
+        if obj.session_duration:
+            minutes = obj.session_duration // 60
+            seconds = obj.session_duration % 60
+            return f"{minutes}m {seconds}s"
+        return "N/A"
+    session_display.short_description = 'Duração'

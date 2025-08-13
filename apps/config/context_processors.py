@@ -37,14 +37,23 @@ def modules_context(request: HttpRequest) -> Dict[str, Any]:
         service = ModuleService()
         available_modules = service.get_menu_modules()
         
+        # Obter o app atual da requisição
+        current_app = None
+        if hasattr(request, 'resolver_match') and request.resolver_match:
+            current_app = request.resolver_match.app_name or request.resolver_match.namespace
+        
+        # Buscar módulo atual usando get_module_by_name
+        current_module = None
+        if current_app:
+            current_module = service.get_module_by_name(current_app)
+        
         context.update({
             'available_modules': available_modules,
-            'current_module': service.get_current_module(request),
-            'modules_configured': bool(available_modules),  # True se há módulos disponíveis
+            'current_module': current_module,
+            'modules_configured': bool(available_modules),
         })
     except Exception as e:
         logger.error(f"Erro no context processor de módulos: {e}")
-        # Em caso de erro, definir modules_configured como False
         context['modules_configured'] = False
     
     return context

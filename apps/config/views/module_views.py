@@ -24,11 +24,56 @@ class ModuleListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     def get_queryset(self):
         module_service = ModuleService()
         all_modules = module_service.get_all_modules()
-        installed_apps = module_service.get_installed_apps_list()
-        # Padroniza nomes para comparar sem prefixo 'apps.'
-        installed_names = set([a.split('.')[-1] for a in installed_apps])
-        filtered = [m for m in all_modules if m.app_name.split('.')[-1] in installed_names]
-        return filtered
+        
+        # Filtro melhorado para apps funcionais
+        functional_modules = []
+        for module in all_modules:
+            if self._is_app_functional(module.app_name):
+                functional_modules.append(module)
+        
+        return functional_modules
+    
+    def _is_app_functional(self, app_name: str) -> bool:
+        """Verifica se um app está funcional"""
+        try:
+            # 1. Verificar se está em INSTALLED_APPS
+            full_app_name = f'apps.{app_name}'
+            if full_app_name not in settings.INSTALLED_APPS:
+                return False
+            
+            # 2. Verificar se o módulo pode ser importado
+            try:
+                __import__(full_app_name)
+            except ImportError:
+                return False
+            
+            # 3. Verificar se tem URLs configuradas (opcional)
+            try:
+                from django.urls import reverse
+                # Tenta resolver uma URL básica do app
+                reverse(f'{app_name}:index')
+            except:
+                # Se não tem URLs, ainda pode ser funcional
+                pass
+            
+            # 4. Verificar se models estão migrados
+            try:
+                from django.apps import apps
+                app_config = apps.get_app_config(app_name)
+                models = app_config.get_models()
+                if models:
+                    # Tenta fazer uma query simples no primeiro model
+                    first_model = models[0]
+                    first_model.objects.count()
+            except:
+                # Se não tem models ou erro de migração
+                return False
+            
+            return True
+            
+        except Exception as e:
+            logger.warning(f"Erro ao verificar app {app_name}: {e}")
+            return False
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

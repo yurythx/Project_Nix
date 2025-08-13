@@ -23,6 +23,7 @@ from .views.resumable_upload_views import (
 )
 from django.urls import path, include
 from django.views.generic import TemplateView
+from .views import progress_views
 
 app_name = 'mangas'
 
@@ -90,4 +91,10 @@ urlpatterns = [
     path('<slug:manga_slug>/capitulo/<slug:capitulo_slug>/pagina/<int:pk>/editar/', PaginaUpdateView.as_view(), name='pagina_edit'),
     path('<slug:manga_slug>/capitulo/<slug:capitulo_slug>/pagina/<int:pk>/deletar/', PaginaDeleteView.as_view(), name='pagina_delete'),
     path('<slug:manga_slug>/capitulo/<slug:capitulo_slug>/paginas-lazy/', capitulo_paginas_lazy, name='capitulo_paginas_lazy'),
+    # Adicionar nas urlpatterns:
+    path('progress/save/', progress_views.save_progress, name='save_progress'),
+    path('progress/get/', progress_views.get_progress, name='get_progress'),
+    path('progress/statistics/', progress_views.get_manga_statistics, name='get_manga_statistics'),
+    path('progress/complete/', progress_views.mark_chapter_completed, name='mark_chapter_completed'),
+    path('progress/suggestions/', progress_views.continue_reading_suggestions, name='continue_reading_suggestions'),
 ]

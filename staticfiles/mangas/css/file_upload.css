@@ -1,0 +1,137 @@
+/* Estilos para o widget de upload de múltiplos arquivos */
+.multiple-file-input {
+    margin: 1rem 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+.file-upload-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    border: 2px dashed #ccc;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+    min-height: 150px;
+}
+
+.file-upload-area:hover, .file-upload-area.dragover {
+    border-color: #4a90e2;
+    background-color: #f0f7ff;
+}
+
+.file-upload-icon {
+    font-size: 2.5rem;
+    color: #4a90e2;
+    margin-bottom: 1rem;
+}
+
+.file-upload-main {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.file-upload-sub {
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.file-upload-hint {
+    font-size: 0.8rem;
+    color: #999;
+    margin-top: 1rem;
+    display: block;
+}
+
+/* Esconde o input de arquivo nativo */
+.multiple-file-input input[type="file"] {
+    display: none;
+}
+
+/* Estilo para a lista de arquivos */
+.file-list {
+    margin-top: 1rem;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.file-item {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #f0f0f0;
+    background-color: #fff;
+    transition: background-color 0.2s;
+}
+
+.file-item:last-child {
+    border-bottom: none;
+}
+
+.file-item:hover {
+    background-color: #f9f9f9;
+}
+
+.file-name {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #333;
+}
+
+.file-size {
+    font-size: 0.8rem;
+    color: #666;
+    margin: 0 1rem;
+    white-space: nowrap;
+}
+
+.remove-file {
+    background: none;
+    border: none;
+    color: #dc3545;
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.remove-file:hover {
+    background-color: #f8d7da;
+}
+
+/* Feedback visual durante o upload */
+.upload-progress {
+    width: 100%;
+    height: 4px;
+    background-color: #e9ecef;
+    border-radius: 2px;
+    margin-top: 0.5rem;
+    overflow: hidden;
+}
+
+.upload-progress-bar {
+    height: 100%;
+    background-color: #4a90e2;
+    width: 0%;
+    transition: width 0.3s ease;
+}
+
+/* Mensagens de erro */
+.upload-error {
+    color: #dc3545;
+    font-size: 0.85rem;
+    margin-top: 0.5rem;
+}

@@ -1,0 +1,299 @@
+/* ===== UTILITÁRIOS DE ACESSIBILIDADE - PROJECT NIX ===== */
+
+/* 
+ * Arquivo dedicado a melhorias de acessibilidade
+ * Garante conformidade com WCAG 2.1 AA
+ */
+
+/* === FOCUS MANAGEMENT === */
+*:focus {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+}
+
+/* Remove outline padrão apenas quando há um substituto */
+*:focus:not(:focus-visible) {
+    outline: none;
+}
+
+/* Focus visível para navegação por teclado */
+*:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+    border-radius: var(--border-radius-sm);
+    box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.1);
+}
+
+/* === SKIP LINKS === */
+.skip-link {
+    position: absolute;
+    top: -40px;
+    left: 6px;
+    background: var(--nix-primary);
+    color: white;
+    padding: 8px;
+    text-decoration: none;
+    border-radius: var(--border-radius);
+    z-index: 1000;
+    font-weight: 600;
+}
+
+.skip-link:focus {
+    top: 6px;
+}
+
+/* === HIGH CONTRAST MODE === */
+@media (prefers-contrast: high) {
+    :root {
+        --text-color: #000000;
+        --bg-color: #ffffff;
+        --border-color: #000000;
+        --link-color: #0000ee;
+        --link-hover-color: #551a8b;
+    }
+    
+    [data-theme="dark"] {
+        --text-color: #ffffff;
+        --bg-color: #000000;
+        --border-color: #ffffff;
+        --link-color: #99ccff;
+        --link-hover-color: #ccddff;
+    }
+}
+
+/* === REDUCED MOTION === */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* === SCREEN READER ONLY === */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.sr-only-focusable:focus {
+    position: static;
+    width: auto;
+    height: auto;
+    padding: inherit;
+    margin: inherit;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+}
+
+/* === CONTRAST UTILITIES === */
+.text-high-contrast {
+    color: var(--text-color) !important;
+    font-weight: 600;
+}
+
+.bg-high-contrast {
+    background-color: var(--bg-color) !important;
+    color: var(--text-color) !important;
+}
+
+/* === INTERACTIVE ELEMENTS === */
+button, 
+.btn,
+[role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+    cursor: pointer;
+}
+
+button:disabled,
+.btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+    color: var(--disabled-text);
+    background-color: var(--disabled-bg);
+}
+
+/* === FORM ACCESSIBILITY === */
+.form-control:invalid {
+    border-color: var(--nix-danger);
+    box-shadow: 0 0 0 0.2rem rgba(239, 68, 68, 0.25);
+}
+
+.form-control:valid {
+    border-color: var(--nix-success);
+}
+
+.error-message {
+    color: var(--nix-danger);
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.error-message::before {
+    content: "⚠";
+    font-weight: bold;
+}
+
+/* === LINK ACCESSIBILITY === */
+a:not([class]) {
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 2px;
+}
+
+a:not([class]):hover {
+    text-decoration-thickness: 3px;
+}
+
+/* Links que abrem em nova aba */
+a[target="_blank"]::after {
+    content: " ↗";
+    font-size: 0.8em;
+    opacity: 0.7;
+}
+
+/* === COLOR BLIND FRIENDLY === */
+.status-success {
+    background-color: var(--nix-success);
+    color: white;
+    position: relative;
+}
+
+.status-success::before {
+    content: "✓";
+    margin-right: 0.5rem;
+}
+
+.status-error {
+    background-color: var(--nix-danger);
+    color: white;
+    position: relative;
+}
+
+.status-error::before {
+    content: "✗";
+    margin-right: 0.5rem;
+}
+
+.status-warning {
+    background-color: var(--nix-warning);
+    color: var(--bg-color);
+    position: relative;
+}
+
+.status-warning::before {
+    content: "⚠";
+    margin-right: 0.5rem;
+}
+
+/* === DARK MODE IMPROVEMENTS === */
+[data-theme="dark"] img {
+    opacity: 0.9;
+}
+
+[data-theme="dark"] .card {
+    border: 1px solid var(--border-color);
+}
+
+[data-theme="dark"] .table {
+    --bs-table-bg: var(--bg-secondary);
+    --bs-table-border-color: var(--border-color);
+}
+
+[data-theme="dark"] .table-striped > tbody > tr:nth-of-type(odd) > td {
+    background-color: var(--bg-tertiary);
+}
+
+/* === PRINT STYLES === */
+@media print {
+    * {
+        background: white !important;
+        color: black !important;
+        box-shadow: none !important;
+    }
+    
+    a {
+        text-decoration: underline;
+    }
+    
+    a[href^="http"]:after {
+        content: " (" attr(href) ")";
+    }
+    
+    .no-print {
+        display: none !important;
+    }
+}
+
+/* === TOOLTIPS ACESSÍVEIS === */
+[data-tooltip] {
+    position: relative;
+    cursor: help;
+}
+
+[data-tooltip]:hover::after,
+[data-tooltip]:focus::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--text-color);
+    color: var(--bg-color);
+    padding: 0.5rem;
+    border-radius: var(--border-radius);
+    font-size: 0.875rem;
+    white-space: nowrap;
+    z-index: 1000;
+    box-shadow: var(--shadow-md);
+}
+
+/* === LOADING STATES === */
+.loading {
+    position: relative;
+    color: transparent !important;
+}
+
+.loading::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 1rem;
+    height: 1rem;
+    margin: -0.5rem 0 0 -0.5rem;
+    border: 2px solid var(--border-color);
+    border-top-color: var(--nix-accent);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .loading::after {
+        animation: none;
+        content: "⏳";
+        border: none;
+        font-size: 1rem;
+    }
+}

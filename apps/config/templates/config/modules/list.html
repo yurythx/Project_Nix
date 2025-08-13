@@ -29,6 +29,21 @@
                             <th scope="col"><i class="fas fa-align-left" aria-hidden="true"></i> Descrição</th>
                             <th scope="col"><i class="fas fa-toggle-on" aria-hidden="true"></i> Ativo</th>
                             <th scope="col"><i class="fas fa-cogs" aria-hidden="true"></i> Ações</th>
+                            <!-- Adicionar coluna de status funcional -->
+                            <th scope="col"><i class="fas fa-heartbeat" aria-hidden="true"></i> Status Funcional</th>
+                            
+                            <!-- Na linha do módulo -->
+                            <td class="config-table-cell">
+                                {% if module.is_functional %}
+                                    <span class="config-badge config-badge-success">
+                                        <i class="fas fa-check-circle" aria-hidden="true"></i> Funcional
+                                    </span>
+                                {% else %}
+                                    <span class="config-badge config-badge-danger">
+                                        <i class="fas fa-exclamation-triangle" aria-hidden="true"></i> Com Problemas
+                                    </span>
+                                {% endif %}
+                            </td>
                         </tr>
                     </thead>
                     <tbody class="config-table-body">

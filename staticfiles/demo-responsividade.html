@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demonstração - Responsividade Corrigida</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <link href="css/main.css" rel="stylesheet">
+    <link href="css/accessibility.css" rel="stylesheet">
+    <style>
+        .demo-section {
+            padding: 2rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .breakpoint-demo {
+            border: 2px solid var(--nix-accent);
+            border-radius: var(--border-radius);
+            padding: 1rem;
+            margin: 1rem 0;
+            background: rgba(124, 58, 237, 0.05);
+        }
+        .color-demo {
+            width: 100%;
+            height: 60px;
+            border-radius: var(--border-radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            margin: 0.5rem 0;
+        }
+        .theme-toggle-demo {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        .responsive-test {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="theme-toggle-demo">
+        <button class="btn btn-outline-secondary" onclick="toggleTheme()">
+            <i class="fas fa-moon" id="theme-icon"></i>
+        </button>
+    </div>
+
+    <!-- Navbar de Teste -->
+    <nav class="navbar navbar-expand-lg navbar-nix">
+        <div class="container">
+            <!-- Brand -->
+            <a class="navbar-brand" href="#">
+                <img src="favicon.ico" alt="Project Nix Logo" width="32" height="32">
+                Project Nix
+            </a>
+            
+            <!-- Mobile Toggle -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <!-- Navigation Links -->
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#">
+                            <i class="fas fa-home"></i>Home
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <i class="fas fa-newspaper"></i>Artigos
+                        </a>
+                    </li>
+                </ul>
+                
+                <!-- Search Form -->
+                <form class="d-flex me-3 form-nix align-items-center" method="get" action="#" aria-label="Formulário de busca" role="form">
+                    <div class="input-group">
+                        <input class="form-control form-control-enhanced" type="search" name="q" placeholder="Buscar..."
+                               aria-label="Campo de busca" aria-describedby="search-button" value="">
+                        <button class="btn btn-outline-light text-sans" type="submit"
+                                id="search-button" aria-label="Buscar">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </form>
+                
+                <!-- User Menu -->
+                <ul class="navbar-nav align-items-center">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <i class="fas fa-user"></i>Login
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-5">
+        <div class="text-center mb-5">
+            <h1 class="display-4 fw-bold" style="color: var(--nix-accent);">Responsividade Corrigida</h1>
+            <p class="lead">Teste de responsividade em todos os dispositivos</p>
+        </div>
+
+        <!-- Correções Implementadas -->
+        <section class="demo-section">
+            <h2 class="h3 mb-4">✅ Correções Implementadas</h2>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="fas fa-palette text-primary me-2"></i>
+                                Cores Corrigidas
+                            </h5>
+                            <p class="card-text">Todas as referências ao verde antigo foram substituídas por roxo.</p>
+                            <div class="color-demo" style="background-color: var(--nix-accent);">
+                                Roxo Elegante #7c3aed
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="fas fa-mobile-alt text-primary me-2"></i>
+                                Responsividade
+                            </h5>
+                            <p class="card-text">Breakpoints consistentes e touch targets adequados.</p>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-check text-success me-2"></i>Touch targets 44px</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Breakpoints consistentes</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Typography responsiva</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Breakpoints -->
+        <section class="demo-section">
+            <h2 class="h3 mb-4">📐 Breakpoints Corrigidos</h2>
+            
+            <div class="breakpoint-demo">
+                <h4>Extra Large (≥ 1200px)</h4>
+                <p>Desktop grande - Container com padding otimizado</p>
+            </div>
+
+            <div class="breakpoint-demo">
+                <h4>Large (992px - 1199px)</h4>
+                <p>Desktop padrão - Navbar e cards otimizados</p>
+            </div>
+
+            <div class="breakpoint-demo">
+                <h4>Medium (768px - 991px)</h4>
+                <p>Tablet - Pesquisa 240px, sidebar responsiva</p>
+            </div>
+
+            <div class="breakpoint-demo">
+                <h4>Small (576px - 767px)</h4>
+                <p>Mobile - Touch targets 44px, typography ajustada</p>
+            </div>
+
+            <div class="breakpoint-demo">
+                <h4>Extra Small (≤ 575px)</h4>
+                <p>Mobile pequeno - Espaçamentos reduzidos, font-size 16px</p>
+            </div>
+        </section>
+
+        <!-- Teste de Formulários -->
+        <section class="demo-section">
+            <h2 class="h3 mb-4">📝 Teste de Formulários</h2>
+            
+            <div class="responsive-test">
+                <h4>Clique nos campos para testar o focus roxo:</h4>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Campo de Texto</label>
+                            <input type="text" class="form-control" placeholder="Digite algo...">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Select</label>
+                            <select class="form-select">
+                                <option>Opção 1</option>
+                                <option>Opção 2</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Textarea</label>
+                    <textarea class="form-control" rows="3" placeholder="Digite uma mensagem..."></textarea>
+                </div>
+                <button type="button" class="btn btn-primary">
+                    <i class="fas fa-check me-2"></i>Testar Botão
+                </button>
+            </div>
+        </section>
+
+        <!-- Teste de Cards -->
+        <section class="demo-section">
+            <h2 class="h3 mb-4">🃏 Teste de Cards Responsivos</h2>
+            
+            <div class="row">
+                <div class="col-lg-4 col-md-6">
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">Card Responsivo 1</h5>
+                            <p class="card-text">Este card se adapta automaticamente ao tamanho da tela.</p>
+                            <button class="btn btn-outline-primary btn-sm">Ver Mais</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-md-6">
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">Card Responsivo 2</h5>
+                            <p class="card-text">Touch targets adequados em dispositivos móveis.</p>
+                            <button class="btn btn-primary btn-sm">Ação</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-md-6">
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">Card Responsivo 3</h5>
+                            <p class="card-text">Espaçamentos otimizados para todas as telas.</p>
+                            <button class="btn btn-outline-secondary btn-sm">Detalhes</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Instruções de Teste -->
+        <section class="demo-section">
+            <h2 class="h3 mb-4">🧪 Como Testar</h2>
+            
+            <div class="alert alert-info">
+                <h5><i class="fas fa-info-circle me-2"></i>Instruções de Teste</h5>
+                <ol>
+                    <li><strong>Redimensione a janela</strong> para testar diferentes breakpoints</li>
+                    <li><strong>Clique nos campos de formulário</strong> para ver o focus roxo</li>
+                    <li><strong>Use o toggle de tema</strong> no canto superior direito</li>
+                    <li><strong>Teste em dispositivos móveis</strong> reais</li>
+                    <li><strong>Verifique touch targets</strong> de 44px mínimo</li>
+                </ol>
+            </div>
+        </section>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function toggleTheme() {
+            const html = document.documentElement;
+            const icon = document.getElementById('theme-icon');
+            const currentTheme = html.getAttribute('data-theme');
+            
+            if (currentTheme === 'dark') {
+                html.setAttribute('data-theme', 'light');
+                icon.className = 'fas fa-moon';
+            } else {
+                html.setAttribute('data-theme', 'dark');
+                icon.className = 'fas fa-sun';
+            }
+        }
+
+        // Aplicar tema inicial
+        document.documentElement.setAttribute('data-theme', 'light');
+
+        // Demonstrar responsividade
+        function showCurrentBreakpoint() {
+            const width = window.innerWidth;
+            let breakpoint = '';
+            
+            if (width >= 1200) breakpoint = 'Extra Large (≥1200px)';
+            else if (width >= 992) breakpoint = 'Large (992px-1199px)';
+            else if (width >= 768) breakpoint = 'Medium (768px-991px)';
+            else if (width >= 576) breakpoint = 'Small (576px-767px)';
+            else breakpoint = 'Extra Small (≤575px)';
+            
+            console.log(`📱 Breakpoint atual: ${breakpoint} - Largura: ${width}px`);
+        }
+
+        // Mostrar breakpoint atual
+        window.addEventListener('resize', showCurrentBreakpoint);
+        showCurrentBreakpoint();
+
+        // Demonstrar focus nos formulários
+        document.addEventListener('DOMContentLoaded', function() {
+            const formControls = document.querySelectorAll('.form-control, .form-select');
+            formControls.forEach(control => {
+                control.addEventListener('focus', function() {
+                    console.log('🎯 Campo focado - observe a borda roxa!');
+                });
+            });
+        });
+    </script>
+</body>
+</html>

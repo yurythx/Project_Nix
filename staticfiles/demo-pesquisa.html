@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demonstração - Alinhamento da Pesquisa</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <link href="css/main.css" rel="stylesheet">
+    <link href="css/accessibility.css" rel="stylesheet">
+    <style>
+        .demo-section {
+            padding: 2rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .demo-navbar {
+            margin-bottom: 2rem;
+            position: relative;
+        }
+        .alignment-guide {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: rgba(124, 58, 237, 0.3);
+            top: 50%;
+            pointer-events: none;
+        }
+        .code-example {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 1rem;
+            margin: 1rem 0;
+            font-family: var(--font-family-mono);
+            font-size: 0.875rem;
+        }
+        .theme-toggle-demo {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        .responsive-demo {
+            border: 2px solid var(--nix-accent);
+            border-radius: var(--border-radius);
+            padding: 1rem;
+            margin: 1rem 0;
+            background: rgba(124, 58, 237, 0.05);
+        }
+    </style>
+</head>
+<body>
+    <div class="theme-toggle-demo">
+        <button class="btn btn-outline-secondary" onclick="toggleTheme()">
+            <i class="fas fa-moon" id="theme-icon"></i>
+        </button>
+    </div>
+
+    <!-- Navbar Original -->
+    <nav class="navbar navbar-expand-lg navbar-nix demo-navbar">
+        <div class="container">
+            <div class="alignment-guide"></div>
+            
+            <!-- Brand -->
+            <a class="navbar-brand" href="#">
+                <img src="favicon.ico" alt="Project Nix Logo" width="32" height="32">
+                Project Nix
+            </a>
+            
+            <!-- Mobile Toggle -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <!-- Navigation Links -->
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#">
+                            <i class="fas fa-home"></i>Home
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <i class="fas fa-newspaper"></i>Artigos
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <i class="fas fa-book"></i>Livros
+                        </a>
+                    </li>
+                </ul>
+                
+                <!-- Search Form -->
+                <form class="d-flex me-3 form-nix align-items-center" method="get" action="#" aria-label="Formulário de busca" role="form">
+                    <div class="input-group">
+                        <input class="form-control form-control-enhanced" type="search" name="q" placeholder="Buscar..."
+                               aria-label="Campo de busca" aria-describedby="search-button" value="">
+                        <button class="btn btn-outline-light text-sans" type="submit"
+                                id="search-button" aria-label="Buscar">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </form>
+                
+                <!-- User Menu -->
+                <ul class="navbar-nav align-items-center">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <i class="fas fa-user"></i>Login
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-5">
+        <div class="text-center mb-5">
+            <h1 class="display-4 fw-bold" style="color: var(--nix-accent);">Demonstração - Alinhamento da Pesquisa</h1>
+            <p class="lead">Pesquisa perfeitamente alinhada e responsiva com cores roxas</p>
+        </div>
+
+        <!-- Melhorias Implementadas -->
+        <section class="demo-section">
+            <h2 class="h3 mb-4">✅ Melhorias Implementadas</h2>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="fas fa-align-center text-primary me-2"></i>
+                                Alinhamento Perfeito
+                            </h5>
+                            <p class="card-text">Campo de pesquisa alinhado verticalmente com outros elementos da navbar.</p>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-check text-success me-2"></i>Altura consistente (38px)</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Alinhamento vertical centralizado</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Espaçamento harmonioso</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="fas fa-palette text-primary me-2"></i>
+                                Cores Roxas
+                            </h5>
+                            <p class="card-text">Borda e focus alterados de verde para roxo elegante.</p>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-check text-success me-2"></i>Focus roxo (#7c3aed)</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Box-shadow roxo</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Hover harmonioso</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Responsividade -->
+        <section class="demo-section">
+            <h2 class="h3 mb-4">📱 Responsividade</h2>
+            
+            <div class="responsive-demo">
+                <h4>Desktop (> 991px)</h4>
+                <ul>
+                    <li>Largura: 280px</li>
+                    <li>Altura: 38px</li>
+                    <li>Alinhamento: Horizontal à direita</li>
+                </ul>
+            </div>
+
+            <div class="responsive-demo">
+                <h4>Tablet (768px - 991px)</h4>
+                <ul>
+                    <li>Largura: 240px</li>
+                    <li>Altura: 38px</li>
+                    <li>Font-size: 14px</li>
+                </ul>
+            </div>
+
+            <div class="responsive-demo">
+                <h4>Mobile (≤ 768px)</h4>
+                <ul>
+                    <li>Largura: 100%</li>
+                    <li>Altura: 44px (touch-friendly)</li>
+                    <li>Font-size: 16px</li>
+                    <li>Posição: Abaixo da navegação</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Código CSS -->
+        <section class="demo-section">
+            <h2 class="h3 mb-4">💻 Código CSS Implementado</h2>
+            
+            <h4>Alinhamento Principal</h4>
+            <div class="code-example">
+.navbar .form-nix {
+    display: flex;
+    align-items: center;
+    margin: 0;
+}
+
+.navbar .input-group {
+    display: flex;
+    align-items: center;
+    width: 280px;
+    max-width: 100%;
+}
+
+.navbar .form-control {
+    height: 38px;
+    border-radius: 0.375rem 0 0 0.375rem;
+}
+
+.navbar .btn-outline-light {
+    height: 38px;
+    border-radius: 0 0.375rem 0.375rem 0;
+    min-width: 38px;
+}
+            </div>
+
+            <h4>Cores Roxas</h4>
+            <div class="code-example">
+.navbar .form-control:focus {
+    border-color: var(--nix-accent);
+    box-shadow: 0 0 0 0.2rem rgba(124, 58, 237, 0.25);
+}
+
+.navbar .btn-outline-light:hover {
+    background-color: var(--nix-accent);
+    border-color: var(--nix-accent);
+}
+            </div>
+
+            <h4>Responsividade Mobile</h4>
+            <div class="code-example">
+@media (max-width: 768px) {
+    .navbar .form-nix {
+        width: 100%;
+        margin: 1rem 0;
+        order: 3;
+    }
+
+    .navbar .form-control,
+    .navbar .btn-outline-light {
+        height: 44px;
+        font-size: 16px;
+    }
+}
+            </div>
+        </section>
+
+        <!-- Teste Interativo -->
+        <section class="demo-section">
+            <h2 class="h3 mb-4">🧪 Teste Interativo</h2>
+            
+            <div class="row">
+                <div class="col-md-8">
+                    <p>Clique no campo de pesquisa acima para ver:</p>
+                    <ul>
+                        <li>Borda roxa no focus</li>
+                        <li>Box-shadow roxo suave</li>
+                        <li>Alinhamento perfeito</li>
+                        <li>Transições suaves</li>
+                    </ul>
+                    
+                    <p class="mt-3">Redimensione a janela para testar a responsividade em diferentes tamanhos de tela.</p>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <h5>Teste o Toggle de Tema</h5>
+                            <p class="small text-muted">Use o botão no canto superior direito para alternar entre tema claro e escuro.</p>
+                            <i class="fas fa-moon fa-2x" style="color: var(--nix-accent);"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function toggleTheme() {
+            const html = document.documentElement;
+            const icon = document.getElementById('theme-icon');
+            const currentTheme = html.getAttribute('data-theme');
+            
+            if (currentTheme === 'dark') {
+                html.setAttribute('data-theme', 'light');
+                icon.className = 'fas fa-moon';
+            } else {
+                html.setAttribute('data-theme', 'dark');
+                icon.className = 'fas fa-sun';
+            }
+        }
+
+        // Aplicar tema inicial
+        document.documentElement.setAttribute('data-theme', 'light');
+
+        // Demonstrar focus no campo de pesquisa
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.querySelector('.navbar .form-control');
+            if (searchInput) {
+                searchInput.addEventListener('focus', function() {
+                    console.log('🔍 Campo de pesquisa focado - observe a borda roxa!');
+                });
+            }
+        });
+    </script>
+</body>
+</html>

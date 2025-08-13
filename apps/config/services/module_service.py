@@ -312,3 +312,70 @@ class ModuleService(IModuleService):
         except Exception as e:
             logger.error(f"Erro ao inicializar sistema: {str(e)}")
             return False
+    
+    def test_module_functionality(self, app_name: str) -> Dict:
+        """Testa se um módulo está funcionando corretamente"""
+        results = {
+            'app_name': app_name,
+            'is_functional': True,
+            'tests': {},
+            'errors': []
+        }
+        
+        try:
+            # Teste 1: App instalado
+            full_app_name = f'apps.{app_name}'
+            results['tests']['installed'] = full_app_name in settings.INSTALLED_APPS
+            
+            # Teste 2: Importação
+            try:
+                __import__(full_app_name)
+                results['tests']['importable'] = True
+            except ImportError as e:
+                results['tests']['importable'] = False
+                results['errors'].append(f'Erro de importação: {e}')
+            
+            # Teste 3: Models migrados
+            try:
+                from django.apps import apps
+                app_config = apps.get_app_config(app_name)
+                models = app_config.get_models()
+                if models:
+                    first_model = models[0]
+                    first_model.objects.count()
+                results['tests']['models_migrated'] = True
+            except Exception as e:
+                results['tests']['models_migrated'] = False
+                results['errors'].append(f'Erro de models: {e}')
+            
+            # Teste 4: URLs acessíveis
+            try:
+                from django.test import Client
+                client = Client()
+                response = client.get(f'/{app_name}/')
+                results['tests']['urls_accessible'] = response.status_code < 500
+            except Exception as e:
+                results['tests']['urls_accessible'] = False
+                results['errors'].append(f'Erro de URLs: {e}')
+            
+            # Determina se é funcional
+            required_tests = ['installed', 'importable', 'models_migrated']
+            results['is_functional'] = all(results['tests'].get(test, False) for test in required_tests)
+            
+        except Exception as e:
+            results['is_functional'] = False
+            results['errors'].append(f'Erro geral: {e}')
+        
+        return results
+    
+    def get_functional_modules_only(self) -> List[AppModuleConfiguration]:
+        """Retorna apenas módulos funcionais"""
+        all_modules = self.get_all_modules()
+        functional_modules = []
+        
+        for module in all_modules:
+            test_result = self.test_module_functionality(module.app_name)
+            if test_result['is_functional']:
+                functional_modules.append(module)
+        
+        return functional_modules

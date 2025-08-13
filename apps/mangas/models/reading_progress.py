@@ -60,9 +60,9 @@ class ReadingProgress(models.Model):
         unique_together = ('user', 'manga', 'capitulo')
         ordering = ['-last_read_at']
         indexes = [
-            models.Index(fields=['user', 'manga'], name='reading_progress_user_manga_idx'),
-            models.Index(fields=['user', 'last_read_at'], name='reading_progress_user_date_idx'),
-            models.Index(fields=['manga', 'capitulo'], name='reading_progress_manga_chapter_idx'),
+            models.Index(fields=['user', 'manga'], name='rp_user_manga_idx'),
+            models.Index(fields=['user', 'last_read_at'], name='rp_user_date_idx'),
+            models.Index(fields=['manga', 'capitulo'], name='rp_manga_chapter_idx'),
         ]
 
     def __str__(self):
@@ -144,4 +144,4 @@ class ReadingHistory(models.Model):
         from django.utils import timezone
         self.completed_at = timezone.now()
         self.session_duration = duration_seconds
-        self.save() 
+        self.save()

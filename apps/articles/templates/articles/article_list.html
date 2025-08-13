@@ -4,225 +4,201 @@
 
 {% block title %}{% if current_category %}{{ current_category|title }} - {% endif %}Artigos - Project Nix{% endblock %}
 
-{% block extra_css %}
-<link rel="stylesheet" href="{% static 'articles/css/article-list.css' %}">
+{% block meta_description %}
+{% if current_category %}
+Artigos sobre {{ current_category|title }} - Explore conteúdo especializado em {{ current_category|title }} no Project Nix.
+{% elif search_query %}
+Resultados da busca por \"{{ search_query }}\" - Encontre artigos relevantes no Project Nix.
+{% else %}
+Descubra artigos técnicos, tutoriais e insights sobre desenvolvimento, tecnologia e inovação no Project Nix.
+{% endif %}
+{% endblock %}
 
+{% block extra_css %}
+<link rel=\"stylesheet\" href=\"{% static 'articles/css/article-list.css' %}\">
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'articles/js/article-list.js' %}"></script>
+<script src=\"{% static 'articles/js/article-list.js' %}\"></script>
 {% endblock %}
 
 {% block content %}
-<div class="container my-5">
-    <!-- Barra de Pesquisa e Filtros -->
-    <div class="card border-0 shadow-sm mb-4">
-        <div class="card-header bg-theme-primary text-white">
-            <h6 class="mb-0"><i class="fas fa-filter me-2"></i>Barra de Pesquisa e Filtros</h6>
+<div class=\"container my-4\">
+    <div class=\"row\">
+        <!-- Sidebar com Categorias -->
+        <div class=\"col-lg-3 col-md-4 mb-4\">
+            <div class=\"category-sidebar\">
+                <h5 class=\"mb-3\">Categorias</h5>
+                <ul class=\"category-list\">
+                    <li>
+                        <a href=\"{% url 'articles:article_list' %}\" 
+                           class=\"{% if not current_category %}active{% endif %}\">
+                            <span>Todas</span>
+                            <span class=\"category-count\">{{ total_articles }}</span>
+                        </a>
+                    </li>
+                    {% for category in categories %}
+                    <li>
+                        <a href=\"{% url 'articles:article_category' category_slug=category.slug %}\" 
+                           class=\"{% if current_category == category.slug %}active{% endif %}\">
+                            <span>{{ category.name }}</span>
+                            <span class=\"category-count\">{{ category.article_count }}</span>
+                        </a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
         </div>
-        <div class="card-body">
-            <form method="get" class="row g-3">
-                <!-- Barra de Pesquisa -->
-                <div class="col-md-6">
-                    <div class="input-group">
-                        <input type="text" name="q" class="form-control" placeholder="Buscar artigos..." value="{{ search_query }}">
-                        <button class="btn btn-primary" type="submit">
-                            <i class="fas fa-search"></i>
-                        </button>
-                    </div>
-                </div>
-                
-                <!-- Filtro por Categoria -->
-                <div class="col-md-3">
-                    <select name="category" class="form-select" onchange="this.form.submit()">
-                        <option value="">Todas as Categorias</option>
+        
+        <!-- Conteúdo Principal -->
+        <div class=\"col-lg-9 col-md-8\">
+            <!-- Cabeçalho e Busca -->
+            <div class=\"d-flex justify-content-between align-items-center mb-4\">
+                <h1 class=\"h2 mb-0\">
+                    {% if current_category %}
+                        Artigos em {{ current_category|title }}
+                    {% elif search_query %}
+                        Resultados para \"{{ search_query }}\"
+                    {% else %}
+                        Artigos
+                    {% endif %}
+                </h1>
+                {% if user.is_authenticated and user.is_staff %}
+                    <a href=\"{% url 'articles:article_create' %}\" class=\"btn btn-primary btn-sm\">
+                        <i class=\"fas fa-plus me-1\"></i>Novo Artigo
+                    </a>
+                {% endif %}
+            </div>
+            
+            <!-- Filtros e Busca -->
+            <div class=\"search-filters\">
+                <form method=\"get\" class=\"search-form\" id=\"search-form\">
+                    <input type=\"text\" 
+                           name=\"q\" 
+                           class=\"form-control\" 
+                           placeholder=\"Buscar artigos...\" 
+                           value=\"{{ search_query }}\" 
+                           id=\"search-input\">
+                    <select name=\"category\" class=\"form-select\" style=\"max-width: 200px;\">
+                        <option value=\"\">Todas as Categorias</option>
                         {% for cat in categories %}
-                            <option value="{{ cat.slug }}" {% if current_category == cat.slug %}selected{% endif %}>
+                            <option value=\"{{ cat.slug }}\" {% if current_category == cat.slug %}selected{% endif %}>
                                 {{ cat.name }}
                             </option>
                         {% endfor %}
                     </select>
-                </div>
-                
-                <!-- Ordenação -->
-                <div class="col-md-3">
-                    <select name="sort_by" class="form-select" onchange="this.form.submit()">
-                        <option value="newest" {% if sort_by == 'newest' %}selected{% endif %}>Mais Recentes</option>
-                        <option value="oldest" {% if sort_by == 'oldest' %}selected{% endif %}>Mais Antigos</option>
-                        <option value="title" {% if sort_by == 'title' %}selected{% endif %}>Título A-Z</option>
-                        <option value="views" {% if sort_by == 'views' %}selected{% endif %}>Mais Visualizados</option>
-                        <option value="author" {% if sort_by == 'author' %}selected{% endif %}>Autor A-Z</option>
+                    <select name=\"sort_by\" class=\"form-select\" style=\"max-width: 180px;\">
+                        <option value=\"newest\" {% if sort_by == 'newest' %}selected{% endif %}>Mais Recentes</option>
+                        <option value=\"oldest\" {% if sort_by == 'oldest' %}selected{% endif %}>Mais Antigos</option>
+                        <option value=\"title\" {% if sort_by == 'title' %}selected{% endif %}>Título A-Z</option>
+                        <option value=\"views\" {% if sort_by == 'views' %}selected{% endif %}>Mais Visualizados</option>
                     </select>
+                    <button type=\"submit\" class=\"btn btn-primary\">
+                        <i class=\"fas fa-search\"></i>
+                    </button>
+                    {% if search_query %}
+                    <button type=\"button\" class=\"btn btn-outline-secondary\" id=\"clear-search\">
+                        <i class=\"fas fa-times\"></i>
+                    </button>
+                    {% endif %}
+                </form>
+                
+                {% if search_query or current_category %}
+                <div class=\"mt-2 text-muted small\">
+                    {{ page_obj.paginator.count }} artigo{{ page_obj.paginator.count|pluralize }} encontrado{{ page_obj.paginator.count|pluralize }}
                 </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Categorias Rápidas -->
-    {% if categories %}
-    <div class="card border-0 shadow-sm mb-4">
-        <div class="card-header bg-theme-info text-white">
-            <h6 class="mb-0"><i class="fas fa-tags me-2"></i>Categorias Rápidas</h6>
-        </div>
-        <div class="card-body">
-            <div class="d-flex flex-wrap gap-2">
-                <a href="{% url 'articles:article_list' %}" class="btn btn-sm {% if not current_category %}btn-primary{% else %}btn-outline-primary{% endif %}">
-                    <i class="fas fa-list me-1"></i>Todas
-                </a>
-                {% for category in categories %}
-                    <a href="{% url 'articles:article_category' category_slug=category.slug %}" class="btn btn-sm {% if current_category == category.slug %}btn-primary{% else %}btn-outline-primary{% endif %}">
-                        {{ category.name }}
-                    </a>
-                {% endfor %}
+                {% endif %}
             </div>
-        </div>
-    </div>
-    {% endif %}
-
-    <div class="row">
-        <div class="col-12">
-            {# Seção de artigos em destaque #}
-            {% if featured_articles %}
-            <div class="mb-5">
-                <h2 class="h4 mb-4 text-theme-primary text-sans"><i class="fas fa-star me-2"></i>Conteúdo em Destaque</h2>
-                <div class="row g-4">
+            
+            <!-- Artigos em Destaque -->
+            {% if featured_articles and not search_query and not current_category %}
+            <div class=\"featured-articles\">
+                <h3 class=\"h4 mb-3\">Em Destaque</h3>
+                <div class=\"row\">
                     {% for article in featured_articles %}
-                    <div class="col-md-6 col-lg-4">
-                        <article class="card h-100 shadow-sm article-card border-primary border-2">
+                    <div class=\"col-md-6 mb-3\">
+                        <div class=\"featured-article\">
                             {% if article.featured_image %}
-                            <div class="position-relative">
-                                <img src="{{ article.featured_image.url }}"
-                                     class="card-img-top"
-                                     alt="{{ article.title }}"
-                                     style="height: 200px; object-fit: cover;">
-                                {% if article.category %}
-                                <span class="badge bg-primary position-absolute top-0 start-0 m-2">
-                                    {{ article.category.name }}
-                                </span>
-                                {% endif %}
-                            </div>
+                                <img src=\"{{ article.featured_image.url }}\" 
+                                     class=\"card-img\" 
+                                     alt=\"{{ article.title }}\">
                             {% endif %}
-                            <div class="card-body d-flex flex-column">
-                                <h5 class="card-title mb-2">
-                                    <a href="{{ article.get_absolute_url }}" class="text-decoration-none text-dark">
+                            <div class=\"featured-overlay\">
+                                {% if article.category %}
+                                    <span class=\"badge bg-primary mb-2\">{{ article.category.name }}</span>
+                                {% endif %}
+                                <h4 class=\"h5 text-white mb-2\">
+                                    <a href=\"{{ article.get_absolute_url }}\" class=\"text-white text-decoration-none\">
                                         {{ article.title }}
                                     </a>
-                                </h5>
-                                <p class="card-text flex-grow-1">
-                                    {{ article.excerpt|clean_excerpt:100 }}
-                                </p>
-                                <div class="mt-auto d-flex justify-content-between align-items-center">
-                                    <small class="text-muted">
-                                        <i class="fas fa-user me-1"></i>
-                                        {{ article.author.get_full_name|default:article.author.username }}
+                                </h4>
+                                <p class=\"text-white-50 small mb-2\">{{ article.excerpt|truncatechars:100 }}</p>
+                                <div class=\"d-flex justify-content-between align-items-center\">
+                                    <small class=\"text-white-50\">
+                                        <i class=\"fas fa-user me-1\"></i>{{ article.author.get_full_name|default:article.author.username }}
                                     </small>
-                                    <a href="{{ article.get_absolute_url }}" class="btn btn-outline-primary btn-sm ms-2">
-                                        <i class="fas fa-book-open me-1"></i>Ler
-                                    </a>
+                                    <small class=\"text-white-50\">
+                                        <i class=\"fas fa-calendar me-1\"></i>{{ article.published_at|date:"d/m/Y" }}</span>
+                                    </small>
                                 </div>
                             </div>
-                        </article>
+                        </div>
                     </div>
                     {% endfor %}
                 </div>
             </div>
             {% endif %}
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <div>
-                    <h1 class="h2 mb-1 text-sans text-body">
-                        <i class="fas fa-newspaper me-2 text-theme-primary"></i>
-                        {% if category %}
-                            Artigos em <span class="text-theme-primary">{{ category.name }}</span>
-                        {% elif search_query %}
-                            Resultados para "<span class="text-theme-primary">{{ search_query }}</span>"
-                        {% else %}
-                            Artigos
-                        {% endif %}
-                    </h1>
-                    <p class="text-theme-secondary mb-0 text-body">
-                        {% if search_query or category %}
-                            Mostrando {{ page_obj.paginator.count }} artigo{{ page_obj.paginator.count|pluralize }}
-                        {% else %}
-                            Explore nossa coleção de artigos disponíveis
-                        {% endif %}
-                    </p>
-                </div>
-                <div>
-                    {% if user.is_authenticated and user.is_staff or user.is_authenticated and user.is_superuser or user.is_authenticated and user|has_group:'Editor' %}
-                        <a href="{% url 'articles:article_create' %}" class="btn btn-primary">
-                            <i class="fas fa-plus me-2"></i>Novo Artigo
-                        </a>
-                    {% endif %}
-                </div>
-            </div>
+            
+            <!-- Lista de Artigos -->
             {% if articles %}
-                <div id="articles-container" class="row g-4">
+                <div class=\"articles-grid\" id=\"articles-container\">
                     {% for article in articles %}
-                    <div class="col-lg-6 col-md-6 col-12">
-                        <article class="card h-100 shadow-sm article-card">
-                            {% if article.featured_image %}
-                            <div class="position-relative">
-                                <img src="{{ article.featured_image.url }}"
-                                     class="card-img-top"
-                                     alt="{{ article.title }}"
-                                     style="height: 250px; object-fit: cover;">
-                                {% if article.category %}
-                                <span class="badge bg-primary position-absolute top-0 start-0 m-2">
-                                    {{ article.category.name }}
-                                </span>
+                    <div class=\"col-12 mb-4\">
+                        <article class=\"card article-card h-100\">
+                            <div class=\"row g-0\">
+                                {% if article.featured_image %}
+                                <div class=\"col-md-4\">
+                                    <img src=\"{{ article.featured_image.url }}\" 
+                                         class=\"img-fluid rounded-start h-100\" 
+                                         alt=\"{{ article.title }}\" 
+                                         style=\"object-fit: cover; min-height: 200px;\">
+                                </div>
+                                <div class=\"col-md-8\">
+                                {% else %}
+                                <div class=\"col-12\">
                                 {% endif %}
-                            </div>
-                            {% endif %}
-
-                            <div class="card-body d-flex flex-column">
-                                <h5 class="card-title mb-2">
-                                    <a href="{{ article.get_absolute_url }}" class="text-decoration-none text-dark">
-                                        {{ article.title }}
-                                    </a>
-                                </h5>
-
-                                {% if article.subtitle %}
-                                <h6 class="card-subtitle mb-3 text-muted">{{ article.subtitle }}</h6>
-                                {% endif %}
-
-                                <p class="card-text flex-grow-1">
-                                    {{ article.excerpt|clean_excerpt:120 }}
-                                </p>
-
-                                <div class="mt-auto">
-                                    <div class="d-flex justify-content-between align-items-center mb-3">
-                                        <small class="text-muted">
-                                            <i class="fas fa-user me-1"></i>
-                                            {{ article.author.get_full_name|default:article.author.username }}
-                                        </small>
-                                        <small class="text-muted">
-                                            <i class="fas fa-calendar me-1"></i>
-                                            {{ article.published_at|date:'d/m/Y' }}
-                                        </small>
-                                    </div>
-
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <div class="article-stats">
-                                            <small class="text-muted me-3">
-                                                <i class="fas fa-eye me-1"></i>
-                                                {{ article.view_count|default:0 }}
-                                            </small>
-                                            <small class="text-muted">
-                                                <i class="fas fa-comments me-1"></i>
-                                                {{ article.comment_count|default:0 }}
+                                    <div class=\"card-body d-flex flex-column h-100\">
+                                        <div class=\"d-flex flex-wrap gap-2 mb-2\">
+                                            {% if article.category %}
+                                                <span class=\"badge bg-primary\">{{ article.category.name }}</span>
+                                            {% endif %}
+                                            <span class=\"badge bg-secondary\">{{ article.published_at|date:"d/m/Y" }}</span>
+                                        </div>
+                                        
+                                        <h3 class=\"card-title h5 mb-2\">
+                                            <a href=\"{{ article.get_absolute_url }}\" class=\"text-decoration-none\">
+                                                {{ article.title }}
+                                            </a>
+                                        </h3>
+                                        
+                                        <div class=\"article-stats mb-2\">
+                                            <small class=\"text-muted\">
+                                                <i class=\"fas fa-user me-1\"></i>{{ article.author.get_full_name|default:article.author.username }}
+                                                <i class=\"fas fa-eye ms-3 me-1\"></i>{{ article.view_count|default:0 }}
+                                                <i class=\"fas fa-clock ms-3 me-1\"></i>{{ article.reading_time|default:5 }} min
                                             </small>
                                         </div>
-
-                                        <div class="article-actions">
-                                            <a href="{{ article.get_absolute_url }}"
-                                               class="btn btn-primary btn-sm">
-                                                <i class="fas fa-book-open me-1"></i>Ler
+                                        
+                                        <p class=\"card-text flex-grow-1\">{{ article.excerpt|truncatechars:200 }}</p>
+                                        
+                                        <div class=\"article-actions mt-auto\">
+                                            <a href=\"{{ article.get_absolute_url }}\" class=\"btn btn-outline-primary btn-sm\">
+                                                Ler mais
                                             </a>
                                             {% if user.is_staff and article.get_edit_url %}
-                                            <a href="{{ article.get_edit_url }}"
-                                               class="btn btn-outline-secondary btn-sm ms-1">
-                                                <i class="fas fa-edit"></i>
-                                            </a>
+                                                <a href=\"{{ article.get_edit_url }}\" class=\"btn btn-outline-secondary btn-sm ms-2\">
+                                                    <i class=\"fas fa-edit\"></i>
+                                                </a>
                                             {% endif %}
                                         </div>
                                     </div>
@@ -232,55 +208,62 @@
                     </div>
                     {% endfor %}
                 </div>
+                
+                <!-- Paginação -->
                 {% if page_obj.has_other_pages %}
-                <nav aria-label="Paginação" class="mt-5">
-                    <ul class="pagination justify-content-center">
-                        {% if page_obj.has_previous %}
-                            <li class="page-item">
-                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}">Anterior</a>
-                            </li>
-                        {% endif %}
-                        {% for num in page_obj.paginator.page_range %}
-                            {% if page_obj.number == num %}
-                                <li class="page-item active">
-                                    <span class="page-link">{{ num }}</span>
-                                </li>
-                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-                                <li class="page-item">
-                                    <a class="page-link" href="?page={{ num }}{% if search_query %}&q={{ search_query }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}">{{ num }}</a>
+                <div class=\"pagination-wrapper\">
+                    <nav aria-label=\"Paginação\">
+                        <ul class=\"pagination\">
+                            {% if page_obj.has_previous %}
+                                <li class=\"page-item\">
+                                    <a class=\"page-link\" href=\"?page={{ page_obj.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}\">Anterior</a>
                                 </li>
                             {% endif %}
-                        {% endfor %}
-                        {% if page_obj.has_next %}
-                            <li class="page-item">
-                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}">Próximo</a>
-                            </li>
-                        {% endif %}
-                    </ul>
-                </nav>
+                            
+                            {% for num in page_obj.paginator.page_range %}
+                                {% if page_obj.number == num %}
+                                    <li class=\"page-item active\">
+                                        <span class=\"page-link\">{{ num }}</span>
+                                    </li>
+                                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                    <li class=\"page-item\">
+                                        <a class=\"page-link\" href=\"?page={{ num }}{% if search_query %}&q={{ search_query }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}\">{{ num }}</a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if page_obj.has_next %}
+                                <li class=\"page-item\">
+                                    <a class=\"page-link\" href=\"?page={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}{% if sort_by %}&sort_by={{ sort_by }}{% endif %}\">Próximo</a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
                 {% endif %}
             {% else %}
-                <div id="articles-container" class="text-center py-5">
-                    <i class="fas fa-newspaper fa-5x text-theme-secondary mb-3"></i>
-                    <h3 class="text-theme-secondary text-sans text-body">
+                <!-- Estado Vazio -->
+                <div class=\"text-center py-5\">
+                    <i class=\"fas fa-newspaper fa-4x text-muted mb-3\"></i>
+                    <h3 class=\"text-muted\">
                         {% if search_query %}
-                            Nenhum artigo encontrado para "{{ search_query }}"
-                        {% elif category %}
-                            Nenhum artigo encontrado na categoria "{{ category.name }}"
+                            Nenhum artigo encontrado para \"{{ search_query }}\"
+                        {% elif current_category %}
+                            Nenhum artigo encontrado na categoria \"{{ current_category|title }}\"
                         {% else %}
                             Nenhum artigo encontrado
                         {% endif %}
                     </h3>
-                    <p class="text-theme-secondary text-body">
-                        {% if search_query or category %}
+                    <p class=\"text-muted\">
+                        {% if search_query or current_category %}
                             Tente ajustar os filtros ou fazer uma nova busca.
                         {% else %}
                             Ainda não há artigos publicados.
                         {% endif %}
                     </p>
-                    {% if search_query or category %}
-                        <a href="{% url 'articles:article_list' %}" class="btn btn-primary mt-3">
-                            <i class="fas fa-list me-2"></i>Ver Todos os Artigos
+                    {% if search_query or current_category %}
+                        <a href=\"{% url 'articles:article_list' %}\" class=\"btn btn-primary\">
+                            Ver Todos os Artigos
                         </a>
                     {% endif %}
                 </div>

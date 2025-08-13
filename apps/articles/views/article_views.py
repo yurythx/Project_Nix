@@ -227,25 +227,194 @@ class ArticleSearchView(BaseArticleView, ListView):
     def get_queryset(self) -> QuerySet[Article]:
         """Retorna queryset filtrado pela busca"""
         query = self.request.GET.get('q', '').strip()
+        search_param = self.request.GET.get('search', '').strip()  # Para compatibilidade com AJAX
         category = self.request.GET.get('category', '')
         tag = self.request.GET.get('tag', '')
+        sort = self.request.GET.get('sort', '-published_at')
 
-        if not query and not category and not tag:
-            return Article.objects.none()
+        # Usa 'search' se 'q' estiver vazio (compatibilidade AJAX)
+        if not query and search_param:
+            query = search_param
 
-        filters = {}
+        # Inicia com artigos publicados
+        queryset = self.article_service.get_published_articles()
+
+        # Aplica busca por texto se houver query
+        if query:
+            queryset = queryset.filter(
+                Q(title__icontains=query) |
+                Q(excerpt__icontains=query) |
+                Q(content__icontains=query) |
+                Q(meta_keywords__icontains=query) |
+                Q(tags__name__icontains=query)
+            ).distinct()
+
+        # Aplica filtro por categoria
         if category:
-            filters['category'] = category
-        if tag:
-            filters['tag'] = tag
+            queryset = queryset.filter(category__slug=category)
 
-        return self.article_service.search_articles(query, **filters)
+        # Aplica filtro por tag
+        if tag:
+            queryset = queryset.filter(tags__slug=tag)
+
+        # Para requisições AJAX sem filtros, retorna todos os artigos publicados
+        # Para requisições normais sem filtros, retorna queryset vazio (para não mostrar todos os artigos na página de busca)
+        if not query and not category and not tag:
+            is_ajax = self.request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+            if not is_ajax:
+                return Article.objects.none()
+
+        # Aplica ordenação
+        if sort:
+            queryset = queryset.order_by(sort)
+
+        return queryset
+
+    def get(self, request, *args, **kwargs):
+        """Override para detectar requisições AJAX e retornar JSON"""
+        # Detecta se é uma requisição AJAX
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return self.get_ajax_response()
+        
+        # Para requisições normais, usa o comportamento padrão
+        return super().get(request, *args, **kwargs)
+
+    def get_ajax_response(self):
+        """Retorna resposta JSON para requisições AJAX"""
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        try:
+            logger.info(f"AJAX Request - Page: {self.request.GET.get('page', 1)}, Params: {dict(self.request.GET)}")
+            
+            # Obtém os artigos paginados
+            self.object_list = self.get_queryset()
+            logger.info(f"QuerySet count: {self.object_list.count()}")
+            
+            # Usa uma abordagem mais segura para obter o contexto
+            try:
+                context = self.get_context_data(object_list=self.object_list)
+                logger.info("Context data obtained successfully")
+            except Exception as context_error:
+                logger.error(f"Error in get_context_data: {str(context_error)}")
+                # Fallback: criar contexto manualmente
+                from django.core.paginator import Paginator
+                paginator = Paginator(self.object_list, self.paginate_by)
+                page_number = self.request.GET.get('page', 1)
+                page_obj = paginator.get_page(page_number)
+                
+                context = {
+                    'articles': page_obj,
+                    'paginator': paginator,
+                    'page_obj': page_obj,
+                }
+                logger.info("Fallback context created")
+            
+            # Prepara dados dos artigos para JSON
+            articles_data = []
+            try:
+                for article in context['articles']:
+                    # Formatar data de publicação
+                    published_date = ''
+                    if article.published_at:
+                        published_date = article.published_at.strftime('%d/%m/%Y')
+                    
+                    # Calcular tempo de leitura (aproximado)
+                    reading_time = 5  # valor padrão
+                    if hasattr(article, 'content') and article.content:
+                        word_count = len(article.content.split())
+                        reading_time = max(1, word_count // 200)  # ~200 palavras por minuto
+                    
+                    article_data = {
+                        'id': article.id,
+                        'title': article.title,
+                        'slug': article.slug,
+                        'excerpt': article.excerpt or '',
+                        'published_at': published_date,
+                        'views': getattr(article, 'view_count', 0),
+                        'reading_time': reading_time,
+                        'url': article.get_absolute_url(),
+                    }
+                    
+                    # Adiciona autor com verificação segura
+                    if hasattr(article, 'author') and article.author:
+                        article_data['author'] = article.author.get_full_name() or article.author.username
+                    else:
+                        article_data['author'] = 'Autor desconhecido'
+                    
+                    # Adiciona categoria como string simples
+                    if hasattr(article, 'category') and article.category:
+                        article_data['category'] = article.category.name
+                    else:
+                        article_data['category'] = 'Sem categoria'
+                    
+                    # Adiciona imagem com verificação segura
+                    if hasattr(article, 'featured_image') and article.featured_image:
+                        try:
+                            article_data['featured_image'] = article.featured_image.url
+                        except:
+                            article_data['featured_image'] = None
+                    else:
+                        article_data['featured_image'] = None
+                    
+                    articles_data.append(article_data)
+                    
+                logger.info(f"Articles data prepared: {len(articles_data)} articles")
+            except Exception as articles_error:
+                logger.error(f"Error preparing articles data: {str(articles_error)}")
+                raise articles_error
+                
+            # Prepara dados de paginação
+            paginator = context.get('paginator')
+            page_obj = context.get('page_obj')
+            
+            pagination_data = {
+                'has_next': page_obj.has_next() if page_obj else False,
+                'has_previous': page_obj.has_previous() if page_obj else False,
+                'current_page': page_obj.number if page_obj else 1,
+                'total_pages': paginator.num_pages if paginator else 1,
+                'total_count': paginator.count if paginator else len(articles_data),
+            }
+            
+            logger.info(f"Pagination data: {pagination_data}")
+            
+            response_data = {
+                'success': True,
+                'articles': articles_data,
+                'pagination': pagination_data,
+                'search_query': self.request.GET.get('q', ''),
+                'filters': {
+                    'category': self.request.GET.get('category', ''),
+                    'tag': self.request.GET.get('tag', ''),
+                    'sort': self.request.GET.get('sort', '-published_at'),
+                }
+            }
+            
+            logger.info("AJAX response prepared successfully")
+            return JsonResponse(response_data)
+            
+        except Exception as e:
+            logger.error(f"AJAX Error: {str(e)}", exc_info=True)
+            return JsonResponse({
+                'success': False,
+                'error': f'Erro na busca: {str(e)}',
+                'debug_info': {
+                    'page': self.request.GET.get('page', 1),
+                    'params': dict(self.request.GET)
+                }
+            }, status=500)
 
     def get_context_data(self, **kwargs) -> Dict[str, Any]:
         """Adiciona dados específicos da busca"""
         context = super().get_context_data(**kwargs)
 
         query = self.request.GET.get('q', '').strip()
+        search_param = self.request.GET.get('search', '').strip()
+        
+        # Usa 'search' se 'q' estiver vazio
+        if not query and search_param:
+            query = search_param
+            
         context.update({
             'search_query': query,
             'categories': self.category_service.get_categories_with_articles(),

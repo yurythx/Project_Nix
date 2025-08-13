@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demonstração - Inconsistências Corrigidas</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <link href="css/main.css" rel="stylesheet">
+    <link href="css/accessibility.css" rel="stylesheet">
+    <style>
+        .demo-section {
+            padding: 2rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .inconsistency-demo {
+            border: 2px solid var(--nix-accent);
+            border-radius: var(--border-radius);
+            padding: 1rem;
+            margin: 1rem 0;
+            background: rgba(124, 58, 237, 0.05);
+        }
+        .theme-toggle-demo {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        .color-sample {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: inline-block;
+            margin-right: 1rem;
+            border: 2px solid var(--border-color);
+        }
+        .before-after {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        .before, .after {
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            border: 1px solid var(--border-color);
+        }
+        .before {
+            background-color: rgba(239, 68, 68, 0.1);
+        }
+        .after {
+            background-color: rgba(34, 197, 94, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="theme-toggle-demo">
+        <button class="btn btn-outline-secondary" onclick="toggleTheme()">
+            <i class="fas fa-moon" id="theme-icon"></i>
+        </button>
+    </div>
+
+    <!-- Navbar de Teste -->
+    <nav class="navbar navbar-expand-lg navbar-nix">
+        <div class="container">
+            <!-- Brand -->
+            <a class="navbar-brand" href="#">
+                <img src="favicon.ico" alt="Project Nix Logo" width="32" height="32">
+                Project Nix
+            </a>
+            
+            <!-- Mobile Toggle -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <!-- Navigation Links -->
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#">
+                            <i class="fas fa-home"></i>Home
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <i class="fas fa-newspaper"></i>Artigos
+                        </a>
+                    </li>
+                </ul>
+                
+                <!-- Search Form -->
+                <form class="d-flex me-3 form-nix align-items-center" method="get" action="#" aria-label="Formulário de busca" role="form">
+                    <div class="input-group">
+                        <input class="form-control form-control-enhanced" type="search" name="q" placeholder="Buscar..."
+                               aria-label="Campo de busca" aria-describedby="search-button" value="">
+                        <button class="btn btn-outline-light text-sans" type="submit"
+                                id="search-button" aria-label="Buscar">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </form>
+                
+                <!-- User Menu -->
+                <ul class="navbar-nav align-items-center">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                            <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 24px; height: 24px; background-color: var(--nix-accent) !important;">
+                                <i class="fas fa-user text-white small"></i>
+                            </div>
+                            <span class="d-none d-md-inline">Usuário</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><h6 class="dropdown-header">Menu Corrigido</h6></li>
+                            <li><a class="dropdown-item" href="#"><i class="fas fa-user me-2"></i>Perfil</a></li>
+                            <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>Configurações</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-5">
+        <div class="text-center mb-5">
+            <h1 class="display-4 fw-bold" style="color: var(--nix-accent);">Inconsistências Corrigidas</h1>
+            <p class="lead">Revisão completa e correção de todas as inconsistências encontradas</p>
+        </div>
+
+        <!-- Correções de Cores -->
+        <section class="demo-section">
+            <h2 class="h3 mb-4">🎨 Correções de Cores</h2>
+            
+            <div class="inconsistency-demo">
+                <h4>Classes CSS Atualizadas</h4>
+                <div class="before-after">
+                    <div class="before">
+                        <h5>❌ Antes</h5>
+                        <ul>
+                            <li><code>.bg-django-green</code></li>
+                            <li><code>.text-django-green</code></li>
+                            <li><code>.border-django-green</code></li>
+                            <li>Cores hardcoded: <code>#0C4B33</code>, <code>#44B78B</code></li>
+                        </ul>
+                    </div>
+                    <div class="after">
+                        <h5>✅ Depois</h5>
+                        <ul>
+                            <li><code>.bg-nix-accent</code></li>
+                            <li><code>.text-nix-accent</code></li>
+                            <li><code>.border-nix-accent</code></li>
+                            <li>Variáveis CSS: <code>var(--nix-accent)</code></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="fas fa-palette me-2" style="color: var(--nix-accent);"></i>
+                                Nova Paleta
+                            </h5>
+                            <p class="card-text">Todas as referências ao verde foram substituídas por roxo elegante.</p>
+                            <div class="d-flex align-items-center">
+                                <div class="color-sample" style="background-color: var(--nix-accent);"></div>
+                                <span>Roxo Elegante #7c3aed</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                Consistência Total
+                            </h5>
+                            <p class="card-text">Nenhuma referência ao verde antigo restante em todo o projeto.</p>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-check text-success me-2"></i>Templates corrigidos</li>
+                                <li><i class="fas fa-check text-success me-2"></i>CSS atualizado</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Classes removidas</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Correções de Templates -->
+        <section class="demo-section">
+            <h2 class="h3 mb-4">📄 Templates Corrigidos</h2>
+            
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">base_config.html</h5>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-check text-success me-2"></i>Avatar roxo</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Ícone de configuração</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Classes atualizadas</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">design-demo.html</h5>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-check text-success me-2"></i>Título atualizado</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Paleta de cores</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Descrições corrigidas</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">Páginas de Erro</h5>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-check text-success me-2"></i>404.html corrigido</li>
+                                <li><i class="fas fa-check text-success me-2"></i>403.html corrigido</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Estilos atualizados</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Correções de Responsividade -->
+        <section class="demo-section">
+            <h2 class="h3 mb-4">📱 Responsividade Consolidada</h2>
+            
+            <div class="inconsistency-demo">
+                <h4>Breakpoints Consolidados</h4>
+                <div class="before-after">
+                    <div class="before">
+                        <h5>❌ Antes</h5>
+                        <ul>
+                            <li>Breakpoints duplicados para 768px</li>
+                            <li>Estilos de artigos separados</li>
+                            <li>Inconsistências entre seções</li>
+                        </ul>
+                    </div>
+                    <div class="after">
+                        <h5>✅ Depois</h5>
+                        <ul>
+                            <li>Breakpoint único para 768px</li>
+                            <li>Estilos consolidados</li>
+                            <li>Responsividade consistente</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="alert alert-info">
+                <h5><i class="fas fa-info-circle me-2"></i>Breakpoints Unificados</h5>
+                <ul class="mb-0">
+                    <li><strong>1200px+</strong>: Desktop grande</li>
+                    <li><strong>992px - 1199px</strong>: Desktop padrão</li>
+                    <li><strong>768px - 991px</strong>: Tablet</li>
+                    <li><strong>576px - 767px</strong>: Mobile</li>
+                    <li><strong>≤575px</strong>: Mobile pequeno</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Teste de Componentes -->
+        <section class="demo-section">
+            <h2 class="h3 mb-4">🧩 Teste de Componentes</h2>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <h4>Botões</h4>
+                    <div class="mb-3">
+                        <button class="btn btn-primary me-2">Primário</button>
+                        <button class="btn btn-outline-primary me-2">Outline</button>
+                        <button class="btn btn-secondary">Secundário</button>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <h4>Formulários</h4>
+                    <div class="mb-3">
+                        <input type="text" class="form-control" placeholder="Campo de teste">
+                    </div>
+                </div>
+            </div>
+
+            <h4>Alertas</h4>
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle me-2"></i>
+                Todas as inconsistências foram corrigidas com sucesso!
+            </div>
+        </section>
+
+        <!-- Verificação Final -->
+        <section class="demo-section">
+            <h2 class="h3 mb-4">✅ Verificação Final</h2>
+            
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Status das Correções</h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <ul class="list-unstyled">
+                                        <li><i class="fas fa-check text-success me-2"></i>Cores 100% roxas</li>
+                                        <li><i class="fas fa-check text-success me-2"></i>Classes CSS atualizadas</li>
+                                        <li><i class="fas fa-check text-success me-2"></i>Templates corrigidos</li>
+                                        <li><i class="fas fa-check text-success me-2"></i>Páginas de erro atualizadas</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <ul class="list-unstyled">
+                                        <li><i class="fas fa-check text-success me-2"></i>Responsividade consolidada</li>
+                                        <li><i class="fas fa-check text-success me-2"></i>Breakpoints unificados</li>
+                                        <li><i class="fas fa-check text-success me-2"></i>Tema escuro corrigido</li>
+                                        <li><i class="fas fa-check text-success me-2"></i>TinyMCE atualizado</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function toggleTheme() {
+            const html = document.documentElement;
+            const icon = document.getElementById('theme-icon');
+            const currentTheme = html.getAttribute('data-theme');
+            
+            if (currentTheme === 'dark') {
+                html.setAttribute('data-theme', 'light');
+                icon.className = 'fas fa-moon';
+            } else {
+                html.setAttribute('data-theme', 'dark');
+                icon.className = 'fas fa-sun';
+            }
+        }
+
+        // Aplicar tema inicial
+        document.documentElement.setAttribute('data-theme', 'light');
+
+        // Log de verificação
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('✅ Verificação de inconsistências:');
+            console.log('🎨 Cores: Todas convertidas para roxo');
+            console.log('📄 Templates: Todos corrigidos');
+            console.log('📱 Responsividade: Consolidada');
+            console.log('🌙 Tema escuro: Corrigido');
+        });
+    </script>
+</body>
+</html>
